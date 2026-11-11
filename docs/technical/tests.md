@@ -192,7 +192,7 @@ px/mm: correct; hand-over `spikes/typst-sheet/spell-sheet.pdf` (sha256
 0.5 em between lines, as the story says, so the extra gap is about 0.7 pt and
 hardly visible.
 
-## US-005 make cards from notes (2026-11-12, G2): tests written, red until the code tickets
+## US-005 make cards from notes (2026-11-12, G2): tests written, red until tickets #8 to #11
 
 | AC | Test | State |
 |---|---|---|
@@ -208,7 +208,7 @@ hardly visible.
 | AC-10 | `run-sources` (no vault write call, reading-only dependencies) | written |
 | AC-11 | `us-005-run` (two fresh processes) | written |
 | AC-12 | `us-005-run` (the composed deck) | written |
-| AC-13 | manual check on a generated scratch vault (with US-008) | pending |
+| AC-13 | manual check `docs/technical/manual-checks/M01.md` on a generated scratch vault (procedure with #11, run after US-008) | pending |
 
 New support: `tests/support/run-fixtures.ts` (the composed vault, the runner's
 dependencies with the real compile, a recording writer), `us-005-run-cli.ts`.
@@ -217,3 +217,10 @@ The modules the tests import do not exist before the tickets:
 `src/plugin/{disk-writer,runner,commands}.ts`. The whole-tree typecheck is
 red only for these imports (SCAR-044); the 202 unit and 57 integration tests of
 US-001 to US-003 stay green.
+
+Tickets: #8 the pure core (`run-deck`, `run-kinds`, `run-output`), #9 settings
+and `runCards` (`run-settings`, `run-cards`), #10 the plugin layer
+(`run-disk-writer`, `run-runner`, `run-sources`), #11 PDF level, determinism and
+the manual check (`us-005-run`). Order: #8, #9, #10, #11. The whole-tree
+typecheck is green only after #11 (SCAR-044); each ticket names the errors
+that may remain.
