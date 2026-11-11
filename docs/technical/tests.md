@@ -281,3 +281,31 @@ guard freed in `finally` (my script first could not match it: two lines alike).
 Two of my new tests polluted the shared vault map (a note added under `skills/`
 changed another test's folder listing): found at once, the test now deletes it.
 All caught after the fixes.
+
+## Ticket #11 (2026-11-12)
+
+Whole tree green: typecheck, build, lint exit 0; `npm test` 383 passed (unit,
+plugin and tooling); `npm run test:integration` 61 passed (US-001 sheet 22,
+support 3, skill card 19, spell card 14, US-005 run 4 — counts of the files).
+`tests/integration/us-005-run.test.ts` was written at G2 and passed as soon as
+the runner existed; this ticket proved it (mutation) and added the rest.
+
+**A gate defect found and fixed:** `npm test` ran only `tests/unit`, so the
+plugin tests of #10 never ran in the project's own gate (they had been run by
+hand). The script now runs `tests/unit tests/plugin tests/tooling`; proof
+(SCAR-006): with a deliberately failing test in `tests/plugin`, `npm test`
+exits 1; without it, 0. `CLAUDE.md` says so.
+
+New in this ticket: the generator of the scratch vault
+(`tests/fixtures/generate-vault.ts`: invented notes, a new folder only, the
+same files every run; `tests/tooling/generate-vault.test.ts`, 8 tests), the
+manual-check index and file (`docs/technical/manual-checks.md`, `M01.md`) with
+the guard of SCAR-029 (`tests/tooling/manual-checks.test.ts`, 3 tests).
+Corrections of my own first versions: the deck note's markdown link keeps its
+`../` as written (the test expected it stripped); the image is a real 1x1 PNG
+written as bytes.
+
+Mutation check of the composed flow (9 mutants against `us-005-run` alone):
+all caught except one equivalent (two pushes into independent arrays).
+M01 is run after US-008 (nothing to install before); it also measures the
+real link lookup (stand-in until then).

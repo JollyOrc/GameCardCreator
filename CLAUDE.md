@@ -70,7 +70,7 @@ again at G1, G2 and G4: `scars/GATES.md`. Bootloader (rule 10): read all of
 npm run typecheck   # tsc --noEmit (strict)
 npm run build       # esbuild bundle -> main.js
 npm run lint        # eslint + prettier --check
-npm test            # vitest: unit tests (pure core)
+npm test            # vitest: unit, plugin and tooling tests
 npm run test:integration   # compiles sheets with Typst, reads the PDFs back
 ```
 

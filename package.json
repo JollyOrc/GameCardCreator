@@ -10,7 +10,7 @@
     "build": "tsc --noEmit && node esbuild.config.mjs",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
-    "test": "vitest run tests/unit",
+    "test": "vitest run tests/unit tests/plugin tests/tooling",
     "test:integration": "vitest run tests/integration"
   },
   "devDependencies": {
