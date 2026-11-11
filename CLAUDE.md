@@ -71,6 +71,7 @@ npm run typecheck   # tsc --noEmit (strict)
 npm run build       # esbuild bundle -> main.js
 npm run lint        # eslint + prettier --check
 npm test            # vitest: unit tests (pure core)
+npm run test:integration   # compiles sheets with Typst, reads the PDFs back
 ```
 
 All must pass. Versioning and release: `docs/process/release.md`.

@@ -1,8 +1,6 @@
 // US-001: cards on an A4 sheet. Every expected value below is taken from the
 // story's examples (docs/user-stories/US-001-sheet-layout.md), computed by
 // hand there, never from the code under test (SCAR-003).
-// The module under test, src/core/sheet/layout.ts, does not exist yet: this
-// file is red until ticket "sheet geometry" (see docs/technical/tests.md).
 import {describe, expect, it} from 'vitest';
 import {
   DEFAULT_SHEET,
@@ -321,15 +319,4 @@ describe('US-001 AC-10 (layout part): deterministic', () => {
     expect(placeCards(20, s({gap: 2}))).toEqual(placeCards(20, s({gap: 2})));
     expect(cutMarks(s())).toEqual(cutMarks(s()));
   });
-});
-
-// The PDF-level criteria need the Typst engine (a ticket with a spike first,
-// SCAR-024 / SCAR-045). They are listed here so no AC is without a test stub
-// (SCAR-003); each is replaced by a real test in its ticket.
-describe('US-001 PDF level (engine ticket)', () => {
-  it.todo('AC-9: pages are A4, 595.28 x 841.89 pt, read from the file');
-  it.todo('AC-9: card frames in the PDF are at the AC-1 positions to 0.1 mm');
-  it.todo('AC-9: position markers measured not to move the content (SCAR-028)');
-  it.todo('AC-9: page count of the PDF equals AC-5');
-  it.todo('AC-10: byte-identical PDF from two separate processes');
 });

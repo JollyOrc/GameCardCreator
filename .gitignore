@@ -10,3 +10,6 @@ releases/*.zip
 tests/fixtures/private-words.local.txt
 # private local instructions, never published
 CLAUDE.local.md
+
+# spikes are throw-away (SCAR-035: may hold measurements of real data)
+spikes/

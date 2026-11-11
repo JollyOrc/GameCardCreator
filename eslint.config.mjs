@@ -8,6 +8,7 @@ export default defineConfig(
     'main.js',
     // build output of build/release.mjs
     'dist/',
+    'spikes/',
 
     'releases/',
     'vitest.config.ts.timestamp-*',
