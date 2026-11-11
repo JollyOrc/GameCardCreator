@@ -25,3 +25,8 @@
   the card settings; `checkCardSettings` for the card part, `checkCardsSettings`
   for a command) and `run.ts` (`runCards`: the one place that turns notes into
   cards and a PDF).
+  Ticket #10 adds `confirm.ts` (the replace dialog's text and `dialogKey`, the
+  key rule) and, in `src/plugin/`, `disk-writer.ts` (the one writer),
+  `runner.ts` (every decision of a run, with injected dependencies) and
+  `commands.ts` (the deck command and the menu entry as plain objects over the
+  runner). `main.ts` (US-008) only builds the dependencies and registers them.

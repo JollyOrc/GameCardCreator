@@ -259,3 +259,25 @@ non-default spell tags property (no test: added), a compile message of several
 lines (added), several settings problems at once (added), and the dedicated
 "no cards" guard, which was dead code (the sheet refuses zero cards with the
 same message and never compiles): removed. All caught after the fixes.
+
+## Ticket #10 (2026-11-12)
+
+Gate as the ticket states: eslint 0, prettier 0, lint 0; unit and plugin tests
+372 passed (all of US-001 to US-003 and #8, #9 and the plugin files), integration
+57 (the PDF-level file of #11 excluded); typecheck red only in `us-005-run` and
+`us-005-run-cli`.
+
+Found at the ticket's review: the ticket promised a tested key rule for the
+confirmation (SCAR-013) and the G2 tests had none. `tests/unit/run-confirm.test.ts`
+(13 tests: the dialog text, Escape, Enter on the focused button, no action in a
+composition) was written before the code and `core/run/confirm.ts` follows it.
+
+First green run: 45 of 45 at once; assertions read again. Mutation check (50
+mutants over `confirm.ts`, `disk-writer.ts`, `runner.ts`, `commands.ts`, backup
+and checksum): six survived the first round and each was a real gap: nested
+folders and an empty folder from the writer, the deck's warnings ahead of the
+cards' in the file, a Windows output folder, an upper-case `MD` extension, the
+guard freed in `finally` (my script first could not match it: two lines alike).
+Two of my new tests polluted the shared vault map (a note added under `skills/`
+changed another test's folder listing): found at once, the test now deletes it.
+All caught after the fixes.

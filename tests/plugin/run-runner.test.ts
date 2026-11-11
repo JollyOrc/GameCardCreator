@@ -136,6 +136,28 @@ describe('US-005 AC-4, AC-8, AC-9: a run from a deck note', () => {
     const warnings = log.writes[1]![1];
     expect(warnings).toContain('- DECK_LINK_MISSING — Warn Deck.md — Gone\n');
   });
+  it("the deck's warnings come before the cards' in the file", async () => {
+    const {runner, log} = setup();
+    NOTES['skills/Pic.md'] = '---\ntags: []\n---\n![](pics/a.png)\n\nText.\n';
+    NOTES['Order Deck.md'] = '- [[Pic]]\n- [[Gone]]\n';
+    await runner.runDeck({path: 'Order Deck.md', name: 'Order Deck'});
+    const text = log.writes[1]![1];
+    expect(text.indexOf('DECK_LINK_MISSING')).toBeGreaterThan(0);
+    expect(text.indexOf('SKILL_IMAGE_OMITTED')).toBeGreaterThan(
+      text.indexOf('DECK_LINK_MISSING'),
+    );
+    delete NOTES['skills/Pic.md']; // the shared vault map stays as it was
+  });
+  it('a Windows output folder gets backslash paths', async () => {
+    const {runner, log} = setup({
+      settings: {...SETTINGS, outputFolder: 'C:\\out\\'},
+    });
+    await runner.runDeck({path: 'Opening Deck.md', name: 'Opening Deck'});
+    expect(log.writes.map((w) => w[0])).toEqual([
+      'C:\\out\\Opening Deck cards.pdf',
+      'C:\\out\\Opening Deck cards warnings.md',
+    ]);
+  });
   it('a run with no PDF writes nothing and shows the message', async () => {
     const {runner, log} = setup({pdf: null});
     await runner.runDeck({path: 'Opening Deck.md', name: 'Opening Deck'});
@@ -305,6 +327,9 @@ describe('US-005 AC-9: the commands (SCAR-022, SCAR-031)', () => {
       false,
     );
     expect(c.check(null)).toBe(false);
+    expect(c.check({path: 'Deck.MD', name: 'Deck', extension: 'MD'})).toBe(
+      true,
+    );
     expect(log).toMatchObject({settings: 0, reads: []});
     await c.run({
       path: 'Opening Deck.md',

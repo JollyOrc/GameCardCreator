@@ -7,6 +7,7 @@ import {
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  readdirSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
@@ -34,6 +35,18 @@ describe('US-005 AC-5: createDiskWriter', () => {
     expect(readFileSync(join(root, 'a cards warnings.md'), 'utf8')).toBe(
       'No warnings.\n',
     );
+  });
+  it('ensureFolder alone creates an empty folder, with its parents', async () => {
+    const root = join(base, 'a', 'b', 'c');
+    await createDiskWriter(root).ensureFolder();
+    expect(existsSync(root)).toBe(true);
+    expect(readdirSync(root)).toEqual([]);
+  });
+  it('a file below a folder that does not exist yet creates the folder', async () => {
+    const root = join(base, 'out');
+    const w = createDiskWriter(root);
+    await w.writeText(join(root, 'sub', 'deeper', 'x.md'), 'x');
+    expect(readFileSync(join(root, 'sub', 'deeper', 'x.md'), 'utf8')).toBe('x');
   });
   it('replaces a file of the same name', async () => {
     const w = createDiskWriter(base);
