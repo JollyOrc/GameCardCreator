@@ -119,7 +119,7 @@ backup and checksum): all caught; one first-round mutant was a syntax error
 (not a result) and was redone as a behaviour change; survivors led to tests
 for bold/italic/enum, the clip, the refused settings.
 
-## US-003 spell card (2026-11-11, G2): tests written, red until the code ticket
+## US-003 spell card (2026-11-11, G2): tests written, red until tickets #6 and #7
 
 | AC | Test | State |
 |---|---|---|
