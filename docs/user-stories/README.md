@@ -13,6 +13,6 @@ or its status changes.
 | US-003 | Spell card (full description, no picture) | Done (#6, #7); owner's look open |
 | US-004 | Creature card (statblock, behaviour, actions; no picture) | Draft, blocked on the owner's answers |
 | US-006 | Picture on the creature card (the `illustration` property, if there is room) | planned |
-| US-005 | Make cards from notes: the run, the commands, the output | Draft, D1 to D6 decided |
+| US-005 | Make cards from notes: the run, the commands, the output | Ready (tests written) |
 | US-007 | Settings screen | planned |
 | US-008 | Compile worker, build and release | planned |

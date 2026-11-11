@@ -191,3 +191,29 @@ px/mm: correct; hand-over `spikes/typst-sheet/spell-sheet.pdf` (sha256
 1af59ffa6cdd34f8...). Observation: paragraphs are separated by 0.6 em against
 0.5 em between lines, as the story says, so the extra gap is about 0.7 pt and
 hardly visible.
+
+## US-005 make cards from notes (2026-11-12, G2): tests written, red until the code tickets
+
+| AC | Test | State |
+|---|---|---|
+| AC-1 | `tests/unit/run-deck.test.ts` (link forms, exclusions, header and code, the plan with a stand-in resolver: missing, not a note, ambiguous, order) | written |
+| AC-2 | `tests/unit/run-kinds.test.ts` (`expandSelection`); `tests/plugin/run-runner.test.ts` (a folder, several choices) | written |
+| AC-3 | `run-kinds` (`kindOf` table, `checkKindRules`) | written |
+| AC-4 | `tests/unit/run-cards.test.ts` (the run with a stand-in compiler: order, unknown kind, unreadable note, warning order, fit facts, settings reach the reader and sheet, no cards, no PDF); `tests/integration/us-005-run.test.ts` (real compile) | written |
+| AC-5 | `tests/unit/run-output.test.ts` (`checkOutputFolder` table); `tests/plugin/run-disk-writer.test.ts` (real files); `tests/plugin/run-sources.test.ts` (one writer, no delete) | written |
+| AC-6 | `run-output` (names, run name) | written |
+| AC-7 | `run-runner` (ask once naming both files before any read; Cancel; no question without a file) | written |
+| AC-8 | `run-output` (the file's text); `us-005-run` (the composed file) | written |
+| AC-9 | `run-runner` (refusals before anything, busy guard, settings at run time, menu entries read nothing, the deck command); `tests/unit/run-settings.test.ts` | written |
+| AC-10 | `run-sources` (no vault write call, reading-only dependencies) | written |
+| AC-11 | `us-005-run` (two fresh processes) | written |
+| AC-12 | `us-005-run` (the composed deck) | written |
+| AC-13 | manual check on a generated scratch vault (with US-008) | pending |
+
+New support: `tests/support/run-fixtures.ts` (the composed vault, the runner's
+dependencies with the real compile, a recording writer), `us-005-run-cli.ts`.
+The modules the tests import do not exist before the tickets:
+`src/core/run/{deck,kinds,select,names,output,report,settings,run}.ts` and
+`src/plugin/{disk-writer,runner,commands}.ts`. The whole-tree typecheck is
+red only for these imports (SCAR-044); the 202 unit and 57 integration tests of
+US-001 to US-003 stay green.
