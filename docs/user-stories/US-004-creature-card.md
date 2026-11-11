@@ -2,8 +2,9 @@
 
 **Status:** Draft (G0 done 2026-11-11; the owner answered the control project's
 questions 2026-11-11: statblock through a new Obsidian2Typst API function, the
-contract written here once that story has its G1; drop-then-shrink rule). G1
-and the tests wait for the contract. Criteria marked *pending* depend on it.
+drop-then-shrink rule; the contract (AC-3) written 2026-11-11 and checked
+against Obsidian2Typst US-039 at its G1). G1 and the tests wait for that G1.
+Criteria marked *pending* depend on the owner's decisions.
 
 **As** a game master **I want** one creature per card — its statblock, its
 instincts and its attacks, a picture only if there is room — **so that** I can
@@ -89,13 +90,38 @@ Flattened reeds in a ring.
   have it); a section with a heading and no text gives no block and no
   warning. The example without its Actions section gives one warning; the
   example without its Signs section gives none.
-- **AC-3 (statblock, contract) — pending.** The statblock part of the card is
-  what Obsidian2Typst's API gives for the note's properties, drawn at the
-  text width (54 mm). Measured 2026-11-11 with that plugin's own code and
-  invented data: 36 mm tall (vigour 4, one attack) to 55 mm (vigour 35, four
-  attacks, skills, traits) at the preset's sizes; not measured: icons and
-  fonts. The contract (the shape of the API's answer) is written here once the
-  Obsidian2Typst story has its G1 (SCAR-040).
+- **AC-3 (statblock, the contract).** The statblock part of the card is what
+  Obsidian2Typst's API gives for the note's properties, drawn at the text width
+  (54 mm). The reader is this plugin; the writer's story is Obsidian2Typst
+  US-039 (SCAR-040). The contract, written here once:
+  - **Call.** `app.plugins.plugins["obsidian2typst"].api` with
+    `api.version === 1` and `typeof api.statblockTypst === "function"` and
+    `typeof api.compileFonts === "function"`; otherwise the creature card is
+    refused with a message naming the plugin and the least version (0.15.0);
+    no other card is affected.
+  - `api.statblockTypst(data, options?)`: `data` is the note's properties as
+    plain values (keys in any case), `options.heading` the band's text (the
+    note's file name). It returns `{ok: true, prelude, data, files, credit,
+    warnings}` or `{ok: false, reason, message}`.
+  - `prelude`: Typst definitions (the helper functions whose names start with
+    `o2t-`), the same text for every call, no content of the note.
+  - `data`: a Typst dictionary literal with the keys `band`, `look`, `boxes`,
+    `track`, `attributes`, `traits`, `attacks`, `skills`, `tags`, for
+    `#o2t-sb-box(data)`; `look.sizes` holds the pt sizes of the roles `band`,
+    `value`, `label`, `text`, `attacks`, `skills`; `look.fonts` the families by
+    role; a part without data is `none` (`skills: none`) or `()` (`attacks`).
+  - `files`: `{path, bytes}` for each icon the data names, at that Typst path.
+  - `credit`: the icons' credit text, or `null`.
+  - `warnings`: `{code, message}` of the data checks, once each.
+  - `api.compileFonts()`: the font files the book's export gives its compiler
+    (bundled first, then the vault's).
+  - The helper draws at the width of its container (`width: 100%`).
+  Measured 2026-11-11 with Obsidian2Typst's own code, invented data, no icon
+  files, Libertinus: 36 mm tall (vigour 4, one attack) to 55 mm (vigour 35,
+  four attacks, skills, traits) at 54 mm width; not measured: icons and the
+  preset's fonts in a card compile (the first ticket measures them).
+  Example (invented): the answer for the Fen Hare note above, whose `data`
+  starts `(band: "Fen Hare", look: (fill: ...`, and a `files` entry per icon.
 - **AC-4 (fit, the statblock scales) — numbers measured.** The statblock's
   sizes scale with the card's text size S (factor S / 7); the text is set at
   S; sizes are tried as in US-002 AC-5.
