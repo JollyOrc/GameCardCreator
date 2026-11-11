@@ -370,6 +370,27 @@ function propertyText(value: unknown): {text: string | null; list: boolean} {
   return {text: text === '' ? null : text, list: false};
 }
 
+/**
+ * US-002 AC-1, US-005 AC-1 (SCAR-017, SCAR-034): the one place that removes
+ * the header of a note. Line ends become `\n`; a header is `---` lines around
+ * YAML at the very start (a byte-order mark in front of it is allowed); a
+ * header without its closing line is content. Returns the header match (its
+ * group 1 is the YAML text, or null for none) and the body after it, without a
+ * byte-order mark.
+ */
+export function splitHeader(text: string): {
+  header: RegExpExecArray | null;
+  body: string;
+} {
+  const source = text.replace(/\r\n?/g, '\n');
+  const header = FRONT_MATTER.exec(source);
+  const afterHeader = header === null ? source : source.slice(header[0].length);
+  // A byte-order mark in front of a note without a header is not text.
+  const body =
+    afterHeader.charCodeAt(0) === 0xfeff ? afterHeader.slice(1) : afterHeader;
+  return {header, body};
+}
+
 /** US-003 D4: what differs between the kinds when a note is read. */
 export interface ReadConfig {
   /** The property that holds the tags. */
@@ -397,12 +418,7 @@ export function readText(
 ): {card: SkillCard; warnings: CardWarning[]} {
   const reading = new Reading(path, kind);
   const name = path.replace(/^.*[\\/]/, '').replace(/\.md$/i, '');
-  const source = text.replace(/\r\n?/g, '\n');
-  const header = FRONT_MATTER.exec(source);
-  const afterHeader = header === null ? source : source.slice(header[0].length);
-  // A byte-order mark in front of a note without a header is not text.
-  const body =
-    afterHeader.charCodeAt(0) === 0xfeff ? afterHeader.slice(1) : afterHeader;
+  const {header, body} = splitHeader(text);
 
   let entries: [string, unknown][] = [];
   if (header !== null) {

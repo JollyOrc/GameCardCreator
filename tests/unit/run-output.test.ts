@@ -92,6 +92,8 @@ describe('US-005 AC-6: the names', () => {
       ]),
     ).toBe('Cards');
     expect(runName([])).toBe('Cards');
+    expect(runName([{path: 'a/Skills/', isFolder: true}])).toBe('Skills');
+    expect(runName([{path: '/', isFolder: true}])).toBe('Cards');
   });
 });
 

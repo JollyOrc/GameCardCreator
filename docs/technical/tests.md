@@ -224,3 +224,22 @@ and `runCards` (`run-settings`, `run-cards`), #10 the plugin layer
 the manual check (`us-005-run`). Order: #8, #9, #10, #11. The whole-tree
 typecheck is green only after #11 (SCAR-044); each ticket names the errors
 that may remain.
+
+## Ticket #8 (2026-11-12)
+
+Gate as the ticket states: eslint 0, prettier 0, `npm run lint` 0; unit tests
+303 passed (US-001 to US-003 and the three files of this ticket: 101), the
+integration tests 57 passed; the whole-tree typecheck is red only in the files
+of later tickets (`run-cards`, `run-settings`, `run-runner`, `run-disk-writer`,
+`us-005-run`, `run-fixtures`, `us-005-run-cli`).
+
+First green run: all 94 tests passed at once, so each assertion was read again
+against its criterion. Mutation check (60 mutants over the six modules and the
+header refactor, backup and checksum): 52 caught at once; the survivors were
+read as "can the test input reach the code?": six real test gaps (escaped pipe,
+link title, angle form, tilde fences, case-only ties, trailing slash in a run
+name), one test that could not tell (the ambiguity stand-in never matched a path
+target: the stand-in now answers by name alone), two dead pieces of code
+removed (the second note filter in folder expansion, a `~` branch the
+"not absolute" check subsumes), one equivalent mutant (the fence-opening line);
+all caught or explained after the fixes.

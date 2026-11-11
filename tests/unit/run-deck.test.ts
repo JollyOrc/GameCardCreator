@@ -30,6 +30,11 @@ describe('US-005 AC-1: deckLinks', () => {
     ['[text](Name)', ['Name']],
     ['[img](pics/x.png)', ['pics/x.png']],
     ['a [[A]] b [[B]] c [t](C.md) d [[D]]', ['A', 'B', 'C', 'D']],
+    ['[[Name\\|alias]]', ['Name']],
+    ['[t](Name.md "A title")', ['Name']],
+    ["[t](Name.md 'A title')", ['Name']],
+    ['[t](<Folder X/Name.md>)', ['Folder X/Name']],
+    ['[t](<Folder X/Name.md#h> "T")', ['Folder X/Name']],
   ])('%s gives %j', (text, targets) => {
     expect(deckLinks(text)).toEqual(targets);
   });
@@ -44,6 +49,12 @@ describe('US-005 AC-1: deckLinks', () => {
     ['---\nrelated: "[[InHeader]]"\n---\n'],
   ])('%j is no link to a card', (text) => {
     expect(deckLinks(text)).toEqual([]);
+  });
+  it('a tilde fence is a code block too, and a backtick fence is not closed by a tilde line', () => {
+    expect(deckLinks('~~~\n[[InTilde]]\n~~~\n- [[Real]]\n')).toEqual(['Real']);
+    expect(
+      deckLinks(FENCE + '\n~~~\n[[StillCode]]\n' + FENCE + '\n- [[Real]]\n'),
+    ).toEqual(['Real']);
   });
   it('links after a code block and after the header still count', () => {
     const text = `---\nrelated: "[[InHeader]]"\n---\n${FENCE}\n[[Fenced]]\n${FENCE}\n- [[Real]]\n`;
@@ -72,7 +83,9 @@ function vault(files: string[], folders: string[] = []) {
         .sort();
       return named.length > 0 ? {path: named[0]!, isNote: true} : null;
     },
-    notesNamed: (name: string) => notes.filter((n) => base(n) === name).sort(),
+    // by the name alone, as the real lookup of a name: a path's last part
+    notesNamed: (name: string) =>
+      notes.filter((n) => base(n) === base(name)).sort(),
   };
 }
 

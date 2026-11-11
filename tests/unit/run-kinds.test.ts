@@ -118,6 +118,14 @@ describe('US-005 AC-2: expandSelection', () => {
     );
     expect(expandSelection([], below)).toEqual([]);
   });
+  it('names that differ only by case keep a fixed order (upper case first)', () => {
+    expect(
+      expandSelection([{path: 'x', isFolder: true}], () => [
+        'x/a.md',
+        'x/A.md',
+      ]),
+    ).toEqual(['x/A.md', 'x/a.md']);
+  });
   it('the same note chosen twice is one card', () => {
     expect(
       expandSelection(
