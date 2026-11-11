@@ -52,7 +52,7 @@ mutants: y flip, scale, closed, axis-aligned, both-closed) all caught after the
 open-path and slanted-shape tests were added; the first run let one survive.
 Times: each compile about 0.1 s; limit 30 s per test (SCAR-030).
 
-## US-002 skill card (2026-11-11, G2): tests written, red until ticket #3
+## US-002 skill card (2026-11-11, G2): tests written; red until tickets #3 and #4
 
 | AC | Test | State |
 |---|---|---|
@@ -73,8 +73,9 @@ Times: each compile about 0.1 s; limit 30 s per test (SCAR-030).
 Support code, tested against known Typst first (SCAR-028):
 `tests/integration/support-pdf.test.ts` (3 tests) for the copied PDF text
 reader (from Obsidian2Typst, MIT, same author) and the fact reader.
-The modules the tests import (`src/core/skill/{settings,read,fit,sheet}.ts`)
-do not exist before ticket #3: typecheck, `npm test` (3 skill files) and the
-skill integration file are red for exactly this reason (SCAR-044); the green
-set meanwhile: prettier, eslint, the 53 geometry tests, `sheet-pdf` and
-`support-pdf` integration tests.
+The modules the tests import do not exist before tickets #3 (settings,
+read, fit: the three unit files) and #4 (sheet, escape: the integration file
+and `skill-sheet-cli.ts`). Typecheck is red until #4 for exactly this reason
+(SCAR-044): after #3 its only errors are in those two files. The green set
+meanwhile: prettier, eslint, the 53 geometry tests, `sheet-pdf` and
+`support-pdf` integration tests; after #3 also the three unit files.
