@@ -309,3 +309,36 @@ Mutation check of the composed flow (9 mutants against `us-005-run` alone):
 all caught except one equivalent (two pushes into independent arrays).
 M01 is run after US-008 (nothing to install before); it also measures the
 real link lookup (stand-in until then).
+
+## US-008 the plugin inside Obsidian (2026-11-12, G2): tests written, red until the tickets
+
+| AC | Test | State |
+|---|---|---|
+| AC-1 | `tests/plugin/us-008-compiler.test.ts` (the worker core's PDF and facts equal the reference compile; a Typst error; compile before init) | written |
+| AC-2 | same file (no `fetch`/`XMLHttpRequest`; the embedded text decodes once, only when asked; invalid text refused; a failed decode retried) | written |
+| AC-3 | same file (one at a time; an error answers a message; a worker error restarts; a worker that cannot start; unload, including a worker still starting) | written |
+| AC-4 | `tests/unit/us-008-settings-file.test.ts` (defaults, merge, wrong types named, copies); `us-008-adapters` (the refusal names the file); `us-008-wiring` (no `saveData`) | written |
+| AC-5 | `us-008-adapters` (vault access, check callback, menus); `us-008-wiring` (main.ts only hands over) | written |
+| AC-6 | `us-008-adapters` (the modal: focus on Cancel, Escape, Enter on the focused button, composition, close = Cancel, first answer counts); `us-008-wiring` (keys by `dialogKey` only) | written |
+| AC-7 | `us-008-compiler` (nothing at creation; one worker, buffers handed once) | written |
+| AC-8 | `tests/tooling/us-008-build.test.ts` (licence report, allowed list, `argparse`) | written |
+| AC-9 | same file (test install: files, version, not a vault, data.json untouched, a second install) | written |
+| AC-10 | same file (`checkRelease`; the release script never publishes; the scripts exist) | written |
+| AC-11 | `us-008-wiring` (Node's file system only in the writer; manifest) | written |
+| AC-12 | manual check `M02` (compile in the author's Obsidian), written with the build tickets; M01 follows | pending |
+
+Support: `tests/support/fake-dom.ts` (an element that records children, listeners,
+focus and events: carries only what Obsidian's `createEl`, `addEventListener` and
+`focus` give).
+
+**Proven against a throwaway reference** of the worker core, the client and the
+codec (outside the repository, removed): 15 of 15 compiler tests pass; the
+first run showed that the unload test never reached its case (`dispose()` ran
+before any worker existed) and, once it did, that a worker still starting when
+the plugin unloads would never be terminated: the test now fails against a
+client without that check and passes with it. Not proven by a reference: the
+settings file, the adapters, the modal, the build functions (their tests are read
+assertion by assertion at the first green run).
+Five guards pass already (the manifest, no `saveData`, Node's file system only in
+the writer, the scripts' absence is not a pass: they are in the red set).
+The rest is red only for missing modules (66 failures, all "Cannot find module").
