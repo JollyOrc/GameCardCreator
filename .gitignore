@@ -1,0 +1,12 @@
+node_modules/
+dist/
+main.js
+*.log
+.DS_Store
+vitest.config.ts.timestamp-*
+# private, generated or local state (SCAR-035)
+docs/state/
+releases/*.zip
+tests/fixtures/private-words.local.txt
+# private local instructions, never published
+CLAUDE.local.md

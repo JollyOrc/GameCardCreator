@@ -1,0 +1,8 @@
+node_modules
+main.js
+package-lock.json
+releases
+scars
+docs
+*.md
+dist
