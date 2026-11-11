@@ -8,4 +8,8 @@ or its status changes.
 
 | Story | Title | Status |
 |---|---|---|
-| — | none written yet | — |
+| US-001 | Cards on an A4 sheet | Ready |
+| US-002 | Skill card (tags on top, full description, no picture) | planned |
+| US-003 | Spell card (full description, no picture) | planned |
+| US-004 | Creature card (statblock, instincts, attacks, picture if room) | planned |
+| US-005 | Choosing notes and creating the PDF (command, output location, settings) | planned |
