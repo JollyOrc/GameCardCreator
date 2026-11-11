@@ -79,7 +79,9 @@ describe('US-003 AC-1: the example spell on a card', () => {
         m.runsOf(0).find((r) => runText(r).includes(part))?.size;
       expect(sizeOf('Wizardry')).toBeCloseTo(5.6, 2);
       expect(sizeOf('Reed Whisper')).toBeCloseTo(9.1, 2);
-      expect(sizeOf('A thin')).toBeCloseTo(7, 2);
+      expect(
+        m.runsOf(0).find((r) => runText(r).trim() === 'A')?.size,
+      ).toBeCloseTo(7, 2);
       expect(m.facts).toEqual([{i: 0, size: 7, fits: true}]);
     },
     LIMIT,
@@ -118,6 +120,36 @@ describe('US-003 AC-5: the size follows the amount of text', () => {
       expect(fitWarnings(m.facts, cards)).toEqual([
         {code: 'SPELL_TEXT_OVERFLOW', path: 'spells/Long.md', detail: '5.5 pt'},
       ]);
+    },
+    LIMIT,
+  );
+});
+
+describe('US-003 AC-5: the fit loop is stable for spells (SCAR-021)', () => {
+  it(
+    '0 to 400 words in steps of 10: sizes never grow, overflow only at the top, no compiler warning',
+    async () => {
+      const counts = Array.from({length: 41}, (_, i) => i * 10);
+      const m = await makeSheet(
+        counts.map((n) => spell({blocks: n === 0 ? [] : words(n)})),
+      );
+      expect(m.facts).toHaveLength(41);
+      expect(m.diagnostics).toEqual([]);
+      const facts = [...m.facts].sort(
+        (a, b) => (a as {i: number}).i - (b as {i: number}).i,
+      ) as {i: number; size: number; fits: boolean}[];
+      facts.forEach((f, k) => expect(f.i).toBe(k));
+      for (let k = 1; k < facts.length; k++) {
+        expect(facts[k]!.size, `${counts[k]} words`).toBeLessThanOrEqual(
+          facts[k - 1]!.size,
+        );
+      }
+      const first = facts.findIndex((f) => !f.fits);
+      expect(first).toBeGreaterThan(0);
+      for (let k = first; k < facts.length; k++) {
+        expect(facts[k]!.fits).toBe(false);
+        expect(facts[k]!.size).toBe(5.5);
+      }
     },
     LIMIT,
   );

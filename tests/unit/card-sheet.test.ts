@@ -94,11 +94,7 @@ describe('US-003 #6: skillSheetTypst is the same sheet with the skill check adde
     });
     expect(r.ok).toBe(false);
     // the generic sheet knows nothing of properties: it makes the sheet
-    expect(
-      cardSheetTypst(cards, DEFAULT_SHEET, {
-        ...DEFAULT_SKILL,
-        kindProperty: 'timing',
-      }).ok,
-    ).toBe(true);
+    const clash = {...DEFAULT_SKILL, kindProperty: 'timing'};
+    expect(cardSheetTypst(cards, DEFAULT_SHEET, clash).ok).toBe(true);
   });
 });

@@ -119,7 +119,7 @@ backup and checksum): all caught; one first-round mutant was a syntax error
 (not a result) and was redone as a behaviour change; survivors led to tests
 for bold/italic/enum, the clip, the refused settings.
 
-## US-003 spell card (2026-11-11, G2): tests written, red until tickets #6 and #7
+## US-003 spell card (2026-11-11, G2): tests written (green since #6 and #7)
 
 | AC | Test | State |
 |---|---|---|
@@ -169,3 +169,25 @@ Mutation check (19 mutants, backup and checksum): all caught except two in
 nothing reads a spell until #7, so they are re-run there. Two tests were
 added after the first review found `cardSheetTypst` untested directly
 (`card-sheet`).
+
+## Ticket #7 (2026-11-11)
+
+Whole tree green: typecheck, build, lint, `npm test` 202 passed,
+`npm run test:integration` 57 passed (US-001 sheet 22, support 3, skill card
+19, spell card 13). New in #7: `src/core/spell/{settings,read}.ts`, and the
+stability sweep with spell cards (0 to 400 words in steps of 10, 41 facts,
+sizes never grow, no compiler diagnostic).
+
+First green run read against the criteria: three failures, all read as
+"test or code?": a doc comment in `spell/read.ts` contained the literal
+spell code and the AC-11 text check rightly flagged it (code: comment
+reworded); an excess-property type error in `card-sheet.test.ts` (test); a
+run lookup for `A thin` that the bold run splits (test: looks up the run `A`).
+
+Mutation check (9 mutants, backup and checksum): all caught, including the
+two that waited for a spell reader (`kind` of the card and of the reading).
+Look (AC-10): the mixed sheet at full page width and a spell card at 23.6
+px/mm: correct; hand-over `spikes/typst-sheet/spell-sheet.pdf` (sha256
+1af59ffa6cdd34f8...). Observation: paragraphs are separated by 0.6 em against
+0.5 em between lines, as the story says, so the extra gap is about 0.7 pt and
+hardly visible.
