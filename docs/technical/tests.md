@@ -6,18 +6,18 @@ Quality gates: see `CLAUDE.md`. Unit tests are in `tests/unit/`.
 
 | Story | AC | Test (`tests/unit/sheet-layout.test.ts`) | State |
 |---|---|---|---|
-| US-001 | AC-1 | `AC-1: default grid` (3 tests) | written, red until T1 (#1) |
-| US-001 | AC-2 | `AC-2: margin range` (5) | written, red until T1 (#1) |
-| US-001 | AC-3 | `AC-3: card size range` (5) | written, red until T1 (#1) |
-| US-001 | AC-4 | `AC-4: upright only` (3) | written, red until T1 (#1) |
-| US-001 | AC-5 | `AC-5: pages and order` (7) | written, red until T1 (#1) |
-| US-001 | AC-6 | `AC-6: gap` (2) | written, red until T1 (#1) |
-| US-001 | AC-7 | `AC-7: cut marks` (6) | written, red until T1 (#1) |
-| US-001 | AC-8 | `AC-8: sweep` (1, asserts 168 combinations) | written, red until T1 (#1) |
+| US-001 | AC-1 | `AC-1: default grid` (3 tests) | green (#1) (#1) |
+| US-001 | AC-2 | `AC-2: margin range` (5) | green (#1) (#1) |
+| US-001 | AC-3 | `AC-3: card size range` (5) | green (#1) (#1) |
+| US-001 | AC-4 | `AC-4: upright only` (3) | green (#1) (#1) |
+| US-001 | AC-5 | `AC-5: pages and order` (7) | green (#1) (#1) |
+| US-001 | AC-6 | `AC-6: gap` (2) | green (#1) (#1) |
+| US-001 | AC-7 | `AC-7: cut marks` (6) | green (#1) (#1) |
+| US-001 | AC-8 | `AC-8: sweep` (1, asserts 168 combinations) | green (#1) (#1) |
 | US-001 | AC-9 | `PDF level` (4 `todo`) | needs the engine ticket T2 (#2) |
 | US-001 | AC-10 | layout part (1) written; PDF part `todo` | #1 / #2 |
 | US-001 | AC-11 | manual look, full page width and 4x at the joins | manual check, with T2 |
-| US-001 | AC-12 | `AC-12: settings checked` (20) | written, red until T1 (#1) |
+| US-001 | AC-12 | `AC-12: settings checked` (20) | green (#1) (#1) |
 
 ## How the tests were proven (2026-11-11, G2)
 
@@ -31,12 +31,14 @@ cut-marks switch) all failed a test; the first try left the top and bottom
 omission mutants alive and led to the 62 x 143 example. The reference is not
 in the repository; the code ticket writes the real module.
 
-## Gate set while tests come before code (SCAR-006, SCAR-044)
+## Gate set (SCAR-006, SCAR-044)
 
-`tests/unit/sheet-layout.test.ts` imports `src/core/sheet/layout.ts`, which
-does not exist before ticket T1 (sheet geometry). Until T1 is done the whole
-tree checks `npm run typecheck`, `npm test` and `npm run lint` (type-aware
-rules) are red for exactly this reason, and for no other. The set that must be
-green meanwhile: `npx prettier --check .` and `npx eslint .` (no type check of
-the missing import). T1 closes the gap; no later ticket may be started with
-the gate red.
+Ticket #1 is done (2026-11-11): `npm run typecheck`, `npm run build`,
+`npm run lint` and `npm test` are green again (53 passed, 5 todo). The five
+`todo` tests (the PDF level, AC-9 and the PDF half of AC-10) belong to ticket
+#2 and are the only tests not yet real. Mutation check of the real module
+(2026-11-11): 17 mutants (centring, column and row count with gap, each of
+the four omission sides, the 3 mm boundary, reading order, the cut-marks
+switch, both range ends, the finite check, page count, the no-fit rule, both
+edge coordinates), all caught; the module was restored and proved equal to
+its checksum.
