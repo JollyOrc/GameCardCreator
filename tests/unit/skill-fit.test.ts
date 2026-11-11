@@ -52,6 +52,39 @@ describe('US-002 AC-6, AC-8: fit warnings', () => {
   it('no facts at all: every card is unknown', () => {
     expect(fitWarnings([], cards)).toHaveLength(3);
   });
+  it('the first valid fact of a card counts', () => {
+    const facts = [
+      {i: 0, size: 4, fits: false},
+      {i: 0, size: 7, fits: true},
+      {i: 1, size: 7, fits: true},
+      {i: 2, size: 7, fits: true},
+    ];
+    expect(fitWarnings(facts, cards)).toEqual([
+      {code: 'SKILL_TEXT_OVERFLOW', path: 's/A.md', detail: '4 pt'},
+    ]);
+  });
+  it('a fact whose fits is not a boolean, or is missing, is ignored', () => {
+    const facts: unknown[] = [
+      {i: 0, size: 7, fits: true},
+      {i: 1, size: 7, fits: 'no'},
+      {i: 2, size: 7},
+    ];
+    expect(fitWarnings(facts, cards).map((w) => [w.code, w.path])).toEqual([
+      ['SKILL_FIT_UNKNOWN', 's/B.md'],
+      ['SKILL_FIT_UNKNOWN', 's/C.md'],
+    ]);
+  });
+  it('a fact with a size that is not a finite number is ignored', () => {
+    const facts: unknown[] = [
+      {i: 0, size: 7, fits: true},
+      {i: 1, size: NaN, fits: false},
+      {i: 2, size: Infinity, fits: false},
+    ];
+    expect(fitWarnings(facts, cards).map((w) => [w.code, w.path])).toEqual([
+      ['SKILL_FIT_UNKNOWN', 's/B.md'],
+      ['SKILL_FIT_UNKNOWN', 's/C.md'],
+    ]);
+  });
   it('a malformed fact is ignored, its card is unknown', () => {
     const facts: unknown[] = [
       {i: 0, size: 7, fits: true},

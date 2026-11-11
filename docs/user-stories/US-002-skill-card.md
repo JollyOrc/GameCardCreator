@@ -102,7 +102,8 @@ named `Reed Sweep.md`.
   as a paragraph whose first words are the callout's title in bold; a rule.
   Not shown: images and embeds (`![](...)`, `![[...]]`): each gives the
   warning `SKILL_IMAGE_OMITTED` naming the note (D3). Anything else (a table,
-  HTML, another code block) is shown as its plain text lines, with the warning
+  HTML, another code block) is shown as its plain text lines (a table row is
+  one line, its cells joined by ` | `, the separator row left out), with the warning
   `SKILL_BLOCK_UNSUPPORTED` naming the note and the kind. The example
   description reads: `You sweep a reed staff low. Spend a success to knock an
   adjacent enemy prone.` then the two list items, with `reed staff` bold and
@@ -132,7 +133,11 @@ named `Reed Sweep.md`.
   bold text and link text: `#`, `$`, `*`, `_`, `@`, `<x>`, `\`, `` ` ``, `//`,
   `"`, `[`, `]`, and, at the start of a paragraph or item, `=`, `-`, `+`, `/`.
 - **AC-8 (problems are warnings, rule 8).** Each warning above names the
-  note's path; one failing card does not stop the others; the list of
+  note's path, and a note's warnings are in the order of its text: the
+  properties first (in the order they are written), then the description; a
+  front matter that is not valid YAML gives `SKILL_PROPERTIES_INVALID` (detail
+  `yaml`), is not shown, and the card is made from the description; one failing
+  card does not stop the others; the list of
   warnings is returned with the sheet, in card order. A note with nothing but a title (no tags, no
   details, no description) gives a card with its title only and
   `SKILL_EMPTY`. A card for which the compile reports no fit fact gets

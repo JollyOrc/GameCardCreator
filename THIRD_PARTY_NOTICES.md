@@ -11,6 +11,10 @@ and is completed with the licence texts when the first release bundles them
 | @myriaddreamin/typst.ts | 0.7.0 | Apache-2.0 |
 | @myriaddreamin/typst-ts-web-compiler | 0.7.0 | Apache-2.0 |
 | @myriaddreamin/typst-ts-renderer | 0.7.0 | Apache-2.0 |
+| yaml | 2.9.1 | ISC |
+| markdown-it | 15.0.3 | MIT |
+| entities | as locked | BSD-2-Clause |
+| linkify-it, mdurl, uc.micro, punycode.js | as locked | MIT |
 
 The two WebAssembly binaries are compiled from Rust code, including the Typst
 compiler (Apache-2.0) and its Rust dependencies; their licence texts are not

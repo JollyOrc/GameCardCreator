@@ -79,3 +79,19 @@ and `skill-sheet-cli.ts`). Typecheck is red until #4 for exactly this reason
 (SCAR-044): after #3 its only errors are in those two files. The green set
 meanwhile: prettier, eslint, the 53 geometry tests, `sheet-pdf` and
 `support-pdf` integration tests; after #3 also the three unit files.
+
+## Ticket #3 (2026-11-11)
+
+Unit tests: 147 passed (`skill-settings`, `skill-read`, `skill-fit`,
+`skill-source`). Integration: `sheet-pdf` and `support-pdf` 24 passed; the
+skill integration file waits for #4. Typecheck and build are red only for
+`src/core/skill/sheet` (two files, as the ticket says). Mutation check of
+`settings.ts`, `read.ts` and `fit.ts` (about 55 mutants over two rounds, backup
+and checksum before, `shasum -c` after): all caught except three
+equivalent ones, which were removed as dead code (the float epsilon in
+`textSizes`, the integer and sign checks of a fact's index) and one type-only
+check (`typeof size`, needed for narrowing). The first round let seven live:
+no test for the first valid fact, a non-boolean `fits`, a BOM before a note
+without a header, a closing line like `--- text`, an empty or bare `#` tag, a
+header that is a scalar or a list, and the table cell separator; tests were
+added for each.

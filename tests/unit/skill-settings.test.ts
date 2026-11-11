@@ -81,7 +81,7 @@ describe('US-002 AC-10: refused settings', () => {
     expect(checkSkillSettings(s({timingProperty: ' '}))).toHaveLength(1);
   });
   it('largest below smallest is refused', () => {
-    const issues = checkSkillSettings(s({maxSize: 5, minSize: 6}));
+    const issues = checkSkillSettings(s({maxSize: 6, minSize: 7}));
     expect(issues).toHaveLength(1);
     expect(issues[0]).toMatch(/largest/i);
   });

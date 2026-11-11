@@ -84,6 +84,15 @@ describe('US-002 AC-1: the header is removed once, before every rule (SCAR-034)'
     expect(card.tags).toEqual(['Field Craft']);
     expect(plain(card.blocks[0])).toBe('Text.');
   });
+  it('a byte-order mark before a note without a header is not text', () => {
+    const {card} = read('\uFEFFJust text.\n');
+    expect(plain(card.blocks[0])).toBe('Just text.');
+  });
+  it('a line that only starts with --- does not close the header', () => {
+    const {card} = read('---\ntags:\n  - A\n--- not closing\nText.\n');
+    expect(card.tags).toEqual([]);
+    expect(JSON.stringify(card.blocks)).toContain('Text.');
+  });
   it('CRLF line ends are read like LF', () => {
     const {card} = read(
       '---\r\ntags:\r\n  - Melee\r\n---\r\nOne.\r\n\r\nTwo.\r\n',
@@ -114,6 +123,25 @@ describe('US-002 AC-1: the header is removed once, before every rule (SCAR-034)'
   });
 });
 
+describe('US-002 AC-8: front matter that is not YAML', () => {
+  it('gives SKILL_PROPERTIES_INVALID, is not shown, and the card is made from the text', () => {
+    const r = read('---\ntags: [unclosed\nkind: x: y\n---\nText.\n');
+    expect(r.warnings).toEqual([
+      {code: 'SKILL_PROPERTIES_INVALID', path: PATH, detail: 'yaml'},
+    ]);
+    expect(r.card.tags).toEqual([]);
+    expect(r.card.blocks).toHaveLength(1);
+    expect(JSON.stringify(r.card.blocks)).not.toContain('unclosed');
+  });
+  it('property warnings come before description warnings', () => {
+    const r = read('---\nkind:\n  - a\n---\n![](x.png)\n\nText.\n');
+    expect(r.warnings.map((w) => w.code)).toEqual([
+      'SKILL_VALUE_NOT_TEXT',
+      'SKILL_IMAGE_OMITTED',
+    ]);
+  });
+});
+
 describe('US-002 AC-2: tag labels', () => {
   it.each([
     ['FieldCraft', 'Field Craft'],
@@ -137,6 +165,27 @@ describe('US-002 AC-2: tag labels', () => {
   });
   it('a string value is one tag', () => {
     expect(read('---\ntags: solo\n---\nx\n').card.tags).toEqual(['Solo']);
+  });
+});
+
+describe('US-002 AC-2, AC-8: tags and headers of other shapes', () => {
+  it('an empty tag and a bare # are not tags', () => {
+    const {card} = read('---\ntags:\n  - ""\n  - "#"\n  - Melee\n---\nx\n');
+    expect(card.tags).toEqual(['Melee']);
+  });
+  it('a header that is a scalar or a list is not a property list', () => {
+    for (const header of ['just words', '- a\n- b']) {
+      const r = read(`---\n${header}\n---\nText.\n`);
+      expect(r.warnings, header).toEqual([
+        {code: 'SKILL_PROPERTIES_INVALID', path: PATH, detail: 'yaml'},
+      ]);
+      expect(r.card.tags).toEqual([]);
+    }
+  });
+  it('an empty header is no problem', () => {
+    const r = read('---\n---\nText.\n');
+    expect(r.warnings).toEqual([]);
+    expect(plain(r.card.blocks[0])).toBe('Text.');
   });
 });
 
@@ -263,9 +312,7 @@ describe('US-002 AC-4: the description text', () => {
     expect(r.warnings).toEqual([
       {code: 'SKILL_BLOCK_UNSUPPORTED', path: PATH, detail: 'table'},
     ]);
-    const text = JSON.stringify(r.card.blocks);
-    expect(text).toContain('a');
-    expect(text).toContain('2');
+    expect(r.card.blocks.map(plain)).toEqual(['a | b', '1 | 2']);
   });
   it('html is shown as its text with SKILL_BLOCK_UNSUPPORTED html', () => {
     const r = body('<div>Inside</div>');
