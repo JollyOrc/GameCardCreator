@@ -118,3 +118,29 @@ Mutation check, emitter and escape (about 30 mutants over three rounds, with
 backup and checksum): all caught; one first-round mutant was a syntax error
 (not a result) and was redone as a behaviour change; survivors led to tests
 for bold/italic/enum, the clip, the refused settings.
+
+## US-003 spell card (2026-11-11, G2): tests written, red until the code ticket
+
+| AC | Test | State |
+|---|---|---|
+| AC-1 | `tests/unit/spell-read.test.ts` (example, other shapes); `spell-card-pdf` AC-1 (text order, sizes, no row) | written |
+| AC-2 | `spell-read` AC-2 (timing ignored: card equals the example card) | written |
+| AC-3 | `spell-read` AC-3 (links, lists, image, table, html, code, view block) | written |
+| AC-4 | `spell-read` AC-4; `card-codes` (fit warnings follow the kind) | written |
+| AC-5 | `spell-card-pdf` AC-5 (7 word counts, overflow warning) | written |
+| AC-6 | `spell-settings` (shared sizes, `checkSizes`); `spell-card-pdf` AC-6 | written |
+| AC-7 | `spell-card-pdf` AC-7 (mixed sheet: pages, order, containment, codes) | written |
+| AC-8 | `spell-card-pdf` AC-8 (39 literal-text cases) | written |
+| AC-9 | `spell-card-pdf` AC-9 (two fresh processes) | written |
+| AC-10 | manual look, with the code ticket | pending |
+| AC-11 | `card-codes` (cardCode; text check over all of `src/core`) | written |
+
+New support: `tests/support/card-sheet.ts` (one helper that compiles cards of
+any kind and cuts the text by card), `spell-fixtures.ts`, `spell-sheet-cli.ts`.
+The modules and exports the tests import do not exist before the tickets:
+`src/core/spell/{settings,read}.ts`, `src/core/card/{sheet,warning}.ts`,
+`DEFAULT_SIZES`, `checkSizes`, `CardSizes` in `skill/settings.ts`, and the
+optional `kind` of `SkillCard`. Typecheck is red until the tickets are done
+(SCAR-044); the US-001 and US-002 tests (161 unit + 44 integration, minus the
+new files) stay green and are re-run at every ticket (D4: the generalisation
+keeps them green).
