@@ -11,5 +11,6 @@ or its status changes.
 | US-001 | Cards on an A4 sheet | Done (#1, #2) |
 | US-002 | Skill card (tags on top, full description, no picture) | Done (#3, #4); owner's look open |
 | US-003 | Spell card (full description, no picture) | Done (#6, #7); owner's look open |
-| US-004 | Creature card (statblock, instincts, attacks, picture if room) | planned |
+| US-004 | Creature card (statblock, behaviour, actions; no picture) | Draft, blocked on the owner's answers |
+| US-006 | Picture on the creature card (the `illustration` property, if there is room) | planned |
 | US-005 | Choosing notes and creating the PDF (command, output location, settings) | planned |
