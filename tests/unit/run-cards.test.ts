@@ -186,6 +186,28 @@ describe('US-005 AC-4: the run', () => {
     expect(log.compile[0]).not.toContain('"Other"');
     expect(log.compile[0]).toContain('(6, 5.5, 5)');
   });
+  it('the spell settings reach the spell reader (a non-default tags property)', async () => {
+    const {d, log} = deps();
+    NOTES['spells/Labelled.md'] =
+      '---\nlabels:\n  - Wizardry\ntags:\n  - Other\n---\nText.\n';
+    const r = await runCards(
+      ['spells/Labelled.md'],
+      {...settings, spell: {tagsProperty: 'labels'}},
+      d,
+    );
+    if (!r.ok) throw new Error(r.message);
+    expect(log.compile[0]).toContain('"Wizardry"');
+    expect(log.compile[0]).not.toContain('"Other"');
+  });
+  it('a compile message of several lines is cut at its first line', async () => {
+    const {d} = deps({
+      pdf: null,
+      message:
+        'main.typ:3:1: error: first\n  trace line two\n  trace line three',
+    });
+    const r = await runCards(['skills/Plain.md'], settings, d);
+    expect(r).toMatchObject({ok: false, message: 'main.typ:3:1: error: first'});
+  });
   it('no cards: no compile, no file, the message', async () => {
     const {d, log} = deps();
     const r = await runCards(['misc/Loose.md'], settings, d);
@@ -204,6 +226,23 @@ describe('US-005 AC-4: the run', () => {
     const r = await runCards(['skills/Plain.md'], settings, d);
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.message).toContain('unclosed delimiter');
+  });
+  it('every settings problem is in the message, not only the first', async () => {
+    const {d} = deps();
+    const r = await runCards(
+      ['skills/Plain.md'],
+      {
+        ...settings,
+        sheet: {...settings.sheet, margin: 51},
+        skill: {...settings.skill, kindProperty: 'timing'},
+      },
+      d,
+    );
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.message).toMatch(/margin/i);
+      expect(r.message).toMatch(/timing/);
+    }
   });
   it('invalid card settings are refused before any read', async () => {
     const {d, log} = deps();

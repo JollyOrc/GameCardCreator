@@ -243,3 +243,19 @@ target: the stand-in now answers by name alone), two dead pieces of code
 removed (the second note filter in folder expansion, a `~` branch the
 "not absolute" check subsumes), one equivalent mutant (the fence-opening line);
 all caught or explained after the fixes.
+
+## Ticket #9 (2026-11-12)
+
+Gate as the ticket states: eslint 0, prettier 0, lint 0; unit tests 323 passed
+(US-001 to US-003, #8 and the two files of this ticket: 20), integration 57;
+the whole-tree typecheck is red only in `run-runner`, `run-disk-writer`,
+`us-005-run` and `us-005-run-cli` (the plugin ticket's modules).
+
+First green run: 17 of 17 at once; assertions read again. Mutation check
+(32 mutants over `settings.ts` and `run.ts`, backup and checksum): the first
+round left four alive; each read as "can the input reach the code?": the guard
+before any read (a formatting mismatch of my script, retried: caught), a
+non-default spell tags property (no test: added), a compile message of several
+lines (added), several settings problems at once (added), and the dedicated
+"no cards" guard, which was dead code (the sheet refuses zero cards with the
+same message and never compiles): removed. All caught after the fixes.

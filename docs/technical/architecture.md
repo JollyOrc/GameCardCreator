@@ -21,3 +21,7 @@
   selection), `names.ts` (file names), `output.ts` (the output folder),
   `report.ts` (the warnings file's text). The one reader of a note's header is
   `splitHeader` in `skill/read.ts`, used by the note reader and by `deckLinks`.
+  Ticket #9 adds `settings.ts` (`CardsSettings`: kind rules, output folder and
+  the card settings; `checkCardSettings` for the card part, `checkCardsSettings`
+  for a command) and `run.ts` (`runCards`: the one place that turns notes into
+  cards and a PDF).
