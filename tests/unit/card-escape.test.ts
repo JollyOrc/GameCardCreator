@@ -26,7 +26,8 @@ describe('US-002 AC-7: typstString', () => {
 
 describe('US-002 AC-7: the emitter writes user text only through typstString', () => {
   const source = readFileSync(
-    join(process.cwd(), 'src', 'core', 'skill', 'sheet.ts'),
+    // The builder moved from skill/sheet.ts to card/sheet.ts (US-003 #6).
+    join(process.cwd(), 'src', 'core', 'card', 'sheet.ts'),
     'utf8',
   );
   const code = source

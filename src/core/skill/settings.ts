@@ -1,8 +1,26 @@
 // US-002 AC-5, AC-10: the settings of the skill card, their check and the
 // text sizes that are tried. Pure; messages are returned, never reported.
 
+/**
+ * US-003 AC-6 (D2): the size settings that every kind of text card shares.
+ * `maxSize` 5.5 to 10 pt, `minSize` 4 to 10 pt (not above the largest),
+ * `sizeStep` 0.05 to 1 pt.
+ */
+export interface CardSizes {
+  maxSize: number;
+  minSize: number;
+  sizeStep: number;
+}
+
+/** US-003 AC-6: the shared defaults, as the skill card had them. */
+export const DEFAULT_SIZES: Readonly<CardSizes> = Object.freeze({
+  maxSize: 7,
+  minSize: 5.5,
+  sizeStep: 0.25,
+});
+
 /** US-002 settings table: property names, labels and the size range. */
-export interface SkillSettings {
+export interface SkillSettings extends CardSizes {
   tagsProperty: string;
   timingProperty: string;
   timingLabel: string;
@@ -10,12 +28,6 @@ export interface SkillSettings {
   kindLabel: string;
   requiresProperty: string;
   requiresLabel: string;
-  /** Largest text size in pt, 5.5 to 10. */
-  maxSize: number;
-  /** Smallest text size in pt, 4 to the largest. */
-  minSize: number;
-  /** Step between the sizes in pt, 0.05 to 1. */
-  sizeStep: number;
 }
 
 /** US-002 settings table: the defaults (invented names, D1). */
@@ -27,13 +39,39 @@ export const DEFAULT_SKILL: Readonly<SkillSettings> = Object.freeze({
   kindLabel: 'Type',
   requiresProperty: 'requires',
   requiresLabel: 'Requires',
-  maxSize: 7,
-  minSize: 5.5,
-  sizeStep: 0.25,
+  ...DEFAULT_SIZES,
 });
 
 /** Rounds to 1e-4 pt, which removes floating-point dust from sizes. */
 const round = (value: number): number => Math.round(value * 1e4) / 1e4;
+
+/**
+ * US-003 AC-6, US-002 AC-10: checks the size settings; one message per
+ * problem, empty when they are valid. "Largest below smallest" is checked only
+ * when both are in range, so one mistake gives one message.
+ */
+export function checkSizes(sizes: CardSizes): string[] {
+  const issues: string[] = [];
+  const inRange = (value: number, low: number, high: number): boolean =>
+    Number.isFinite(value) && value >= low && value <= high;
+  const largestOk = inRange(sizes.maxSize, 5.5, 10);
+  const smallestOk = inRange(sizes.minSize, 4, 10);
+  if (!largestOk) {
+    issues.push(`The largest size ${sizes.maxSize} is outside 5.5 to 10 pt`);
+  }
+  if (!smallestOk) {
+    issues.push(`The smallest size ${sizes.minSize} is outside 4 to 10 pt`);
+  }
+  if (!inRange(sizes.sizeStep, 0.05, 1)) {
+    issues.push(`The size step ${sizes.sizeStep} is outside 0.05 to 1 pt`);
+  }
+  if (largestOk && smallestOk && sizes.maxSize < sizes.minSize) {
+    issues.push(
+      `The largest size ${sizes.maxSize} is below the smallest size ${sizes.minSize}`,
+    );
+  }
+  return issues;
+}
 
 /**
  * US-002 AC-10: checks the settings; one message per problem, empty when the
@@ -69,24 +107,7 @@ export function checkSkillSettings(settings: SkillSettings): string[] {
     }
   }
 
-  const inRange = (value: number, low: number, high: number): boolean =>
-    Number.isFinite(value) && value >= low && value <= high;
-  const largestOk = inRange(settings.maxSize, 5.5, 10);
-  const smallestOk = inRange(settings.minSize, 4, 10);
-  if (!largestOk) {
-    issues.push(`The largest size ${settings.maxSize} is outside 5.5 to 10 pt`);
-  }
-  if (!smallestOk) {
-    issues.push(`The smallest size ${settings.minSize} is outside 4 to 10 pt`);
-  }
-  if (!inRange(settings.sizeStep, 0.05, 1)) {
-    issues.push(`The size step ${settings.sizeStep} is outside 0.05 to 1 pt`);
-  }
-  if (largestOk && smallestOk && settings.maxSize < settings.minSize) {
-    issues.push(
-      `The largest size ${settings.maxSize} is below the smallest size ${settings.minSize}`,
-    );
-  }
+  issues.push(...checkSizes(settings));
   return issues;
 }
 
@@ -96,12 +117,12 @@ export function checkSkillSettings(settings: SkillSettings): string[] {
  * itself as the last one (always). Assumes valid settings. Defaults: 7, 6.75,
  * 6.5, 6.25, 6, 5.75, 5.5.
  */
-export function textSizes(settings: SkillSettings): number[] {
-  const {maxSize, minSize, sizeStep} = settings;
+export function textSizes(sizes: CardSizes): number[] {
+  const {maxSize, minSize, sizeStep} = sizes;
   // Float dust may lose the last step; the smallest size is added below anyway.
   const steps = Math.floor((maxSize - minSize) / sizeStep);
-  const sizes: number[] = [];
-  for (let k = 0; k <= steps; k++) sizes.push(round(maxSize - k * sizeStep));
-  if (sizes[sizes.length - 1] !== round(minSize)) sizes.push(round(minSize));
-  return sizes;
+  const list: number[] = [];
+  for (let k = 0; k <= steps; k++) list.push(round(maxSize - k * sizeStep));
+  if (list[list.length - 1] !== round(minSize)) list.push(round(minSize));
+  return list;
 }

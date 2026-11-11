@@ -144,3 +144,28 @@ optional `kind` of `SkillCard`. Typecheck is red until the tickets are done
 (SCAR-044); the US-001 and US-002 tests (161 unit + 44 integration, minus the
 new files) stay green and are re-run at every ticket (D4: the generalisation
 keeps them green).
+
+## Ticket #6 (2026-11-11)
+
+Gate as the ticket states: eslint 0, prettier 0, `npm test` 177 passed (the 8
+unit files that do not import `src/core/spell/*`, among them the new
+`card-codes` 9 and `card-sheet` 7), `test:integration` 44 passed (the spell
+integration file excluded: it needs #7). Typecheck is red only in
+`spell-read`, `spell-settings`, `spell-card-pdf` and `spell-sheet-cli`
+(missing `src/core/spell/*`), as stated. All US-001 and US-002 tests pass
+unchanged.
+
+SCAR-017 grep (done before writing code): `SKILL_` was in `skill/read.ts` (9
+warning calls, 2 comments) and `skill/fit.ts` (2 codes, 2 comments): all go
+through `cardCode`; users of `skillSheetTypst`, `SkillSettings`,
+`checkSkillSettings`, `textSizes`, `DEFAULT_SKILL`: `skill/{read,settings,
+sheet}.ts`, the US-002 tests, `skill-sheet-cli`, `spell-sheet-cli`,
+`spell-settings`. SCAR-023 guards that pin moved code: `card-escape` read
+`skill/sheet.ts`; re-pointed to `card/sheet.ts` with the reason in the file;
+`skill-source` still holds (the reader stays in `skill/read.ts`).
+
+Mutation check (19 mutants, backup and checksum): all caught except two in
+`readText` (the `kind` field of the card, and the kind of the `Reading`):
+nothing reads a spell until #7, so they are re-run there. Two tests were
+added after the first review found `cardSheetTypst` untested directly
+(`card-sheet`).

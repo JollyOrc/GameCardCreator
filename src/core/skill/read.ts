@@ -4,6 +4,7 @@
 // warnings are returned, never reported (SCAR-038).
 import MarkdownIt from 'markdown-it';
 import {parseDocument} from 'yaml';
+import {cardCode, type CardKind} from '../card/warning';
 import type {SkillSettings} from './settings';
 
 /** US-002 AC-4: a stretch of text with its formatting; flags only when set. */
@@ -28,6 +29,8 @@ export interface CardWarning {
 
 /** US-002 "The card": what a skill card shows. */
 export interface SkillCard {
+  /** US-003: the kind of card; none means a skill card. */
+  kind?: CardKind;
   path: string;
   name: string;
   /** Tag labels as shown (AC-2). */
@@ -79,9 +82,17 @@ function linkText(value: string): string {
 /** Collects the pieces of one note's reading; the warnings keep their order. */
 class Reading {
   readonly warnings: CardWarning[] = [];
-  constructor(readonly path: string) {}
-  warn(code: string, detail: string): void {
-    this.warnings.push({code, path: this.path, detail});
+  constructor(
+    readonly path: string,
+    readonly kind: CardKind,
+  ) {}
+  /** Adds the warning `name` of this note's kind (`cardCode`, AC-11). */
+  warn(name: string, detail: string): void {
+    this.warnings.push({
+      code: cardCode(this.kind, name),
+      path: this.path,
+      detail,
+    });
   }
 }
 
@@ -115,8 +126,8 @@ function asWritten(src: string): string {
 
 /**
  * US-002 AC-4: the runs of inline tokens. Images and embeds are omitted with
- * `SKILL_IMAGE_OMITTED`, links keep their text, inline HTML is dropped with
- * `SKILL_BLOCK_UNSUPPORTED`. `allBold` makes every run bold (headings, a
+ * the image-omitted warning, links keep their text, inline HTML is dropped with
+ * the block-unsupported warning. `allBold` makes every run bold (headings, a
  * callout's title).
  */
 function inlineRuns(
@@ -135,7 +146,7 @@ function inlineRuns(
         let from = 0;
         for (const m of child.content.matchAll(WIKILINK)) {
           add(child.content.slice(from, m.index));
-          if (m[1] === '!') reading.warn('SKILL_IMAGE_OMITTED', m[2] ?? '');
+          if (m[1] === '!') reading.warn('IMAGE_OMITTED', m[2] ?? '');
           else add(m[3] !== undefined && m[3] !== '' ? m[3] : (m[2] ?? ''));
           from = m.index + m[0].length;
         }
@@ -163,12 +174,12 @@ function inlineRuns(
         break;
       case 'image':
         reading.warn(
-          'SKILL_IMAGE_OMITTED',
+          'IMAGE_OMITTED',
           asWritten(String(child.attrGet('src') ?? '')),
         );
         break;
       case 'html_inline':
-        reading.warn('SKILL_BLOCK_UNSUPPORTED', 'html');
+        reading.warn('BLOCK_UNSUPPORTED', 'html');
         break;
       default:
         break;
@@ -245,12 +256,12 @@ class BlockBuilder {
         case 'code_block': {
           const language = (token.info ?? '').trim().split(/\s+/)[0] ?? '';
           if (language === 'dataview' || language === 'dataviewjs') break;
-          this.reading.warn('SKILL_BLOCK_UNSUPPORTED', 'code');
+          this.reading.warn('BLOCK_UNSUPPORTED', 'code');
           out.push(...this.lines(token.content));
           break;
         }
         case 'html_block':
-          this.reading.warn('SKILL_BLOCK_UNSUPPORTED', 'html');
+          this.reading.warn('BLOCK_UNSUPPORTED', 'html');
           out.push(...this.lines(token.content.replace(/<[^>]*>/g, '')));
           break;
         case 'table_open':
@@ -326,7 +337,7 @@ class BlockBuilder {
 
   /** A table as plain rows (cells joined by ` | `), with the warning. */
   private table(): Block[] {
-    this.reading.warn('SKILL_BLOCK_UNSUPPORTED', 'table');
+    this.reading.warn('BLOCK_UNSUPPORTED', 'table');
     const rows: Block[] = [];
     let cells: string[] = [];
     while (this.pos < this.tokens.length) {
@@ -359,21 +370,32 @@ function propertyText(value: unknown): {text: string | null; list: boolean} {
   return {text: text === '' ? null : text, list: false};
 }
 
+/** US-003 D4: what differs between the kinds when a note is read. */
+export interface ReadConfig {
+  /** The property that holds the tags. */
+  tagsProperty: string;
+  /** The details row: property name and label, in the order shown (none: no row). */
+  rows: readonly (readonly [string, string])[];
+}
+
 /**
- * US-002 AC-1 to AC-4, AC-8, AC-9, AC-10: reads a skill note into its card.
+ * US-002 AC-1 to AC-4, AC-8, AC-9, AC-10, US-003 AC-1 to AC-4: reads a note of
+ * `kind` into its card; the one reader of a skill or spell note.
  *
  * The title is the file name without `.md`. The header is removed once (a
  * header without its closing line is content, a BOM and CRLF are read), the
- * properties are read with the names of `settings` (case ignored), and the
- * description is read as the blocks of the story. Warnings are returned in
- * the order of the note's text: properties first, then the description.
+ * properties are read with the names of `config` (case ignored), and the
+ * description is read as the blocks of the story. Warnings carry the code of
+ * the kind (`cardCode`) and are returned in the order of the note's text:
+ * properties first, then the description.
  */
-export function readSkill(
+export function readText(
+  kind: CardKind,
   path: string,
   text: string,
-  settings: SkillSettings,
+  config: ReadConfig,
 ): {card: SkillCard; warnings: CardWarning[]} {
-  const reading = new Reading(path);
+  const reading = new Reading(path, kind);
   const name = path.replace(/^.*[\\/]/, '').replace(/\.md$/i, '');
   const source = text.replace(/\r\n?/g, '\n');
   const header = FRONT_MATTER.exec(source);
@@ -388,7 +410,7 @@ export function readSkill(
     const data: unknown = doc.errors.length === 0 ? doc.toJS() : undefined;
     // `undefined` (a YAML error) is not an object either, so it is invalid too.
     if (data !== null && (typeof data !== 'object' || Array.isArray(data))) {
-      reading.warn('SKILL_PROPERTIES_INVALID', 'yaml');
+      reading.warn('PROPERTIES_INVALID', 'yaml');
     } else if (data !== null) {
       entries = Object.entries(data as Record<string, unknown>);
     }
@@ -398,7 +420,7 @@ export function readSkill(
       ([key]) => key.trim().toLowerCase() === property.trim().toLowerCase(),
     );
 
-  const tagsValue = find(settings.tagsProperty)?.[1];
+  const tagsValue = find(config.tagsProperty)?.[1];
   const rawTags = Array.isArray(tagsValue)
     ? tagsValue
     : tagsValue === undefined
@@ -412,11 +434,7 @@ export function readSkill(
     .filter((t) => t !== '' && t !== '#')
     .map(tagLabel);
 
-  const rows: [string, string][] = [
-    [settings.timingProperty, settings.timingLabel],
-    [settings.kindProperty, settings.kindLabel],
-    [settings.requiresProperty, settings.requiresLabel],
-  ];
+  const rows = config.rows;
   const shown = new Map<string, string>();
   const notText: string[] = [];
   for (const [property] of rows) {
@@ -428,7 +446,7 @@ export function readSkill(
   }
   // Warnings in the order the properties are written.
   for (const [key] of entries) {
-    if (notText.includes(key)) reading.warn('SKILL_VALUE_NOT_TEXT', key);
+    if (notText.includes(key)) reading.warn('VALUE_NOT_TEXT', key);
   }
   const details = rows.flatMap(([property, label]) => {
     const value = shown.get(property);
@@ -437,10 +455,30 @@ export function readSkill(
 
   const blocks = new BlockBuilder(markdown.parse(body, {}), reading).blocks();
   if (tags.length === 0 && details.length === 0 && blocks.length === 0) {
-    reading.warn('SKILL_EMPTY', '');
+    reading.warn('EMPTY', '');
   }
   return {
-    card: {path, name, tags, details, blocks},
+    card: {kind, path, name, tags, details, blocks},
     warnings: reading.warnings,
   };
+}
+
+/**
+ * US-002 AC-1 to AC-4, AC-8, AC-9, AC-10: reads a skill note into its card
+ * (`readText` with the skill's properties: tags, then timing, kind and
+ * requires as the details row).
+ */
+export function readSkill(
+  path: string,
+  text: string,
+  settings: SkillSettings,
+): {card: SkillCard; warnings: CardWarning[]} {
+  return readText('skill', path, text, {
+    tagsProperty: settings.tagsProperty,
+    rows: [
+      [settings.timingProperty, settings.timingLabel],
+      [settings.kindProperty, settings.kindLabel],
+      [settings.requiresProperty, settings.requiresLabel],
+    ],
+  });
 }
