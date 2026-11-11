@@ -76,22 +76,28 @@ export async function compilePdf(source: string): Promise<Uint8Array> {
 export async function compileWithFacts(
   source: string,
   label: string,
-): Promise<{pdf: Uint8Array; facts: unknown[]}> {
+): Promise<{pdf: Uint8Array; facts: unknown[]; diagnostics: unknown[]}> {
   const pdf = await compilePdf(source);
   const t = typst();
   const path = `/sheet-${counter - 1}.typ`; // the file compilePdf just added
   const compiler = await t.getCompiler();
-  const facts = await compiler.runWithWorld(
+  const read = await compiler.runWithWorld(
     {mainFilePath: path},
     async (world) => {
-      await world.compile({diagnostics: 'unix'});
+      const compiled = (await world.compile({diagnostics: 'unix'})) as {
+        diagnostics?: unknown;
+      } | null;
       const out: unknown = await world.query({
         selector: `<${label}>`,
         field: 'value',
       });
       const values: unknown = typeof out === 'string' ? JSON.parse(out) : out;
-      return Array.isArray(values) ? values : [];
+      const diagnostics = compiled?.diagnostics;
+      return {
+        facts: Array.isArray(values) ? values : [],
+        diagnostics: Array.isArray(diagnostics) ? diagnostics : [],
+      };
     },
   );
-  return {pdf, facts};
+  return {pdf, ...read};
 }

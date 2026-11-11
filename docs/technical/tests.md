@@ -52,7 +52,7 @@ mutants: y flip, scale, closed, axis-aligned, both-closed) all caught after the
 open-path and slanted-shape tests were added; the first run let one survive.
 Times: each compile about 0.1 s; limit 30 s per test (SCAR-030).
 
-## US-002 skill card (2026-11-11, G2): tests written; red until tickets #3 and #4
+## US-002 skill card (2026-11-11, G2): tests written (green since #3 and #4)
 
 | AC | Test | State |
 |---|---|---|
@@ -95,3 +95,26 @@ no test for the first valid fact, a non-boolean `fits`, a BOM before a note
 without a header, a closing line like `--- text`, an empty or bare `#` tag, a
 header that is a scalar or a list, and the table cell separator; tests were
 added for each.
+
+## Ticket #4 (2026-11-11)
+
+Whole tree green: typecheck, build, lint, `npm test` 161 passed,
+`npm run test:integration` 44 passed (US-001 sheet 22, support 3, skill card
+19). New in #4: `card-escape` unit tests (14, incl. the text check that user
+text reaches the emitter only through `typstString`), the fit-loop sweep
+(0 to 400 words in steps of 10: 41 facts, sizes never grow, overflow only at
+the top, no compiler diagnostic: SCAR-021), the clip box of the text area,
+the source test for bold, italic, lists and refused settings.
+
+Found by running: (1) the story's 200-word size (5.75 pt) was measured with
+filled tag chips; the story's own layout gives 6 pt, checked by an independent
+spike run and by the emitter; story and test corrected; (2) the test fixture
+lacked the tags and details row of the measured card; (3) the support PDF
+reader counted a clip box as a frame (fixed, tested on a clipped block, and
+it now reports clip boxes); (4) the determinism harness needed a
+`createRequire` banner for esbuild's ESM bundle.
+
+Mutation check, emitter and escape (about 30 mutants over three rounds, with
+backup and checksum): all caught; one first-round mutant was a syntax error
+(not a result) and was redone as a behaviour change; survivors led to tests
+for bold/italic/enum, the clip, the refused settings.

@@ -98,6 +98,21 @@ describe(
       );
       expect([p!.frames.length, p!.lines.length]).toEqual([0, 0]);
     });
+    it('a clip box around a stroked frame is not a second frame', async () => {
+      const [p] = readSheet(
+        await compilePdf(
+          doc(
+            '#place(top + left, dx: 10mm, dy: 20mm, block(width: 30mm, height: 40mm, clip: true, rect(width: 30mm, height: 40mm, stroke: 0.2pt)))',
+          ),
+        ),
+      );
+      expect(p!.frames).toHaveLength(1);
+      expect(p!.clips).toHaveLength(1);
+      const c = p!.clips[0]!;
+      expect([c.x, c.y, c.w, c.h].map((v) => +v.toFixed(2))).toEqual([
+        10, 20, 30, 40,
+      ]);
+    });
     it('guard: an empty page reads as no frames and no lines (the blank result)', async () => {
       const [p] = readSheet(await compilePdf(doc('#[]')));
       expect([p!.frames.length, p!.lines.length]).toEqual([0, 0]);

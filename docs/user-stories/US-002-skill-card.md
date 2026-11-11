@@ -116,9 +116,11 @@ named `Reed Sweep.md`.
   largest size at which everything fits the text area is used (measured in
   Typst with `measure`, one compile; the size and whether it fits are read
   back from the compile, label `gcc-fit`). Measured 2026-11-11 with the layout
-  above, invented words of 6.7 letters on average (harsher than the real
+  above (first with filled tag chips, which gave 5.75 pt for 200 words; corrected
+  at ticket #4 with the plain tags of this layout, by the spike and by the
+  emitter alike), invented words of 6.7 letters on average (harsher than the real
   notes), paragraphs of 35 words: 40, 80, 115 and 140 words use 7 pt; 160
-  words use 6.25 pt; 200 words use 5.75 pt; 250 words do not fit at 5.5 pt
+  words use 6.25 pt; 200 words use 6 pt; 250 words do not fit at 5.5 pt
   (AC-6). The sizes tried at the defaults are 7, 6.75, 6.5, 6.25, 6, 5.75,
   5.5. Scope: this layout and this text; a note with longer paragraphs or
   lists may differ (the tests use the same fixture).

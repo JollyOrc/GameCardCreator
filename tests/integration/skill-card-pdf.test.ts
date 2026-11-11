@@ -37,6 +37,19 @@ const mk = (over: Partial<SkillCard> = {}): SkillCard => ({
 });
 const words = (n: number): Block[] => inventedParagraphs(n).map(para);
 
+/** A card shaped like the measured one: two tags, title, details row (story AC-5). */
+const measured = (over: Partial<SkillCard> = {}): SkillCard =>
+  mk({
+    name: 'Reed Sweep',
+    tags: ['Field Craft', 'Melee'],
+    details: [
+      {label: 'Time', value: 'action'},
+      {label: 'Type', value: 'attack'},
+      {label: 'Requires', value: 'Basket Knots'},
+    ],
+    ...over,
+  });
+
 /** Compiles cards onto a sheet; returns the pages' runs and the fit facts. */
 async function make(
   cards: SkillCard[],
@@ -69,6 +82,48 @@ async function make(
     textOf: (i: number) => textOf(runsOf(i)),
   };
 }
+
+describe('US-002 AC-4, AC-10: the source the emitter writes', () => {
+  const card = mk({
+    blocks: [
+      {
+        kind: 'paragraph',
+        runs: [
+          {text: 'a'},
+          {text: 'b', bold: true},
+          {text: 'c', italic: true},
+          {text: 'd', bold: true, italic: true},
+        ],
+      },
+      {kind: 'list', ordered: true, items: [[para('one')]]},
+      {kind: 'list', ordered: false, items: [[para('two')]]},
+    ],
+  });
+  it('writes bold, italic, both, an ordered and a bullet list', () => {
+    const r = skillSheetTypst([card], DEFAULT_SHEET, DEFAULT_SKILL);
+    if (!r.ok) throw new Error(r.message);
+    expect(r.source).toContain('#strong("b")');
+    expect(r.source).toContain('#emph("c")');
+    expect(r.source).toContain('#strong(emph("d"))');
+    expect(r.source).toContain('#enum([#"one"])');
+    expect(r.source).toContain('#list([#"two"])');
+  });
+  it('refuses invalid skill settings and no cards, writing no source', () => {
+    const bad = skillSheetTypst([card], DEFAULT_SHEET, {
+      ...DEFAULT_SKILL,
+      kindProperty: 'timing',
+    });
+    expect(bad.ok).toBe(false);
+    if (!bad.ok) expect(bad.message).toMatch(/timing/);
+    expect(skillSheetTypst([], DEFAULT_SHEET, DEFAULT_SKILL)).toEqual({
+      ok: false,
+      message: 'There are no cards to print',
+    });
+    expect(
+      skillSheetTypst([card], {...DEFAULT_SHEET, margin: 51}, DEFAULT_SKILL).ok,
+    ).toBe(false);
+  });
+});
 
 describe('US-002 AC-1, layout: the example note on a card', () => {
   const {card} = readSkill('skills/Reed Sweep.md', EXAMPLE_NOTE, DEFAULT_SKILL);
@@ -252,15 +307,13 @@ describe('US-002 AC-5: the size follows the amount of text', () => {
     [115, 7, true],
     [140, 7, true],
     [160, 6.25, true],
-    [200, 5.75, true],
+    [200, 6, true],
     [250, 5.5, false],
   ];
   it(
-    '40, 115, 140, 160, 200 and 250 words use 7, 7, 7, 6.25, 5.75 and 5.5 pt',
+    '40, 115, 140, 160, 200 and 250 words use 7, 7, 7, 6.25, 6 and 5.5 pt',
     async () => {
-      const m = await make(
-        sizes.map(([n]) => mk({name: `W${n}`, blocks: words(n)})),
-      );
+      const m = await make(sizes.map(([n]) => measured({blocks: words(n)})));
       expect(m.facts).toHaveLength(sizes.length); // one fact per card (SCAR-023)
       const byIndex = [...m.facts].sort(
         (a, b) => (a as {i: number}).i - (b as {i: number}).i,
@@ -274,7 +327,7 @@ describe('US-002 AC-5: the size follows the amount of text', () => {
   it(
     'the drawn description uses the size the fact reports',
     async () => {
-      const m = await make([mk({blocks: words(160)})]);
+      const m = await make([measured({blocks: words(160)})]);
       const desc = m
         .runsOf(0)
         .filter(
@@ -293,8 +346,8 @@ describe('US-002 AC-6: overflow is cut and warned', () => {
     '400 words: smallest size, does not fit, one SKILL_TEXT_OVERFLOW',
     async () => {
       const cards = [
-        mk({path: 'skills/Long.md', name: 'Long', blocks: words(400)}),
-        mk({name: 'Short', blocks: words(40)}),
+        measured({path: 'skills/Long.md', name: 'Long', blocks: words(400)}),
+        measured({name: 'Short', blocks: words(40)}),
       ];
       const m = await make(cards);
       expect(m.facts).toEqual([
@@ -311,6 +364,64 @@ describe('US-002 AC-6: overflow is cut and warned', () => {
         .slice(0, 4)
         .join(' ');
       expect(m.textOf(0)).toContain(first);
+    },
+    LIMIT,
+  );
+});
+
+describe('US-002 AC-5: the fit loop is stable (SCAR-021)', () => {
+  it(
+    '0 to 400 words in steps of 10: sizes never grow, fit ends where text overflows, no compiler warning',
+    async () => {
+      const counts = Array.from({length: 41}, (_, i) => i * 10);
+      const typst = skillSheetTypst(
+        counts.map((n) => measured({blocks: n === 0 ? [] : words(n)})),
+        DEFAULT_SHEET,
+        DEFAULT_SKILL,
+      );
+      if (!typst.ok) throw new Error(typst.message);
+      const out = await compileWithFacts(typst.source, FIT_LABEL);
+      expect(out.facts).toHaveLength(41); // every card has its fact
+      expect(out.diagnostics).toEqual([]); // convergence and other warnings
+      const facts = [...out.facts].sort(
+        (a, b) => (a as {i: number}).i - (b as {i: number}).i,
+      ) as {i: number; size: number; fits: boolean}[];
+      facts.forEach((f, k) => expect(f.i).toBe(k));
+      for (let k = 1; k < facts.length; k++) {
+        expect(facts[k]!.size, `${counts[k]} words`).toBeLessThanOrEqual(
+          facts[k - 1]!.size,
+        );
+      }
+      const firstOverflow = facts.findIndex((f) => !f.fits);
+      expect(firstOverflow).toBeGreaterThan(0);
+      for (let k = firstOverflow; k < facts.length; k++) {
+        expect(facts[k]!.fits).toBe(false);
+        expect(facts[k]!.size).toBe(5.5);
+      }
+    },
+    LIMIT,
+  );
+});
+
+describe('US-002 AC-6: the text is clipped at the text area', () => {
+  it(
+    'every card has a clip box of its text area, 4 mm inside the frame',
+    async () => {
+      const m = await make([
+        measured({blocks: words(400)}),
+        measured({blocks: words(20)}),
+      ]);
+      const [page] = readSheet(m.pdf);
+      for (const i of [0, 1]) {
+        const c = m.placed[i]!;
+        const hit = page!.clips.find(
+          (k) =>
+            Math.abs(k.x - (c.x + 4)) < 0.1 && Math.abs(k.y - (c.y + 4)) < 0.1,
+        );
+        expect(hit, `card ${i}`).toBeDefined();
+        expect(hit!.w).toBeCloseTo(54, 1);
+        expect(hit!.h).toBeCloseTo(80, 1);
+      }
     },
     LIMIT,
   );
@@ -349,7 +460,7 @@ describe('US-002 AC-10: sizes at non-default settings', () => {
     'largest 5.5, smallest 4, step 1: a short text 5.5, a long one 4 and not fitting',
     async () => {
       const m = await make(
-        [mk({blocks: words(20)}), mk({blocks: words(400)})],
+        [measured({blocks: words(20)}), measured({blocks: words(400)})],
         DEFAULT_SHEET,
         custom,
       );
@@ -437,6 +548,9 @@ describe('US-002 AC-11: byte-identical PDF from separate processes', () => {
           platform: 'node',
           format: 'esm',
           outfile: bundle,
+          banner: {
+            js: "import {createRequire} from 'node:module'; const require = createRequire(import.meta.url);",
+          },
           logLevel: 'silent',
         });
         const run = (name: string): Buffer => {

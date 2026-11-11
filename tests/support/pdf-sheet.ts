@@ -13,6 +13,8 @@ export interface PdfPage {
   heightPt: number;
   /** Closed four-corner paths: x, y of the top-left corner, width, height, mm. */
   frames: {x: number; y: number; w: number; h: number}[];
+  /** Clip boxes (closed axis-aligned paths that clip and are not painted). */
+  clips: {x: number; y: number; w: number; h: number}[];
   /** Open two-point paths, in mm from the top-left corner. */
   lines: {x1: number; y1: number; x2: number; y2: number}[];
 }
@@ -62,8 +64,9 @@ const apply = (m: number[], x: number, y: number): [number, number] => [
 function drawings(
   content: string,
   heightPt: number,
-): Pick<PdfPage, 'frames' | 'lines'> {
+): Pick<PdfPage, 'frames' | 'lines' | 'clips'> {
   const frames: PdfPage['frames'] = [];
+  const clips: PdfPage['clips'] = [];
   const lines: PdfPage['lines'] = [];
   for (const block of content.split(/\bq\b/).slice(1)) {
     const cm = /([-\d. ]+) cm\b/.exec(block);
@@ -76,6 +79,10 @@ function drawings(
       x * MM_PER_PT,
       (heightPt - y) * MM_PER_PT,
     ];
+    // A path that is only a clip (`W n`) or not painted draws nothing.
+    const painted = /(^|\s)(S|s|f|F|f\*|B|B\*|b|b\*)(\s|$)/m.test(block);
+    const clipping = /\bW\*?\s+n\b/.test(block);
+    if (!painted && !clipping) continue;
     const closed = /\bh\b/.test(block);
     const axisAligned = points.every((q, i) => {
       const next = points[(i + 1) % points.length]!;
@@ -85,7 +92,7 @@ function drawings(
       const p = points.map(mm);
       const xs = p.map((q) => q[0]);
       const ys = p.map((q) => q[1]);
-      frames.push({
+      (clipping && !painted ? clips : frames).push({
         x: Math.min(...xs),
         y: Math.min(...ys),
         w: Math.max(...xs) - Math.min(...xs),
@@ -96,7 +103,7 @@ function drawings(
       lines.push({x1: a[0], y1: a[1], x2: b[0], y2: b[1]});
     }
   }
-  return {frames, lines};
+  return {frames, lines, clips};
 }
 
 /** Reads every page of a PDF in page order. Throws when none is found. */
