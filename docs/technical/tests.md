@@ -310,7 +310,7 @@ all caught except one equivalent (two pushes into independent arrays).
 M01 is run after US-008 (nothing to install before); it also measures the
 real link lookup (stand-in until then).
 
-## US-008 the plugin inside Obsidian (2026-11-12, G2): tests written, red until the tickets
+## US-008 the plugin inside Obsidian (2026-11-12, G2): tests written, red until tickets #12 to #14
 
 | AC | Test | State |
 |---|---|---|
@@ -342,3 +342,9 @@ assertion by assertion at the first green run).
 Five guards pass already (the manifest, no `saveData`, Node's file system only in
 the writer, the scripts' absence is not a pass: they are in the red set).
 The rest is red only for missing modules (66 failures, all "Cannot find module").
+
+Tickets: #12 the compile worker (`us-008-compiler`), #13 build, test install,
+release scripts, the spike build and M02 (`us-008-build`), #14 the Obsidian
+side (`us-008-settings-file`, `us-008-adapters`, `us-008-wiring`). Order: #12,
+#13, #14. The whole-tree typecheck is green only after #14 (SCAR-044): the
+settings-file test imports `plugin/settings-file` statically.
