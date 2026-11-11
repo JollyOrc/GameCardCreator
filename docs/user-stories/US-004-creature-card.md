@@ -102,7 +102,8 @@ Flattened reeds in a ring.
   - `api.statblockTypst(data, options?)`: `data` is the note's properties as
     plain values (keys in any case), `options.heading` the band's text (the
     note's file name). It returns `{ok: true, prelude, data, files, credit,
-    warnings}` or `{ok: false, reason, message}`.
+    warnings}` or `{ok: false, reason, message}` with `reason` one of `no-settings`,
+    `no-statblock`, `error`.
   - `prelude`: Typst definitions (the helper functions whose names start with
     `o2t-`), the same text for every call, no content of the note.
   - `data`: a Typst dictionary literal with the keys `band`, `look`, `boxes`,
@@ -110,7 +111,9 @@ Flattened reeds in a ring.
     `#o2t-sb-box(data)`; `look.sizes` holds the pt sizes of the roles `band`,
     `value`, `label`, `text`, `attacks`, `skills`; `look.fonts` the families by
     role; a part without data is `none` (`skills: none`) or `()` (`attacks`).
-  - `files`: `{path, bytes}` for each icon the data names, at that Typst path.
+  - `files`: `{path, bytes}` for each icon the data names, at that Typst path
+    (`o2t-icons/<n>.svg`, `n` from 1; the reader writes the bytes at that path
+    next to its source).
   - `credit`: the icons' credit text, or `null`.
   - `warnings`: `{code, message}` of the data checks, once each.
   - `api.compileFonts()`: the font files the book's export gives its compiler
