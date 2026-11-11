@@ -16,3 +16,10 @@ The two WebAssembly binaries are compiled from Rust code, including the Typst
 compiler (Apache-2.0) and its Rust dependencies; their licence texts are not
 shipped by the npm packages. See https://github.com/Myriad-Dreamin/typst.ts
 and https://github.com/typst/typst.
+
+## Fonts
+
+Libertinus Serif (Regular, Bold, Italic, Bold Italic) in `assets/fonts`,
+copied from Obsidian2Typst (same author) on 2026-11-11: SIL Open Font License
+1.1, text in `assets/fonts/Libertinus-OFL.txt`. Bundled into the plugin at the
+first release.

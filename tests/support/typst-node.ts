@@ -1,5 +1,8 @@
 // Test support: the pinned Typst compiler in Node, offline, no fonts, no
-// network (spike-typst.md). One compile helper: `compilePdf`.
+// network (spike-typst.md), with the bundled Libertinus Serif. The compile
+// helpers: `compilePdf`, and `compileWithFacts` for the facts a document
+// writes with `metadata` and a label (read back with `query`, as Obsidian2Typst
+// does).
 import {readFileSync} from 'node:fs';
 import {join} from 'node:path';
 import {CompileFormatEnum} from '@myriaddreamin/typst.ts/dist/esm/compiler.mjs';
@@ -10,6 +13,18 @@ const modules = join(process.cwd(), 'node_modules', '@myriaddreamin');
 const wasm = (pkg: string, file: string) => () =>
   readFileSync(join(modules, pkg, 'pkg', file));
 
+/** The bundled font files (Libertinus Serif, SIL OFL 1.1; assets/fonts). */
+const FONT_FILES = [
+  'LibertinusSerif-Regular.otf',
+  'LibertinusSerif-Bold.otf',
+  'LibertinusSerif-Italic.otf',
+  'LibertinusSerif-BoldItalic.otf',
+];
+const fontBytes = () =>
+  FONT_FILES.map((f) =>
+    readFileSync(join(process.cwd(), 'assets', 'fonts', f)),
+  );
+
 let snippet: TypstSnippet | undefined;
 let counter = 0;
 
@@ -19,7 +34,7 @@ function typst(): TypstSnippet {
     snippet = new TypstSnippet();
     snippet.setCompilerInitOptions({
       getModule: wasm('typst-ts-web-compiler', 'typst_ts_web_compiler_bg.wasm'),
-      beforeBuild: [loadFonts([], {assets: false})],
+      beforeBuild: [loadFonts(fontBytes(), {assets: false})],
     });
     snippet.setRendererInitOptions({
       getModule: wasm('typst-ts-renderer', 'typst_ts_renderer_bg.wasm'),
@@ -51,4 +66,32 @@ export async function compilePdf(source: string): Promise<Uint8Array> {
     throw new Error(`no PDF: ${JSON.stringify(outcome.diagnostics ?? [])}`);
   }
   return outcome.result;
+}
+
+/**
+ * Compiles `source` to PDF and reads the values of every `metadata(..)` that
+ * carries `label` (a list, empty when there is none). The document is
+ * compiled twice (PDF, then a world for the query), as Obsidian2Typst does.
+ */
+export async function compileWithFacts(
+  source: string,
+  label: string,
+): Promise<{pdf: Uint8Array; facts: unknown[]}> {
+  const pdf = await compilePdf(source);
+  const t = typst();
+  const path = `/sheet-${counter - 1}.typ`; // the file compilePdf just added
+  const compiler = await t.getCompiler();
+  const facts = await compiler.runWithWorld(
+    {mainFilePath: path},
+    async (world) => {
+      await world.compile({diagnostics: 'unix'});
+      const out: unknown = await world.query({
+        selector: `<${label}>`,
+        field: 'value',
+      });
+      const values: unknown = typeof out === 'string' ? JSON.parse(out) : out;
+      return Array.isArray(values) ? values : [];
+    },
+  );
+  return {pdf, facts};
 }

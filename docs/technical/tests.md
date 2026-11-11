@@ -51,3 +51,30 @@ marks, page width, the 0-cards refusal, card height) all caught; reader (5
 mutants: y flip, scale, closed, axis-aligned, both-closed) all caught after the
 open-path and slanted-shape tests were added; the first run let one survive.
 Times: each compile about 0.1 s; limit 30 s per test (SCAR-030).
+
+## US-002 skill card (2026-11-11, G2): tests written, red until ticket #3
+
+| AC | Test | State |
+|---|---|---|
+| AC-1 | `tests/unit/skill-read.test.ts` AC-1 (example note, header edge cases: look-alike rule, no closing line, BOM, CRLF, view blocks) | written |
+| AC-2 | `skill-read` AC-2 (tag labels, string value); `skill-card-pdf` AC-2 (five tags wrap) | written |
+| AC-3 | `skill-read` AC-3 (row: order, absent, link, alias, number, boolean, list/map warning) | written |
+| AC-4 | `skill-read` AC-4 (links, heading, callout, lists, rule, embeds, table, html, code) | written |
+| AC-5 | `skill-settings` sizes; `skill-card-pdf` AC-5 (6 word counts; the drawn size equals the fact) | written |
+| AC-6 | `skill-fit` (warnings); `skill-card-pdf` AC-6 (400 words) | written |
+| AC-7 | `skill-card-pdf` AC-7 (about 120 cases: 25 special strings x 6 places, 8 line starts x 3 places) | written |
+| AC-8 | `skill-read` AC-8; `skill-fit` (incl. SKILL_FIT_UNKNOWN) | written |
+| AC-9 | `skill-read` AC-9; `skill-card-pdf` AC-9 | written |
+| AC-10 | `skill-settings`; `skill-read` AC-10; `skill-card-pdf` AC-10 | written |
+| AC-11 | `skill-card-pdf` AC-11 (two fresh processes) | written |
+| AC-12 | `skill-card-pdf` AC-12 (10 cards, 2 pages, containment to 0.1 mm) | written |
+| AC-13 | manual look at printed size and 4x | with the code ticket |
+
+Support code, tested against known Typst first (SCAR-028):
+`tests/integration/support-pdf.test.ts` (3 tests) for the copied PDF text
+reader (from Obsidian2Typst, MIT, same author) and the fact reader.
+The modules the tests import (`src/core/skill/{settings,read,fit,sheet}.ts`)
+do not exist before ticket #3: typecheck, `npm test` (3 skill files) and the
+skill integration file are red for exactly this reason (SCAR-044); the green
+set meanwhile: prettier, eslint, the 53 geometry tests, `sheet-pdf` and
+`support-pdf` integration tests.
