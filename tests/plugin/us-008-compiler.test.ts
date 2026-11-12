@@ -1,9 +1,11 @@
-// US-008 AC-1, AC-2, AC-3, AC-7: the compile worker's core with the real Typst
-// in Node (the reference of AC-1), the lazy embedded assets, and the client that
-// queues requests, restarts after an error and ends on unload. The worker is a
-// fake that runs the core in the same process. Expected values: the test
-// reference (`compileWithFacts`, US-001) and the story. Red until the tickets.
-import {readFileSync} from 'node:fs';
+// US-008 AC-1, AC-2, AC-3, AC-7, AC-13: the compile worker's core with the real
+// Typst in Node (the reference of AC-1), the embedded text that the worker
+// decodes, and the client that hands the texts over, queues requests, restarts
+// after an error and ends on unload. The worker is a fake that runs the core in
+// the same process. Expected values: the test reference (`compileWithFacts`,
+// US-001) and the story. Amended 2026-11-12 (AC-13): the init message carries
+// the gzip + base64 texts; the main thread decodes nothing.
+import {readFileSync, readdirSync, statSync} from 'node:fs';
 import {join} from 'node:path';
 import {gunzipSync} from 'node:zlib';
 import {describe, expect, it} from 'vitest';
@@ -49,8 +51,30 @@ const WASM = readFileSync(
 const FONT_FILES = ['Regular', 'Bold', 'Italic', 'BoldItalic'].map((f) =>
   readFileSync(join(process.cwd(), 'assets/fonts', `LibertinusSerif-${f}.otf`)),
 );
-const buf = (b: Uint8Array): ArrayBuffer =>
-  b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength) as ArrayBuffer;
+
+/** The embedded texts as the build makes them (gzip + base64), made once per file (about 1.5 s). */
+let texts: {compiler: string; fonts: string[]} | null = null;
+async function embeddedTexts(): Promise<{compiler: string; fonts: string[]}> {
+  if (texts === null) {
+    const {gzipBase64} = await load<{gzipBase64(b: Uint8Array): string}>(EMBED);
+    texts = {
+      compiler: gzipBase64(new Uint8Array(WASM)),
+      fonts: FONT_FILES.map((f) => gzipBase64(new Uint8Array(f))),
+    };
+  }
+  return texts;
+}
+/** The init message of the story's protocol (AC-13). */
+async function initMessage(id: string, over: Record<string, unknown> = {}) {
+  const t = await embeddedTexts();
+  return {
+    type: 'init',
+    id,
+    compilerText: t.compiler,
+    fontTexts: t.fonts,
+    ...over,
+  };
+}
 
 /** A sheet source of two cards from the story's example note. */
 function source(): string {
@@ -95,12 +119,7 @@ describe('US-008 AC-1: the worker core compiles like the reference', () => {
       message?: string;
     }[] = [];
     const core = createWorkerCore((m) => void out.push(m as never));
-    await core.handle({
-      type: 'init',
-      id: 'i',
-      compilerWasm: buf(WASM),
-      fonts: FONT_FILES.map(buf),
-    });
+    await core.handle(await initMessage('i'));
     expect(out).toEqual([{type: 'ready', id: 'i'}]);
     const src = source();
     await core.handle({type: 'compile', id: 'c', source: src});
@@ -127,12 +146,7 @@ describe('US-008 AC-1: the worker core compiles like the reference', () => {
     }>(CORE);
     const out: {type: string; message?: string; pdf?: unknown}[] = [];
     const core = createWorkerCore((m) => void out.push(m as never));
-    await core.handle({
-      type: 'init',
-      id: 'i',
-      compilerWasm: buf(WASM),
-      fonts: FONT_FILES.map(buf),
-    });
+    await core.handle(await initMessage('i'));
     await core.handle({type: 'compile', id: 'c', source: '#let x = ('});
     expect(out[1]!.type).toBe('failed');
     expect(out[1]!.message).toMatch(/error/i);
@@ -172,12 +186,7 @@ describe('US-008 AC-2: nothing to download', () => {
     try {
       const out: {type: string}[] = [];
       const core = createWorkerCore((m) => void out.push(m as never));
-      await core.handle({
-        type: 'init',
-        id: 'i',
-        compilerWasm: buf(WASM),
-        fonts: FONT_FILES.map(buf),
-      });
+      await core.handle(await initMessage('i'));
       await core.handle({type: 'compile', id: 'c', source: source()});
       expect(out.map((m) => m.type)).toEqual(['ready', 'compiled']);
       expect(calls).toEqual([]);
@@ -187,13 +196,10 @@ describe('US-008 AC-2: nothing to download', () => {
     }
   }, 60_000);
 
-  it('the embedded text decodes to the original bytes (gzip + base64), only when asked', async () => {
+  it('gzipBase64 and decodeWasm are inverse: the text decodes to the original bytes', async () => {
     const {gzipBase64} = await load<{gzipBase64(b: Uint8Array): string}>(EMBED);
-    const {lazyWasm} = await load<{
-      lazyWasm(
-        t: string,
-        d?: (t: string) => Promise<Uint8Array>,
-      ): () => Promise<Uint8Array>;
+    const {decodeWasm} = await load<{
+      decodeWasm(t: string): Promise<Uint8Array>;
     }>(CODEC);
     const original = new Uint8Array(
       Array.from({length: 5000}, (_, i) => (i * 7) % 251),
@@ -202,32 +208,148 @@ describe('US-008 AC-2: nothing to download', () => {
     expect(Array.from(gunzipSync(Buffer.from(text, 'base64')))).toEqual(
       Array.from(original),
     );
-    let decodes = 0;
+    expect(Array.from(await decodeWasm(text))).toEqual(Array.from(original));
+  });
+  it('text that is not base64, or base64 that is not gzip, is refused by decodeWasm', async () => {
     const {decodeWasm} = await load<{
       decodeWasm(t: string): Promise<Uint8Array>;
     }>(CODEC);
-    const get = lazyWasm(text, (t) => (decodes++, decodeWasm(t)));
-    expect(decodes).toBe(0); // creating it decodes nothing
-    expect(Array.from(await get())).toEqual(Array.from(original));
-    expect(Array.from(await get())).toEqual(Array.from(original));
-    expect(decodes).toBe(1); // once
-  });
-  it('invalid text is refused, and a failed decode is tried again at the next call', async () => {
-    const {lazyWasm, decodeWasm} = await load<{
-      lazyWasm(
-        t: string,
-        d: (t: string) => Promise<Uint8Array>,
-      ): () => Promise<Uint8Array>;
-      decodeWasm(t: string): Promise<Uint8Array>;
-    }>(CODEC);
     await expect(decodeWasm('not base64 !!')).rejects.toThrow(/base64/i);
-    let n = 0;
-    const get = lazyWasm('x', async () => {
-      if (n++ === 0) throw new Error('first try fails');
-      return new Uint8Array([1]);
+    await expect(decodeWasm('AAAA')).rejects.toThrow(); // valid base64, no gzip
+  });
+});
+
+describe('US-008 AC-13: the worker decodes', () => {
+  it('init decodes in the worker: ready comes after the decode, and the next compile uses it', async () => {
+    const {createWorkerCore} = await load<{
+      createWorkerCore(post: Post): {handle(m: unknown): Promise<void>};
+    }>(CORE);
+    const out: {type: string; id?: string}[] = [];
+    const core = createWorkerCore((m) => void out.push(m as never));
+    await core.handle(await initMessage('i'));
+    expect(out).toEqual([{type: 'ready', id: 'i'}]); // answered when handle resolved: decoded
+    await core.handle({type: 'compile', id: 'c', source: '= x'});
+    expect(out.map((m) => m.type)).toEqual(['ready', 'compiled']);
+  }, 60_000);
+  it('an init with text that cannot be decoded answers failed naming the problem; a valid init on the same core then works', async () => {
+    const {createWorkerCore} = await load<{
+      createWorkerCore(post: Post): {handle(m: unknown): Promise<void>};
+    }>(CORE);
+    const out: {type: string; id?: string; message?: string}[] = [];
+    const core = createWorkerCore((m) => void out.push(m as never));
+    await core.handle(
+      await initMessage('bad', {compilerText: 'not base64 !!'}),
+    );
+    expect(out[0]).toMatchObject({type: 'failed', id: 'bad'});
+    expect(out[0]!.message).toMatch(/base64/i);
+    await core.handle(await initMessage('bad2', {fontTexts: ['AAAA']}));
+    expect(out[1]).toMatchObject({type: 'failed', id: 'bad2'});
+    await core.handle({type: 'compile', id: 'c', source: '= x'});
+    expect(out[2]).toMatchObject({type: 'failed', id: 'c'}); // nothing was initialised
+    expect(out[2]!.message).toMatch(/init/i);
+    await core.handle(await initMessage('good'));
+    expect(out[3]).toEqual({type: 'ready', id: 'good'});
+    await core.handle({type: 'compile', id: 'c2', source: '= x'});
+    expect(out[4]!.type).toBe('compiled');
+    // a failed init after a good one leaves nothing initialised (no stale compiler)
+    await core.handle(
+      await initMessage('bad3', {compilerText: 'not base64 !!'}),
+    );
+    expect(out[5]).toMatchObject({type: 'failed', id: 'bad3'});
+    await core.handle({type: 'compile', id: 'c3', source: '= x'});
+    expect(out[6]).toMatchObject({type: 'failed', id: 'c3'});
+    expect(out[6]!.message).toMatch(/init/i);
+  }, 60_000);
+  it('the worker compiles with no font text and with one (it takes what it is given)', async () => {
+    const {createWorkerCore} = await load<{
+      createWorkerCore(post: Post): {handle(m: unknown): Promise<void>};
+    }>(CORE);
+    const t = await embeddedTexts();
+    for (const count of [0, 1]) {
+      const out: {type: string; message?: string}[] = [];
+      const core = createWorkerCore((m) => void out.push(m as never));
+      await core.handle(
+        await initMessage('i', {fontTexts: t.fonts.slice(0, count)}),
+      );
+      await core.handle({type: 'compile', id: 'c', source: '= x'});
+      expect(
+        out.map((m) => m.type),
+        `fonts ${count}`,
+      ).toEqual(['ready', 'compiled']);
+    }
+  }, 60_000);
+  it('a failed decode in the worker is a message to the caller, and the next request starts a new worker', async () => {
+    let attempt = 0;
+    const {c, calls} = await client({
+      // the first worker gets text it cannot decode, the next one the real text
+      compilerText: () => (attempt++ === 0 ? 'not base64 !!' : undefined),
     });
-    await expect(get()).rejects.toThrow('first try fails');
-    expect(Array.from(await get())).toEqual([1]);
+    const first = await c.compile('= x');
+    expect(first.pdf).toBeNull();
+    expect(first.message).toMatch(/base64/i);
+    expect(first.message).not.toContain('\n');
+    const second = await c.compile('= y');
+    expect(second.pdf).not.toBeNull();
+    expect(calls.start).toBe(2);
+    c.dispose();
+  }, 60_000);
+  it('embedded-assets hands over the whole embedded compiler text and every embedded font text, unchanged (the bundle is not loadable in Node)', () => {
+    const text = readFileSync(
+      join(process.cwd(), 'src/plugin/compiler/embedded-assets.ts'),
+      'utf8',
+    );
+    expect(text).toMatch(
+      /import compilerWasmText from 'embedded:compiler-wasm';/,
+    );
+    expect(text).toMatch(/import fontTexts from 'embedded:fonts';/);
+    expect(text).toMatch(/compilerText:\s*\(\)\s*=>\s*compilerWasmText,/);
+    expect(text).toMatch(/fontTexts:\s*\(\)\s*=>\s*fontTexts,/);
+    // the build embeds every .otf of assets/fonts: four (the story's AC-2)
+    expect(
+      readdirSync(join(process.cwd(), 'assets/fonts')).filter((f) =>
+        f.endsWith('.otf'),
+      ),
+    ).toHaveLength(4);
+  });
+  it('no module of the main thread decodes (no atob, DecompressionStream or decodeWasm), and lazyWasm is gone', () => {
+    const code = (path: string) =>
+      readFileSync(join(process.cwd(), path), 'utf8')
+        .split('\n')
+        .filter(
+          (l) =>
+            !l.trim().startsWith('//') &&
+            !l.trim().startsWith('*') &&
+            !l.trim().startsWith('/*'),
+        )
+        .join('\n');
+    const mainThread = [
+      'src/plugin/compiler/index.ts',
+      'src/plugin/compiler/embedded-assets.ts',
+      'src/plugin/compiler/start-worker.ts',
+      'src/plugin/main.ts',
+    ];
+    expect(mainThread).toHaveLength(4);
+    for (const file of mainThread) {
+      expect(code(file), file).not.toMatch(
+        /\batob\b|DecompressionStream|decodeWasm/,
+      );
+    }
+    // the decode is somewhere: the worker's core calls it
+    expect(code('src/plugin/compiler/worker-core.ts')).toMatch(/decodeWasm\(/);
+    // and nothing in src keeps the old lazy main-thread decoder
+    const all: string[] = [];
+    const walk = (dir: string): void => {
+      for (const entry of readdirSync(dir)) {
+        const path = join(dir, entry);
+        if (statSync(path).isDirectory()) walk(path);
+        else if (path.endsWith('.ts')) all.push(path);
+      }
+    };
+    walk(join(process.cwd(), 'src'));
+    expect(all.length).toBeGreaterThanOrEqual(28);
+    expect(
+      all.filter((f) => /\blazyWasm\b/.test(readFileSync(f, 'utf8'))),
+    ).toEqual([]);
   });
 });
 
@@ -235,6 +357,8 @@ describe('US-008 AC-2: nothing to download', () => {
 async function client(
   over: {
     startWorker?: () => WorkerLike | Promise<WorkerLike>;
+    /** Replaces the compiler text for one start (`undefined` = the real text). */
+    compilerText?: () => string | undefined;
     log?: {type: string; id?: string}[];
   } = {},
 ) {
@@ -243,16 +367,14 @@ async function client(
   );
   const calls = {start: 0, wasm: 0, fonts: 0};
   const log = over.log ?? [];
+  const t = await embeddedTexts();
   const c = createCompiler({
     startWorker: async () => {
       calls.start++;
       return over.startWorker ? over.startWorker() : inProcessWorker(log);
     },
-    compilerWasm: async () => (calls.wasm++, new Uint8Array(WASM)),
-    fonts: async () => (
-      calls.fonts++,
-      FONT_FILES.map((f) => new Uint8Array(f))
-    ),
+    compilerText: () => (calls.wasm++, over.compilerText?.() ?? t.compiler),
+    fontTexts: () => (calls.fonts++, t.fonts),
   });
   return {c, calls, log};
 }
@@ -271,7 +393,7 @@ describe("US-008 AC-7: the worker's life", () => {
     expect(init).toHaveLength(1);
     c.dispose();
   }, 60_000);
-  it('the init message carries the WebAssembly and the fonts as ArrayBuffers', async () => {
+  it('the init message carries the embedded texts as strings, not buffers (AC-13)', async () => {
     const seen: unknown[] = [];
     const inner = await inProcessWorker();
     const spy: WorkerLike = {
@@ -287,13 +409,17 @@ describe("US-008 AC-7: the worker's life", () => {
     } as WorkerLike;
     const {c} = await client({startWorker: () => spy});
     await c.compile('= x');
+    const t = await embeddedTexts();
     const init = seen.find((m) => (m as {type: string}).type === 'init') as {
-      compilerWasm: unknown;
-      fonts: unknown[];
+      compilerText: unknown;
+      fontTexts: unknown[];
     };
-    expect(init.compilerWasm).toBeInstanceOf(ArrayBuffer);
-    expect(init.fonts).toHaveLength(4);
-    for (const f of init.fonts) expect(f).toBeInstanceOf(ArrayBuffer);
+    expect(init.compilerText).toBe(t.compiler);
+    expect(init.fontTexts).toEqual(t.fonts);
+    expect(init.fontTexts).toHaveLength(4);
+    for (const f of init.fontTexts) expect(typeof f).toBe('string');
+    expect(init).not.toHaveProperty('compilerWasm');
+    expect(init).not.toHaveProperty('fonts');
     c.dispose();
   }, 60_000);
 });

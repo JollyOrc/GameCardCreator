@@ -15,4 +15,4 @@ or its status changes.
 | US-006 | Picture on the creature card (the `illustration` property, if there is room) | planned |
 | US-005 | Make cards from notes: the run, the commands, the output | Code done (#8 to #11); M01 (AC-13) after US-008 |
 | US-007 | Settings screen | planned |
-| US-008 | The plugin inside Obsidian: compile worker, wiring, build, test installs, release | Ready (tests written) |
+| US-008 | The plugin inside Obsidian: compile worker, wiring, build, test installs, release | Code done (#12 to #14); amended 2026-11-12 (AC-13: the worker decodes), tickets #15, #16 |

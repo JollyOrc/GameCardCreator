@@ -19,8 +19,8 @@ const worker = {
 function deps(over: Partial<CompilerDeps> = {}): CompilerDeps {
   return {
     startWorker: () => worker,
-    compilerWasm: async () => new Uint8Array([1, 2]),
-    fonts: async () => [new Uint8Array([3])],
+    compilerText: () => 'AB',
+    fontTexts: () => ['C'],
     ...over,
   };
 }
@@ -33,28 +33,46 @@ describe('traceDeps', () => {
   it('passes the results on and logs start and end of each step in order', async () => {
     const lines: string[] = [];
     const traced = traceDeps(deps(), (l) => lines.push(l), clock());
-    expect(await traced.compilerWasm()).toEqual(new Uint8Array([1, 2]));
-    expect(await traced.fonts()).toEqual([new Uint8Array([3])]);
+    expect(traced.compilerText()).toBe('AB');
+    expect(traced.fontTexts()).toEqual(['C']);
     expect(await traced.startWorker()).toBe(worker);
     expect(lines).toEqual([
-      'GCC trace compilerWasm start 10.0',
-      'GCC trace compilerWasm end 20.0',
-      'GCC trace fonts start 30.0',
-      'GCC trace fonts end 40.0',
+      'GCC trace compilerText start 10.0',
+      'GCC trace compilerText end 20.0',
+      'GCC trace fontTexts start 30.0',
+      'GCC trace fontTexts end 40.0',
       'GCC trace startWorker start 50.0',
       'GCC trace startWorker end 60.0',
     ]);
   });
-  it('a rejected step is logged as failed and still rejects with the same error', async () => {
+  it('a step that returns a rejected promise is logged as failed and still rejects with the same error', async () => {
     const lines: string[] = [];
-    const boom = new Error('decode failed');
+    const boom = new Error('no worker');
     const traced = traceDeps(
-      deps({compilerWasm: () => Promise.reject(boom)}),
+      deps({startWorker: () => Promise.reject(boom)}),
       (l) => lines.push(l),
       clock(),
     );
-    await expect(traced.compilerWasm()).rejects.toBe(boom);
-    expect(lines.at(-1)).toBe('GCC trace compilerWasm failed 20.0');
+    await expect(traced.startWorker()).rejects.toBe(boom);
+    expect(lines).toEqual([
+      'GCC trace startWorker start 10.0',
+      'GCC trace startWorker failed 20.0',
+    ]);
+  });
+  it('a throwing text step is logged as failed and throws the same error', () => {
+    const lines: string[] = [];
+    const boom = new Error('decode failed');
+    const traced = traceDeps(
+      deps({
+        compilerText: () => {
+          throw boom;
+        },
+      }),
+      (l) => lines.push(l),
+      clock(),
+    );
+    expect(() => traced.compilerText()).toThrow(boom);
+    expect(lines.at(-1)).toBe('GCC trace compilerText failed 20.0');
   });
   it('a synchronous throw is logged as failed and thrown unchanged', () => {
     const lines: string[] = [];

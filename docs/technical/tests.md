@@ -361,3 +361,32 @@ ten mutants, nine caught; the survivor shares the frozen default objects, which
 nothing can change (equivalent). Not measured in Obsidian: the real `Modal`,
 `getFirstLinkpathDest`, `file-menu` and `files-menu` events and `loadData`: that
 is M01 (steps 7 and 8 and the whole run).
+
+## US-008 amendment 2026-11-12 (AC-13: the worker decodes), G2: tests written, red until ticket #15
+
+| AC | Test | State |
+|---|---|---|
+| AC-1 | `us-008-compiler` (the init now carries texts; the reference compare is unchanged) | adapted, passing (2026-11-12, #15) |
+| AC-2 | same (`gzipBase64` and `decodeWasm` inverse; not base64 / not gzip refused; no `fetch` or `XMLHttpRequest`); the lazy-decode tests of `lazyWasm` are gone with it | adapted, passing (2026-11-12, #15) |
+| AC-7 | same (nothing at creation; one worker, the texts handed over once; the init carries strings, not buffers) | adapted, passing (2026-11-12, #15) |
+| AC-13 | same, describe `the worker decodes` (ready after the decode; a text that cannot be decoded answers `failed` and a valid init on the same core works; none and one font text; a failed decode reaches the caller as a message and the next request starts a new worker; a text check that no main-thread module decodes and `lazyWasm` is gone; a text check that `embedded-assets` hands over the whole embedded texts, added after a mutant survived) | passing (2026-11-12, #15) |
+| AC-13 (effect) | the trace of build 0.1.0-m01.3 in the author's Obsidian, recorded in M02: **not measured yet** | pending |
+| trace | `us-008-trace` (dependency names `compilerText`, `fontTexts`; a rejected `startWorker` is logged and rethrown) | adapted, passing (2026-11-12, #15) |
+
+The tests are adaptations of tests proven against a throwaway reference at G2 of
+#12; they were run against the current code and fail for the stated reasons (the
+old core and client take buffers, decode on the main thread and keep `lazyWasm`):
+18 of 27 in the two files fail, 9 pass (the codec's inverse and refusal tests, the
+trace's other cases, `dispose` without a compile). The new text check and the
+failure-and-recovery test are proven by a mutation after the code (SCAR-023, as
+`ef2308d` asks: stated, not hidden). The whole-tree typecheck is red until #15
+(the tests use the new dependency names; SCAR-044).
+
+**Code (#15, 2026-11-12):** 480 tests (unit, plugin, tooling) and 61 integration
+pass; typecheck, eslint and prettier are clean. Mutations on the worker core, the
+client and the assets: six, all caught (the compiler text not decoded, the fonts
+not decoded, a stale compiler after a failed init, a failed init treated as
+ready, an `atob` on the main thread, and one font text handed over: the last one
+survived the first run, because the embedded modules exist only in the bundle,
+and is now caught by the text check on `embedded-assets.ts`). Not measured: the
+effect in Obsidian: the trace of build 0.1.0-m01.3 (M02, follow-up, second run).

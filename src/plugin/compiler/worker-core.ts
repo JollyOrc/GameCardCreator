@@ -7,15 +7,17 @@ import {CompileFormatEnum} from '@myriaddreamin/typst.ts/dist/esm/compiler.mjs';
 import {TypstSnippet} from '@myriaddreamin/typst.ts/dist/esm/contrib/snippet.mjs';
 import {loadFonts} from '@myriaddreamin/typst.ts/dist/esm/options.init.mjs';
 import {FIT_LABEL} from '../../core/skill/fit';
+import {decodeWasm} from './wasm-codec';
 
 /** Sends a message to the plugin; `transfer` lists buffers that move. */
 export type Post = (message: unknown, transfer?: Transferable[]) => void;
 
+/** US-008 AC-13: the embedded texts (gzip + base64) as the build holds them. */
 interface InitMessage {
   type: 'init';
   id: string;
-  compilerWasm: ArrayBuffer;
-  fonts: ArrayBuffer[];
+  compilerText: string;
+  fontTexts: string[];
 }
 interface CompileMessage {
   type: 'compile';
@@ -66,17 +68,16 @@ export function createWorkerCore(post: Post): {
   let typst: TypstSnippet | null = null;
 
   const init = async (message: InitMessage): Promise<void> => {
+    // A failed init leaves nothing initialised: a compile then answers `failed`.
+    typst = null;
+    // US-008 AC-13: the decode happens here, in the worker, never on the main thread.
+    const wasm = await decodeWasm(message.compilerText);
+    const fonts = await Promise.all(message.fontTexts.map(decodeWasm));
     const snippet = new TypstSnippet();
-    const wasm = new Uint8Array(message.compilerWasm);
     snippet.setCompilerInitOptions({
       getModule: () => wasm,
       // assets: false = never fetch the default fonts (AC-2).
-      beforeBuild: [
-        loadFonts(
-          message.fonts.map((buffer) => new Uint8Array(buffer)),
-          {assets: false},
-        ),
-      ],
+      beforeBuild: [loadFonts(fonts, {assets: false})],
     });
     snippet.setRendererInitOptions({getModule: () => new Uint8Array(0)});
     typst = snippet;

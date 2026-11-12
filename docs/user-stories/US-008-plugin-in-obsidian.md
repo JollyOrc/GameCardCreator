@@ -1,7 +1,8 @@
 # US-008 — The plugin inside Obsidian: compile worker, wiring, build, test installs, release
 
 **Status:** Ready (G0 and G1 done 2026-11-12; D1 to D4 accepted by the author
-2026-11-12)
+2026-11-12). Amended 2026-11-12 after the first measurement in Obsidian: AC-1
+(measured), AC-2 and AC-7 (the worker decodes), new AC-13, D5.
 
 **As** a game master **I want** the plugin installed in Obsidian, making the
 cards from my notes without anything else installed or downloaded, **so that**
@@ -23,7 +24,8 @@ into the output folder (rule 2).
   scratch vault, never published (SCAR-012).
 - **Scratch vault**: the vault the generator of US-005 AC-13 made; a folder of
   invented notes.
-- **Embedded**: stored inside `main.js` as text and decoded when first used.
+- **Embedded**: stored inside `main.js` as text and decoded in the compile
+  worker when it starts (AC-13).
 
 ## Acceptance criteria
 
@@ -32,16 +34,17 @@ into the output folder (rule 2).
   PDF bytes, the `gcc-fit` facts and, when there is no PDF, the first line of the
   first diagnostic. Measured in Node at G1 (a reference, SCAR-045): the composed
   deck of US-005 AC-12 gives a PDF whose page boxes, frames and text equal the
-  test reference's. **Not measured:** that Obsidian's Electron worker gives
-  byte-identical PDFs; the first ticket's spike measures it in the author's
-  Obsidian and the result is recorded, not assumed.
+  test reference's. **Measured in Obsidian 2026-11-12 (M02, build 0.1.0-m01.1,
+  M1 MacBook, macOS 27.0.1, Obsidian 1.15.0):** the Electron worker gives the
+  byte-identical PDF (SHA-256 `6b9b67c1…01a6`, 29 068 bytes) on all three runs.
 - **AC-2 (nothing to download).** The compiler WebAssembly (28.3 MB; about
   10.9 MB compressed in Obsidian2Typst's measurement) and the four font files
-  (Libertinus Serif, SIL OFL 1.1) are embedded in `main.js` and decoded on
-  first use; the plugin folder needs only `main.js`, `manifest.json` and
+  (Libertinus Serif, SIL OFL 1.1) are embedded in `main.js` as text and decoded **in
+  the worker** when it starts (AC-13), never on the main thread; the plugin
+  folder needs only `main.js`, `manifest.json` and
   `styles.css`. A compile makes **no network request** (a fake `fetch` and
   `XMLHttpRequest` in the worker's tests fail the test when called; the spike
-  checks in Obsidian). Starting Obsidian does not decode the WebAssembly.
+  checks in Obsidian). Starting Obsidian decodes nothing.
 - **AC-3 (one compile at a time, no throw).** A second compile request waits for
   the running one; a compile that fails (a Typst error, a worker error, a worker
   that cannot start) answers a message and never throws into the caller; after
@@ -74,7 +77,7 @@ into the output folder (rule 2).
   nothing else decides.
 - **AC-7 (the worker's life).** The worker is created on the first compile, not
   at start-up; it is created from the embedded source (a Blob URL), the WebAssembly
-  and fonts are handed to it as buffers; a second run after the first reuses it;
+  and fonts are handed to it as their embedded texts (AC-13); a second run after the first reuses it;
   the memory is released on unload (a test with a fake worker).
 - **AC-8 (the build, SCAR-042, SCAR-036).** `npm run build` writes `main.js` (the
   plugin and its worker with the embedded WebAssembly and fonts), and the build
@@ -111,6 +114,28 @@ into the output folder (rule 2).
   tab), the plugin unloads cleanly (disable and enable it). The results are
   written in the check's report.
 
+- **AC-13 (the main thread does not decode, SCAR-045, SCAR-024, SCAR-032).** The
+  compile service hands the worker the embedded texts (the compiler and each
+  font, gzip + base64) in the init message; the worker decodes them, and answers
+  `ready` after the decode; a text that cannot be decoded answers `failed` with
+  a message naming it, and the next request starts a new worker (AC-3). No
+  module the main thread runs (`compiler/index.ts`, `compiler/embedded-assets.ts`,
+  `compiler/start-worker.ts`, `main.ts`) decodes: a text check finds no `atob`,
+  `DecompressionStream` or `decodeWasm` in them. **Measured before the change**
+  (M02 follow-up, build 0.1.0-m01.2, the author's Obsidian: M1 MacBook, macOS
+  27.0.1, Obsidian 1.15.0): on the first compile, between the start and the end
+  of the compiler decode (164 ms wall) two entries held the main thread, 95.5 ms
+  (a long task that began at the click) and 60.6 ms (a promise continuation),
+  about 156 ms together; the same decode steps took about 25 ms of synchronous
+  work in Node (not Electron). **Not established:** that all of those 156 ms were
+  the decode's own steps (the long task also held the click handling and 15 ms of
+  our sheet preparation). **Not promised:** a number after the change; the spike
+  build 0.1.0-m01.3 measures it in the same way (the trace of build 0.1.0-m01.2,
+  same author, machine and Obsidian) and the result is recorded in M02; "fixed"
+  is not written before that. The init message now carries about 14.3 MB of text
+  instead of 28.3 MB of buffers; its cost on the main thread is part of that
+  measurement.
+
 ## Decisions (author, 2026-11-12: all proposals)
 
 - **D1 — tickets.** (a) the compile worker with its embedded assets and a spike
@@ -128,20 +153,28 @@ into the output folder (rule 2).
 - **D4 — the first run without a settings screen.** The refusal notices name
   the settings file's path (AC-4); M01 gives the file's content. No command
   opens the file.
+- **D5 — the worker decodes (2026-11-12, after M02; the author's "go for all of
+  that" to the proposal).** The embedded texts go to the worker as strings and
+  are decoded there; the main thread decodes nothing. Alternatives not chosen:
+  a faster decode on the main thread (still blocks it), or splitting the decode
+  into chunks that yield (more code, still on the main thread).
 
 ## Interface used by the tests (G1)
 
 - Worker protocol (as Obsidian2Typst's, cut down): `{type: 'init', id,
-  compilerWasm: ArrayBuffer, fonts: ArrayBuffer[]}` answers `{type: 'ready',
+  compilerText: string, fontTexts: string[]}` (gzip + base64 texts; amended
+  2026-11-12, AC-13) answers `{type: 'ready',
   id}`; `{type: 'compile', id, source}` answers `{type: 'compiled', id, pdf:
   ArrayBuffer, facts: unknown[]}`; any failure answers `{type: 'failed', id,
   message}` (the diagnostics, one per line). `src/plugin/compiler/worker-core.ts`:
   `createWorkerCore(post)` returns `{handle(message)}`.
-- `src/plugin/compiler/index.ts`: `createCompiler({startWorker, compilerWasm,
-  fonts})` returns `{compile(source), dispose()}`; `compile` answers `{pdf:
+- `src/plugin/compiler/index.ts`: `createCompiler({startWorker, compilerText,
+  fontTexts})` (`compilerText(): string`, `fontTexts(): string[]`, amended
+  2026-11-12) returns `{compile(source), dispose()}`; `compile` answers `{pdf:
   Uint8Array | null, facts, message?}` (the message is the first line of the
   first diagnostic) and never rejects. `src/plugin/compiler/wasm-codec.ts`:
-  `decodeWasm`, `lazyWasm`; `build/embed.mjs`: `gzipBase64`.
+  `decodeWasm` (used by the worker core; `lazyWasm` removed, amended 2026-11-12);
+  `build/embed.mjs`: `gzipBase64`.
 - `src/plugin/settings-file.ts`: `readSettingsFile(raw)` returns `{settings,
   notice}`: `null` (no file) gives the defaults and no notice; a value that is
   not an object gives the defaults and `Settings file: not an object, using the

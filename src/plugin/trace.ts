@@ -46,8 +46,8 @@ export function traceDeps(
     };
   return {
     startWorker: step('startWorker', deps.startWorker),
-    compilerWasm: step('compilerWasm', deps.compilerWasm),
-    fonts: step('fonts', deps.fonts),
+    compilerText: step('compilerText', deps.compilerText),
+    fontTexts: step('fontTexts', deps.fontTexts),
   };
 }
 

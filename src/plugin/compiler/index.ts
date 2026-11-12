@@ -15,10 +15,10 @@ export interface WorkerLike {
 export interface CompilerDeps {
   /** Creates a worker from the embedded source; called once per worker. */
   startWorker(): WorkerLike | Promise<WorkerLike>;
-  /** The compiler WebAssembly (the caller caches the decoded bytes). */
-  compilerWasm(): Promise<Uint8Array>;
-  /** The font files (the caller caches the decoded bytes). */
-  fonts(): Promise<Uint8Array[]>;
+  /** The embedded compiler as gzip + base64 text; the worker decodes it (AC-13). */
+  compilerText(): string;
+  /** The embedded font files as gzip + base64 texts; the worker decodes them. */
+  fontTexts(): string[];
 }
 
 /** The outcome of one compile; `message` is set exactly when `pdf` is null. */
@@ -44,13 +44,6 @@ const failed = (message: string): CompileResult => ({
 });
 
 const firstLine = (text: string): string => text.split('\n')[0] ?? text;
-
-/** An independent copy of `bytes` as an ArrayBuffer, to be handed over. */
-const copy = (bytes: Uint8Array): ArrayBuffer =>
-  bytes.buffer.slice(
-    bytes.byteOffset,
-    bytes.byteOffset + bytes.byteLength,
-  ) as ArrayBuffer;
 
 interface Answer {
   type?: string;
@@ -107,8 +100,9 @@ export function createCompiler(deps: CompilerDeps): Compiler {
     });
 
   const start = async (): Promise<WorkerLike> => {
-    const wasm = await deps.compilerWasm();
-    const fonts = await deps.fonts();
+    // US-008 AC-13: the texts are handed over as they are; the worker decodes.
+    const compilerText = deps.compilerText();
+    const fontTexts = deps.fontTexts();
     const w = await deps.startWorker();
     if (disposed) {
       // The plugin unloaded while the worker started: none is left running.
@@ -130,15 +124,13 @@ export function createCompiler(deps: CompilerDeps): Compiler {
       current?.fail(event.message ?? 'The worker stopped');
     };
     worker = w;
-    const init = copy(wasm);
-    const fontBuffers = fonts.map(copy);
     const id = `init-${++counter}`;
-    const answer = await ask(
-      w,
+    const answer = await ask(w, id, {
+      type: 'init',
       id,
-      {type: 'init', id, compilerWasm: init, fonts: fontBuffers},
-      [init, ...fontBuffers],
-    );
+      compilerText,
+      fontTexts,
+    });
     if (answer.type !== 'ready') {
       dropWorker();
       throw new Error(firstLine(answer.message ?? 'The worker did not start'));
