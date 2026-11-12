@@ -2,7 +2,12 @@
 // callback, the file explorer's menus and the replace confirmation, over
 // structural parts of Obsidian's API. No Obsidian import: `main.ts` hands over
 // the real `Modal` class. Every key of the dialog is decided by `dialogKey`.
-import {dialogKey, replaceDialog, type DialogButton} from '../core/run/confirm';
+import {
+  dialogKey,
+  replaceDialog,
+  type DialogButton,
+  type ReplaceDialog,
+} from '../core/run/confirm';
 import type {SelectedItem} from '../core/run/select';
 import type {createCardCommands, DeckFile} from './commands';
 
@@ -108,9 +113,20 @@ interface ModalLike {
 export function confirmReplaceWith<App>(
   Base: new (app: App) => ModalLike,
 ): (app: App, files: string[]) => Promise<boolean> {
-  return (app, files) =>
+  return (app, files) => confirmDialogWith(Base)(app, replaceDialog(files));
+}
+
+/**
+ * US-008 | AC-6, US-007 | AC-9: The confirmation over Obsidian's `Modal` class for any
+ * dialog data (`replaceDialog`, `resetDialog`): the question, the two buttons by their own
+ * names, the focus on the safe one, every key decided by `dialogKey`, a close in any other
+ * way answers `false`, the first answer counts.
+ */
+export function confirmDialogWith<App>(
+  Base: new (app: App) => ModalLike,
+): (app: App, dialog: ReplaceDialog) => Promise<boolean> {
+  return (app, dialog) =>
     new Promise<boolean>((resolve) => {
-      const dialog = replaceDialog(files);
       const modal = new Base(app);
       let answered = false;
       let focus: DialogButton = dialog.focus;

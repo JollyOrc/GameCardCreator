@@ -437,3 +437,8 @@ Game Card Creator (file: …)`; its tests check only the path and the setting, a
 
 The whole-tree typecheck is red until the code ticket (SCAR-044): the new tests import the
 eight modules of `src/plugin/settings/` and `confirmDialogWith` of `ui.ts`, which do not exist.
+
+**#17 (2026-11-12):** the code of the core is written. `us-007-fields`, `-status`, `-commit`,
+`-rules` and `-reset` pass (162 of 162; with `us-008-adapters` 182); `npm test` has 658 passing
+and 17 failing, all of tickets #18 and #19; integration 61 of 61. Sixteen mutants on the code,
+all caught.
