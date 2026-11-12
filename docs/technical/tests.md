@@ -317,14 +317,14 @@ real link lookup (stand-in until then).
 | AC-1 | `tests/plugin/us-008-compiler.test.ts` (the worker core's PDF and facts equal the reference compile; a Typst error; compile before init) | written |
 | AC-2 | same file (no `fetch`/`XMLHttpRequest`; the embedded text decodes once, only when asked; invalid text refused; a failed decode retried) | written |
 | AC-3 | same file (one at a time; an error answers a message; a worker error restarts; a worker that cannot start; unload, including a worker still starting) | written |
-| AC-4 | `tests/unit/us-008-settings-file.test.ts` (defaults, merge, wrong types named, copies); `us-008-adapters` (the refusal names the file); `us-008-wiring` (no `saveData`) | written |
-| AC-5 | `us-008-adapters` (vault access, check callback, menus); `us-008-wiring` (main.ts only hands over) | written |
-| AC-6 | `us-008-adapters` (the modal: focus on Cancel, Escape, Enter on the focused button, composition, close = Cancel, first answer counts); `us-008-wiring` (keys by `dialogKey` only) | written |
+| AC-4 | `tests/unit/us-008-settings-file.test.ts` (defaults, merge, wrong types named, copies); `us-008-adapters` (the refusal names the file); `us-008-wiring` (no `saveData`) | passing (2026-11-12, #14) |
+| AC-5 | `us-008-adapters` (vault access, check callback, menus); `us-008-wiring` (main.ts only hands over) | passing (2026-11-12, #14) |
+| AC-6 | `us-008-adapters` (the modal: focus on Cancel, Escape, Enter on the focused button, composition, close = Cancel, first answer counts); `us-008-wiring` (keys by `dialogKey` only) | passing (2026-11-12, #14) |
 | AC-7 | `us-008-compiler` (nothing at creation; one worker, buffers handed once) | written |
 | AC-8 | `tests/tooling/us-008-build.test.ts` (licence report, allowed list, `argparse`) | passing (2026-11-12, #13); the real bundle's report read with `npm run build`: 10 packages, all allowed, no `argparse` |
 | AC-9 | same file (test install: files, version, not a vault, data.json untouched, a second install) | passing (2026-11-12, #13); installed in a scratch vault, checksums equal the fresh build, the vault's other 12 files unchanged, a second install refused |
 | AC-10 | same file (`checkRelease`; the release script never publishes; the scripts exist) | passing (2026-11-12, #13); `release:build` itself is not run until a release (it needs a committed tree and release notes) |
-| AC-11 | `us-008-wiring` (Node's file system only in the writer; manifest) | written |
+| AC-11 | `us-008-wiring` (Node's file system only in the writer; manifest) | passing (2026-11-12, #14) |
 | AC-12 | manual check `M02` (compile in the author's Obsidian), written with #13; M01 follows | M02 written, spike build installed (0.1.0-m01.1), **waits for the author's measurement** |
 
 Support: `tests/support/fake-dom.ts` (an element that records children, listeners,
@@ -348,3 +348,16 @@ release scripts, the spike build and M02 (`us-008-build`), #14 the Obsidian
 side (`us-008-settings-file`, `us-008-adapters`, `us-008-wiring`). Order: #12,
 #13, #14. The whole-tree typecheck is green only after #14 (SCAR-044): the
 settings-file test imports `plugin/settings-file` statically.
+
+**#14 (2026-11-12):** the whole tree is green: 467 tests (unit, plugin, tooling),
+61 integration, typecheck, eslint, prettier. Two slips of mine in the G2 tests
+were found by the code and corrected, not hidden: the wiring test required
+`confirmReplace: confirmReplaceWith(Modal)` although the adapters test (and the
+runner) need the app handed to the modal, so the text check now requires
+`(files) => confirmReplaceWith(Modal)(this.app, files)`; and the fake
+`getFirstLinkpathDest` did not match a link by file name (`pic.png`), which
+Obsidian does. Mutation checks on settings-file, obsidian-deps, ui and runner:
+ten mutants, nine caught; the survivor shares the frozen default objects, which
+nothing can change (equivalent). Not measured in Obsidian: the real `Modal`,
+`getFirstLinkpathDest`, `file-menu` and `files-menu` events and `loadData`: that
+is M01 (steps 7 and 8 and the whole run).

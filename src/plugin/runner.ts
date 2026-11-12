@@ -42,6 +42,11 @@ export interface RunnerDeps {
   /** Asks to replace the files (both are named); false is `Cancel`. */
   confirmReplace(files: string[]): Promise<boolean>;
   notice(text: string): void;
+  /**
+   * US-008 AC-4: the path of the settings file; a refusal for a setting names
+   * it. Optional: without it the notices are as before.
+   */
+  settingsFile?(): string;
 }
 
 /** US-005 AC-9: the runner. */
@@ -66,6 +71,14 @@ const inFolder = (folder: string, name: string): string =>
 export function createCardsRunner(deps: RunnerDeps): CardsRunner {
   let running = false;
 
+  /** US-008 AC-4: a refusal for a setting, naming the settings file when known. */
+  const refuse = (text: string): void =>
+    deps.notice(
+      deps.settingsFile
+        ? `${text}\nSettings file: ${deps.settingsFile()}`
+        : text,
+    );
+
   /** The notes of a run and the warnings of finding them. */
   type Plan = {notes: string[]; warnings: CardWarning[]};
 
@@ -79,7 +92,7 @@ export function createCardsRunner(deps: RunnerDeps): CardsRunner {
       const settings = await deps.settings();
       const issues = checkCardsSettings(settings, deps.vaultRoot());
       if (issues.length > 0) {
-        deps.notice(`Cannot make cards: ${issues.join('; ')}`);
+        refuse(`Cannot make cards: ${issues.join('; ')}`);
         return;
       }
       const checked = checkOutputFolder(
@@ -87,12 +100,12 @@ export function createCardsRunner(deps: RunnerDeps): CardsRunner {
         deps.vaultRoot(),
       );
       if (!checked.ok) {
-        deps.notice(`Cannot make cards: ${checked.message}`);
+        refuse(`Cannot make cards: ${checked.message}`);
         return;
       }
       const folder = checked.folder;
       if (await deps.isFile(folder)) {
-        deps.notice(`Cannot make cards: output folder "${folder}" is a file`);
+        refuse(`Cannot make cards: output folder "${folder}" is a file`);
         return;
       }
 

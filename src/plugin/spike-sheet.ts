@@ -41,3 +41,49 @@ export function countPages(pdf: Uint8Array): number {
   const text = new TextDecoder('latin1').decode(pdf);
   return (text.match(/\/Type\s*\/Page(?![A-Za-z])/g) ?? []).length;
 }
+
+/** What the developer command shows (`notice`) and logs (`log`). */
+export interface SpikeReport {
+  notice: string;
+  log: string;
+}
+
+const hex = (buffer: ArrayBuffer): string =>
+  Array.from(new Uint8Array(buffer), (b) =>
+    b.toString(16).padStart(2, '0'),
+  ).join('');
+
+/**
+ * US-008 | AC-1, AC-12 (the spike): compiles the fixed sheet with `compiler` and
+ * reports the time, the pages, the bytes, the fit facts, the heap (when the
+ * engine gives it) and the SHA-256 of the PDF, to compare with the Node
+ * reference. A failed compile is reported as such.
+ */
+export async function runSpike(compiler: {
+  compile(source: string): Promise<{
+    pdf: Uint8Array | null;
+    facts: unknown[];
+    message?: string;
+  }>;
+}): Promise<SpikeReport> {
+  const started = performance.now();
+  const result = await compiler.compile(spikeSheetSource());
+  const ms = Math.round(performance.now() - started);
+  if (result.pdf === null) {
+    const text = `Spike failed after ${ms} ms: ${result.message ?? '?'}`;
+    return {notice: text, log: `Game Card Creator spike: ${text}`};
+  }
+  const sha = hex(
+    await crypto.subtle.digest('SHA-256', result.pdf.slice().buffer),
+  );
+  const memory = (performance as unknown as {memory?: {usedJSHeapSize: number}})
+    .memory;
+  const heap = memory
+    ? `${Math.round(memory.usedJSHeapSize / 1048576)} MB`
+    : 'n/a';
+  const line = `${ms} ms, ${countPages(result.pdf)} page(s), ${result.pdf.length} bytes, ${result.facts.length} fit facts, heap ${heap}`;
+  return {
+    notice: `Spike: ${line}`,
+    log: `Game Card Creator spike: ${line}; sha256 ${sha}`,
+  };
+}

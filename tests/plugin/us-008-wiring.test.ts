@@ -58,7 +58,11 @@ describe('US-008 AC-5: main.ts only hands over', () => {
     expect(text).toMatch(/readSettingsFile\(/);
     expect(text).toMatch(/settingsFile:/);
     expect(text).toMatch(/createCompiler\(/);
-    expect(text).toMatch(/confirmReplace:\s*confirmReplaceWith\(Modal\)/);
+    // the runner calls confirmReplace(files); the app comes from the plugin
+    // (corrected at #14: the G2 text had no way to give the modal its app)
+    expect(text).toMatch(
+      /confirmReplace:\s*\(files\)\s*=>\s*confirmReplaceWith\(Modal\)\(this\.app,\s*files\)/,
+    );
     expect(text).toMatch(
       /notice:\s*\(text(: string)?\)\s*=>\s*void new Notice\(text\)/,
     );

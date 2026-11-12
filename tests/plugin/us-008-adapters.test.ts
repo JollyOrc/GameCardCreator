@@ -81,6 +81,7 @@ function fakeApp(over: {base?: string | null} = {}) {
           flat(TREE).find(
             (f) =>
               f.basename === target ||
+              f.name === target || // Obsidian resolves a link by file name too (corrected at #14)
               f.path === target ||
               f.path === `${target}.md`,
           ) ?? null

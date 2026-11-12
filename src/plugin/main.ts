@@ -1,55 +1,71 @@
-// US-008 #13 (the spike build): a minimal entry point with one developer
-// command that compiles the fixed sheet and shows the time, the pages and the
-// bytes. Replaced by the real entry point in ticket #14.
-import {Notice, Plugin} from 'obsidian';
-import {createEmbeddedCompiler} from './compiler/embedded-assets';
-import type {Compiler} from './compiler/index';
-import {countPages, spikeSheetSource} from './spike-sheet';
-
-const hex = (buffer: ArrayBuffer): string =>
-  Array.from(new Uint8Array(buffer), (b) =>
-    b.toString(16).padStart(2, '0'),
-  ).join('');
+// US-008 AC-4, AC-5, AC-6, AC-11 (SCAR-031): the entry point. It only builds
+// the dependencies of US-005's runner from Obsidian and registers the command
+// and the menus; every decision lives in a tested function. Keeps the developer
+// command of the spike (ticket #13) until the settings screen exists.
+import {Modal, Notice, Plugin} from 'obsidian';
+import {createCardCommands} from './commands';
+import {embeddedCompilerDeps} from './compiler/embedded-assets';
+import {createCompiler} from './compiler/index';
+import {createDiskWriter} from './disk-writer';
+import {vaultAccess} from './obsidian-deps';
+import {createCardsRunner} from './runner';
+import {readSettingsFile} from './settings-file';
+import {runSpike} from './spike-sheet';
+import {
+  confirmReplaceWith,
+  onFileMenu,
+  onFilesMenu,
+  toCheckCallback,
+} from './ui';
 
 export default class GameCardCreatorPlugin extends Plugin {
-  private compiler: Compiler | null = null;
+  private readonly compiler = createCompiler(embeddedCompilerDeps());
 
-  /** US-008 | AC-7, AC-12: the compiler exists from the first command, not at start-up. */
+  /** US-008 | AC-4 to AC-6: builds the runner's dependencies and registers. */
   override onload(): void {
+    const runner = createCardsRunner({
+      ...vaultAccess(this.app),
+      // Read when a run starts (never at load); `saveData` is never called.
+      settings: async () => {
+        const {settings, notice} = readSettingsFile(await this.loadData());
+        if (notice !== null) new Notice(notice);
+        return settings;
+      },
+      settingsFile: () =>
+        `${vaultAccess(this.app).vaultRoot()}/${this.manifest.dir}/data.json`,
+      compile: (source) => this.compiler.compile(source),
+      isFile: (path) => createDiskWriter(path).isFile(path),
+      writerFor: createDiskWriter,
+      confirmReplace: (files) => confirmReplaceWith(Modal)(this.app, files),
+      notice: (text) => void new Notice(text),
+    });
+    const commands = createCardCommands(runner);
+    this.addCommand({
+      id: commands.deckCommand.id,
+      name: commands.deckCommand.name,
+      checkCallback: toCheckCallback(commands.deckCommand, () =>
+        this.app.workspace.getActiveFile(),
+      ),
+    });
+    this.registerEvent(
+      this.app.workspace.on('file-menu', onFileMenu(commands)),
+    );
+    this.registerEvent(
+      this.app.workspace.on('files-menu', onFilesMenu(commands)),
+    );
     this.addCommand({
       id: 'spike-compile',
       name: 'Spike: compile a fixed sheet (developer)',
-      callback: () => void this.spike(),
+      callback: () =>
+        void runSpike(this.compiler).then(({notice, log}) => {
+          console.log(log);
+          new Notice(notice);
+        }),
     });
   }
 
-  /** US-008 | AC-3, AC-7: ends the worker when the plugin unloads. */
+  /** US-008 | AC-3, AC-7: ends the compile worker when the plugin unloads. */
   override onunload(): void {
-    this.compiler?.dispose();
-    this.compiler = null;
-  }
-
-  /** US-008 | AC-1, AC-12: compiles the fixed sheet; shows and logs the measurements. */
-  private async spike(): Promise<void> {
-    this.compiler ??= createEmbeddedCompiler();
-    const started = performance.now();
-    const result = await this.compiler.compile(spikeSheetSource());
-    const ms = Math.round(performance.now() - started);
-    if (result.pdf === null) {
-      new Notice(`Spike failed after ${ms} ms: ${result.message ?? '?'}`);
-      return;
-    }
-    const sha = hex(
-      await crypto.subtle.digest('SHA-256', result.pdf.slice().buffer),
-    );
-    const memory = (
-      performance as unknown as {memory?: {usedJSHeapSize: number}}
-    ).memory;
-    const heap = memory
-      ? `${Math.round(memory.usedJSHeapSize / 1048576)} MB`
-      : 'n/a';
-    const line = `${ms} ms, ${countPages(result.pdf)} page(s), ${result.pdf.length} bytes, ${result.facts.length} fit facts, heap ${heap}`;
-    console.log(`Game Card Creator spike: ${line}; sha256 ${sha}`);
-    new Notice(`Spike: ${line}`);
+    this.compiler.dispose();
   }
 }
