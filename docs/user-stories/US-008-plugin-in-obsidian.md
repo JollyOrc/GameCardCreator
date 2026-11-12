@@ -71,6 +71,11 @@ into the output folder (rule 2).
   `Create cards from this deck note` is registered with a `checkCallback` for
   the active Markdown file; `Create cards` is added to the file explorer's menu
   by `file-menu` (one item) and `files-menu` (several), for files and folders.
+  **Amended 2026-11-12 (M04 finding F2):** for one Markdown note `file-menu` adds the
+  second item `Create cards from this deck note` (US-005 AC-9), wherever Obsidian fires
+  `file-menu` (the explorer, a note's tab menu, the editor's menu: **measured by M05 on 2026-11-12, Obsidian
+  1.15.0, the author's Obsidian: the explorer, the note's tab menu and the editor's more-options
+  menu all show both items**).
 - **AC-6 (the confirmation dialog, SCAR-013, SCAR-014).** The question of US-005
   AC-7 is an Obsidian `Modal` that draws `replaceDialog` (both files, `Replace`
   and `Cancel`, the focus on `Cancel`), passes every key to `dialogKey`, and

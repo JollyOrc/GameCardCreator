@@ -119,7 +119,12 @@ All examples use invented names and folders; the real ones are settings.
 - **AC-9 (the commands, SCAR-022, SCAR-016, SCAR-031).** `Create cards from
   this deck note` (command palette; offered only for a Markdown note), and
   `Create cards` in the file explorer's menu for one or several files and
-  folders. The menu and command handlers only pass what they were given (the
+  folders. **Amended 2026-11-12 (M04 finding F2, D7):** for exactly one Markdown
+  note the menu also has `Create cards from this deck note` (after `Create
+  cards`), which makes the cards of the links of that note, as the command does
+  (`Decks/Opening Deck.md` gives the deck `Opening Deck`; `a.b.md` gives `a.b`).
+  A folder (even one named `x.md`), a file that is not a Markdown note and
+  several chosen items get only `Create cards`. The menu and command handlers only pass what they were given (the
   note, the chosen files) to the run; every read happens after the click
   (building the menu entry reads nothing). The settings are read when the
   command runs, not when the menu was built. A second run while one is running
@@ -174,6 +179,12 @@ Decided by the author (2026-11-12, after the first four):
 - **D6 — the compile worker.** The pattern of Obsidian2Typst copied (embedded
   WASM, lazy decode, a worker for the compile and the facts), recorded in
   `dependencies.md`, rather than a shared package.
+- **D7 — the deck note in the context menu (author, 2026-11-12, after M04 finding F2,
+  "defaults").** For exactly one Markdown note the menu shows `Create cards` first and `Create
+  cards from this deck note` second; a folder, a file that is not a Markdown note and several
+  chosen items keep the one existing item; the deck item appears in every menu that fires
+  `file-menu` (explorer, a note's tab menu, the editor's menu). The command palette entry is
+  unchanged.
 
 ## Not covered
 
