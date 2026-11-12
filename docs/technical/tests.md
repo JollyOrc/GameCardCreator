@@ -208,7 +208,7 @@ hardly visible.
 | AC-10 | `run-sources` (no vault write call, reading-only dependencies) | written |
 | AC-11 | `us-005-run` (two fresh processes) | written |
 | AC-12 | `us-005-run` (the composed deck) | written |
-| AC-13 | manual check `docs/technical/manual-checks/M01.md` on a generated scratch vault (procedure with #11, run after US-008) | pending |
+| AC-13 | manual check `docs/technical/manual-checks/M01.md` on a generated scratch vault | run 2026-11-12 (build 0.1.0-m01.3, steps 1 to 12) with open points (step 5 details, step 10, notice texts); **the run on the real vault is open** |
 
 New support: `tests/support/run-fixtures.ts` (the composed vault, the runner's
 dependencies with the real compile, a recording writer), `us-005-run-cli.ts`.
