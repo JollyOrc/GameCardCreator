@@ -390,3 +390,50 @@ ready, an `atob` on the main thread, and one font text handed over: the last one
 survived the first run, because the embedded modules exist only in the bundle,
 and is now caught by the text check on `embedded-assets.ts`). Not measured: the
 effect in Obsidian: the trace of build 0.1.0-m01.3 (M02, follow-up, second run).
+
+## US-007 the settings screen (2026-11-12, G2): tests written, red until the tickets
+
+| AC | Test | State |
+|---|---|---|
+| AC-1 | `tests/unit/us-007-fields` (the fields of the three pages, 17 in all, labels and groups, kinds); `us-007-wiring` (the tab is a `PluginSettingTab` named `Game Card Creator`, the three page names) | written |
+| AC-2 | `tests/unit/us-007-status` (ready, one rule, normal form, not ready with the checks' messages in order, pages' problems, no card fits once, a range problem without a second grid message, the vault as folder) | written |
+| AC-3 | `us-007-fields` (`fieldKey`: Enter commits, not during a composition or key code 229); `tests/plugin/us-007-commit` (a toggle; not a number; refused values leave the file unchanged) | written |
+| AC-4 | `us-007-wiring` (exactly one `commitSetting(`, two `commitRule(`, one `resetPage(` in the tab; the rows from `fieldsOf`; no `saveData`, `.write(` or `loadData` in the tab; no second path for the dialog's answer) | written |
+| AC-5 | `us-007-commit` (`/tmp//out/` becomes `/tmp/out`; inside the vault allowed, no warning; seven refused forms with the messages of `checkOutputFolder`); `tests/plugin/us-007-folder-dialog` (A then B then unavailable, cancel, a throw, start folder, availability) | written |
+| AC-6 | `tests/plugin/us-007-rules` (append, replace in place, order, a missing folder warns and is saved, the refused rules with `checkKindRules`' messages, deleting, a stale index, a hand edit in between, one queue with the fields) | written |
+| AC-7 | `us-007-commit` (empty name, duplicate names without case, a name saved trimmed, a label may be empty) | written |
+| AC-8 | `us-007-commit` (the table: 7 numbers x 4 examples that commit x 2 refused x 4 not-a-number forms; the size rule between two fields once; a hand-edited problem elsewhere does not block); `us-007-status` (the grid line, 7 cases) | written |
+| AC-9 | `tests/plugin/us-007-reset` (the question names the page, Cancel focused; only the keys of the page; the file loaded now; the modal: Escape, Enter on Cancel and on Reset, click, composition, close, first answer) | written |
+| AC-10 | `tests/plugin/us-007-store` (backup before the first write; once; never over an existing copy; none without a file; a failed copy stops the write; only the two paths); `us-007-wiring` (`saveData` in main.ts and the store only; the backup name; `.copy(` only in the store) | written |
+| AC-11 | `us-007-commit` and `us-007-rules` (the file is loaded for every commit; two commits at once lose nothing; a failing read or write is a message) | written |
+| AC-12 | `tests/plugin/us-007-notice` (the refusal notice text; the output-is-a-file refusal; without the path as before) | written |
+| AC-13 | manual check M04 (written with the tickets, G3): the real tab, the open tab, `defaultPath` | pending |
+
+Support: `tests/support/memory-store.ts` (a settings store in memory: `read` and `write` like
+`loadData` and `saveData`, `set` for a hand edit, `writes` and `reads` counted).
+
+**Proven against a throwaway reference** of every module, the tab stub and the three edited
+files (outside the repository, removed; the three files restored from backups, checksums
+checked): 200 of 200 pass in the nine new files and 696 of 696 in the tree. The reference
+found **two slips of my own in the tests** and one conflict with an older guard, all before
+the tickets: (1) the wiring text said `saveData` is called only from `main.ts`, but the store
+must call the one it is given: now two places, each counted; (2) US-005 AC-10's text check
+forbade `adapter.copy` anywhere, wider than its criterion (a *run* changes no vault file):
+narrowed to the store and `adapter.copy` only, with a check that a run never reaches the store;
+(3) `loadData()` must stay one call in `main.ts` (US-008's check): the runner reads through
+the store. Seven mutants on the reference (invalid values saved, an existing backup
+overwritten, commits not serialised, reset touching every page, Enter during a composition,
+the dialog always starting in Documents, a rule problem already in the file blocking other
+rows): all caught (a first round ran with a broken shell filter and found no test files: it
+was discarded and redone). Not proven by a reference: the real tab (`Setting` rows, the
+Back control, blur events): M04.
+
+**Tests of earlier stories that this story's tickets change** (SCAR-023, listed now):
+`us-008-wiring` "only main.ts imports Obsidian" (now `main.ts` and the tab) and "no file calls
+saveData" (now `main.ts` and the store), `run-sources` "no file calls a write ... on the vault
+or its adapter" (now: all but the store, and the store only `adapter.copy`), and
+`us-008-adapters`' notice tests (the text `Settings file:` is replaced by `See Settings →
+Game Card Creator (file: …)`; its tests check only the path and the setting, and still pass).
+
+The whole-tree typecheck is red until the code ticket (SCAR-044): the new tests import the
+eight modules of `src/plugin/settings/` and `confirmDialogWith` of `ui.ts`, which do not exist.

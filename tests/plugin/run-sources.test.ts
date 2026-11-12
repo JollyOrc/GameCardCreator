@@ -40,10 +40,27 @@ describe('US-005 AC-10: no change to the vault', () => {
       expect(files.map(rel)).toContain(f);
     }
   });
-  it('no file calls a write, delete or rename on the vault or its adapter', () => {
-    const forbidden =
-      /\b(vault|adapter)\.(modify|create|createBinary|createFolder|delete|rename|trash|append|appendBinary|process|copy|write|writeBinary|remove|rmdir|mkdir)\s*\(/;
-    expect(files.filter((f) => forbidden.test(code(f))).map(rel)).toEqual([]);
+  // Narrowed 2026-11-12 (US-007 G2, SCAR-023): the criterion is that a *run* changes
+  // no file of the vault. The settings store (US-007 AC-10) is the one module that
+  // may touch the vault's adapter, and only with `copy` (the one-time backup of the
+  // plugin's own data.json into the plugin's own folder); a run never reaches it
+  // (checked in us-007-wiring). Every other file still calls none of these.
+  const WRITES =
+    /\b(vault|adapter)\.(modify|create|createBinary|createFolder|delete|rename|trash|append|appendBinary|process|copy|write|writeBinary|remove|rmdir|mkdir)\s*\(/;
+  it('no file but the settings store calls a write, delete or rename on the vault or its adapter', () => {
+    expect(
+      files
+        .filter((f) => rel(f) !== 'plugin/settings/store.ts')
+        .filter((f) => WRITES.test(code(f)))
+        .map(rel),
+    ).toEqual([]);
+  });
+  it('the settings store calls only adapter.copy on the vault or its adapter, nothing else', () => {
+    const store = files.find((f) => rel(f) === 'plugin/settings/store.ts');
+    expect(store).toBeDefined();
+    const text = code(store!);
+    expect(text).toMatch(/\badapter\.copy\s*\(/);
+    expect(text.replace(/\badapter\.copy\s*\(/g, '')).not.toMatch(WRITES);
   });
   it('the run dependencies offer reading and no vault writing', () => {
     const runner = code(join(root, 'plugin', 'runner.ts'));

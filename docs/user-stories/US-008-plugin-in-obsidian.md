@@ -55,7 +55,9 @@ into the output folder (rule 2).
   and US-001 to US-003, unknown keys are ignored, a file that is not valid JSON
   or not an object gives the defaults and one notice; the plugin never calls
   `saveData` (there is no screen: the author's file is never overwritten; a text
-  check over the sources). The commands' refusal for missing settings (US-005
+  check over the sources). **Superseded by US-007 (2026-11-12): the plugin saves only
+  through the settings screen (AC-10); the refusal notice also says `Settings → Game
+  Card Creator` (AC-12).** The commands' refusal for missing settings (US-005
   AC-9) names the file's path, `<vault>/.obsidian/plugins/game-card-creator/
   data.json`, and the setting.
 - **AC-5 (the Obsidian side of the runner).** `main.ts` builds the dependencies

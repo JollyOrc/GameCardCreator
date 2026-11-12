@@ -71,19 +71,27 @@ describe('US-008 AC-5: main.ts only hands over', () => {
   it('the compiler is disposed on unload', () => {
     expect(main()).toMatch(/onunload\(\)[^}]*\.dispose\(\)/s);
   });
-  it('only main.ts imports Obsidian (everything else is testable without it)', () => {
+  // Amended 2026-11-12 (US-007 G2): the settings tab is the second file that
+  // imports Obsidian; every other file stays testable without it.
+  it('only main.ts and the settings tab import Obsidian (everything else is testable without it)', () => {
     const importing = files
       .filter((f) => /from 'obsidian'/.test(code(f)))
       .map(rel);
-    expect(importing).toEqual(['plugin/main.ts']);
+    expect(importing.sort()).toEqual([
+      'plugin/main.ts',
+      'plugin/settings/tab.ts',
+    ]);
   });
 });
 
-describe("US-008 AC-4: the author's settings file is never written", () => {
-  it('no file calls saveData', () => {
+describe("US-008 AC-4 (amended by US-007): the author's settings file is written only through the settings screen", () => {
+  // Amended 2026-11-12 (US-007 AC-10): the plugin saves only through the settings
+  // screen: main.ts hands saveData to the settings store, the only caller
+  // (checked in us-007-wiring).
+  it('saveData is called only from main.ts (handing it over) and the settings store', () => {
     expect(
       files.filter((f) => /\bsaveData\s*\(/.test(code(f))).map(rel),
-    ).toEqual([]);
+    ).toEqual(['plugin/main.ts', 'plugin/settings/store.ts']);
   });
 });
 

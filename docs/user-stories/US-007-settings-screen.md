@@ -40,8 +40,11 @@ English only (D9).
   The classic `Setting` API is used; `minAppVersion` stays 1.5.0 (D8).
 - **AC-2 (the status line).** The main page starts with one status line made by the same
   checks the commands run (`checkCardsSettings` with the vault's folder): `Ready: 2 kind
-  rules, output folder /path` when valid; otherwise `Not ready:` and every problem on its
-  own line, the messages of the checks, not new ones. It is made again after every commit.
+  rules, output folder /path` when valid (`1 kind rule` for one); otherwise `Not ready:` and
+  every problem on its own line starting with `- `, in the order of the checks, the messages
+  of the checks, not new ones. A sheet on which no card fits the page (the layout function's
+  message) is a problem too, because a run would refuse it. It is made again after every
+  commit.
 - **AC-3 (commit as you go, no Save button).** A valid value is saved at once; a text or
   number field commits on Enter and when it loses the focus, **not during an input-method
   composition** (SCAR-013) and not on every key; a toggle and a drop-down commit on change.
@@ -100,15 +103,21 @@ English only (D9).
   Deleting a kind rule asks nothing (D15).
 - **AC-10 (the file, SCAR-018).** The first write by the screen first copies `data.json` to
   `data-before-settings-screen.json` in the plugin's folder (never overwritten once it
-  exists; no copy when there was no file); the screen keeps keys it does not know, writes
-  two-space JSON, and writes no other file. `saveData` is called only from one module (a
-  text check). The new US-008 AC-4 reads: the plugin saves only through the screen.
+  exists; no copy when there was no file; a failed copy stops the write and says so); the
+  screen keeps keys it does not know and writes no other file. The file is written by
+  Obsidian's `saveData` (its own formatting: **not** controlled or measured here). `saveData`
+  has exactly one call in the source tree, in `main.ts`, handing it to the settings store (a
+  text check). US-008 AC-4's "never calls `saveData`" is superseded: the plugin saves only
+  through the screen.
 - **AC-11 (the open tab, SCAR-016).** Every commit loads the current file, changes the one
-  key and saves, so a change made to the file while the tab is open is not silently lost;
+  key and saves (commits run one after the other, so two at once lose nothing), so a change
+  made to the file while the tab is open is not silently lost;
   the page shows the file's values again when it is drawn. A handler never uses a value
   read when the control was drawn.
-- **AC-12 (the refusal notice).** The notice of a refused run (US-008 AC-4) keeps the
-  setting and the file's path and adds `Settings → Game Card Creator` (D11, text only).
+- **AC-12 (the refusal notice, D11).** The notice of a refused run (a setting missing or
+  wrong; US-008 AC-4) is its message, then a new line `See Settings → Game Card Creator
+  (file: <path>)`; text only. A run that makes no PDF, and a runner without the file's path,
+  keep their notices as before.
 - **AC-13 (checked in Obsidian).** The manual check M04 runs on a tab that stays open: it
   changes a value, changes the file by hand, comes back to the tab, and runs a command
   with the new settings.
@@ -148,14 +157,22 @@ English only (D9).
 - That the dialog's `defaultPath` (the stored folder, else Documents) is honoured in
   Obsidian: measured in M04 (AC-5), not before.
 
-## Interface used by the tests (G1, proposed)
+## Interface used by the tests (G2)
 
-- `src/plugin/folder-dialog.ts`: `chooseFolder(env, startAt)` answers `{kind: 'chosen', path}`,
+- Modules under `src/plugin/settings/`: `fields.ts` (`FIELDS`, `fieldsOf(page)`, `valueOf`,
+  `fieldKey`), `commit.ts` (`commitSetting`, the `SettingsStore` type, one queue for every
+  change), `rules.ts` (`commitRule`: `set` and `delete`), `status.ts` (`statusLine`,
+  `gridLine`), `reset.ts` (`resetPage`, `resetDialog`, `PAGE_TITLES`), `store.ts`
+  (`createSettingsStore`: `loadData`, `saveData`, the backup), `folder-dialog.ts` and `tab.ts`
+  (the only one that imports Obsidian, with `main.ts`); `ui.ts` gains `confirmDialogWith`.
+- `src/plugin/settings/folder-dialog.ts`: `folderDialogAvailable(env)` (true when A or B has a
+  dialog object; nothing is opened) and `chooseFolder(env, startAt)` answers `{kind: 'chosen', path}`,
   `{kind: 'cancelled'}` or `{kind: 'unavailable'}`; `env` is the page's `require`; A is tried
   first, then B; a throw of a dialog is `unavailable` for that way and the next is tried; the
-  dialog is asked for `openDirectory` and `defaultPath: startAt`. `startAt(settings, home)`
-  is the stored output folder when it is a non-empty text, else `<home>/Documents`; a pure
-  function with its own tests.
+  dialog is asked for `openDirectory` and `defaultPath: startAt`. `dialogStart(outputFolder, home, exists)`
+  is the stored output folder when it is a non-empty text and `exists(path)` says so, else
+  `<home>/Documents` (async; an existence check that throws counts as "does not exist");
+  the separator of `home` is kept.
 
 ## Not covered
 
