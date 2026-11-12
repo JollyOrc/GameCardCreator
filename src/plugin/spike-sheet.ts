@@ -67,8 +67,10 @@ export async function runSpike(compiler: {
   }>;
 }): Promise<SpikeReport> {
   const started = performance.now();
+  console.log(`GCC trace compile start ${started.toFixed(1)}`);
   const result = await compiler.compile(spikeSheetSource());
   const ms = Math.round(performance.now() - started);
+  console.log(`GCC trace compile end ${performance.now().toFixed(1)}`);
   if (result.pdf === null) {
     const text = `Spike failed after ${ms} ms: ${result.message ?? '?'}`;
     return {notice: text, log: `Game Card Creator spike: ${text}`};

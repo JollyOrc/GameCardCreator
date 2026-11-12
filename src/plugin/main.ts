@@ -11,6 +11,7 @@ import {vaultAccess} from './obsidian-deps';
 import {createCardsRunner} from './runner';
 import {readSettingsFile} from './settings-file';
 import {runSpike} from './spike-sheet';
+import {observeLongTasks, traceDeps} from './trace';
 import {
   confirmReplaceWith,
   onFileMenu,
@@ -19,10 +20,15 @@ import {
 } from './ui';
 
 export default class GameCardCreatorPlugin extends Plugin {
-  private readonly compiler = createCompiler(embeddedCompilerDeps());
+  private readonly compiler = createCompiler(
+    // Test builds only (M02 follow-up): steps logged with time stamps.
+    traceDeps(embeddedCompilerDeps(), (line) => console.log(line)),
+  );
 
   /** US-008 | AC-4 to AC-6: builds the runner's dependencies and registers. */
   override onload(): void {
+    console.log(`GCC trace onload ${performance.now().toFixed(1)}`);
+    observeLongTasks((line) => console.log(line), PerformanceObserver);
     const runner = createCardsRunner({
       ...vaultAccess(this.app),
       // Read when a run starts (never at load); `saveData` is never called.
