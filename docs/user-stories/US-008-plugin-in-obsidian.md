@@ -134,7 +134,14 @@ into the output folder (rule 2).
   same author, machine and Obsidian) and the result is recorded in M02; "fixed"
   is not written before that. The init message now carries about 14.3 MB of text
   instead of 28.3 MB of buffers; its cost on the main thread is part of that
-  measurement.
+  measurement. **Measured after the change (2026-11-12, M02 second run, build
+  0.1.0-m01.3, the same author, machine and Obsidian, one first compile):** the
+  decode step takes 0.1 ms on the main thread, and no long task and no
+  long-animation-frame entry occurs between `compile start` and `compile end`
+  (the 113 ms and 60.6 ms entries are gone); the PDF is byte-identical; later
+  compiles take 6 and 5 ms. Not established: entries below Chromium's 50 ms
+  threshold; the plugin load's own long task (about 218 ms with Obsidian's own
+  start-up, unchanged); a shorter wall time (451 ms against 435 ms).
 
 ## Decisions (author, 2026-11-12: all proposals)
 

@@ -370,7 +370,7 @@ is M01 (steps 7 and 8 and the whole run).
 | AC-2 | same (`gzipBase64` and `decodeWasm` inverse; not base64 / not gzip refused; no `fetch` or `XMLHttpRequest`); the lazy-decode tests of `lazyWasm` are gone with it | adapted, passing (2026-11-12, #15) |
 | AC-7 | same (nothing at creation; one worker, the texts handed over once; the init carries strings, not buffers) | adapted, passing (2026-11-12, #15) |
 | AC-13 | same, describe `the worker decodes` (ready after the decode; a text that cannot be decoded answers `failed` and a valid init on the same core works; none and one font text; a failed decode reaches the caller as a message and the next request starts a new worker; a text check that no main-thread module decodes and `lazyWasm` is gone; a text check that `embedded-assets` hands over the whole embedded texts, added after a mutant survived) | passing (2026-11-12, #15) |
-| AC-13 (effect) | the trace of build 0.1.0-m01.3 in the author's Obsidian, recorded in M02: **not measured yet** | pending |
+| AC-13 (effect) | the trace of build 0.1.0-m01.3 in the author's Obsidian, recorded in M02 (second run) | measured 2026-11-12: no long entry in the first compile (one run; scope in M02) |
 | trace | `us-008-trace` (dependency names `compilerText`, `fontTexts`; a rejected `startWorker` is logged and rethrown) | adapted, passing (2026-11-12, #15) |
 
 The tests are adaptations of tests proven against a throwaway reference at G2 of
