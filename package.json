@@ -1,6 +1,6 @@
 {
   "name": "game-card-creator",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "description": "Obsidian plugin that creates print-ready game cards (62 x 88 mm) as an A4 PDF from notes.",

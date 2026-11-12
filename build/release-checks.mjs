@@ -6,6 +6,30 @@ import {join} from 'node:path';
 const readJson = (path) => JSON.parse(readFileSync(path, 'utf8'));
 
 /**
+ * Ticket #16: the problems of a built `main.js` that must not be released, one line each: it
+ * names the folder it was built in (`buildFolder`, a clean clone), or it holds the diagnosis code
+ * of the test builds (the strings `GCC trace` and `GCC spike`).
+ */
+export function checkBundleText(text, buildFolder = null) {
+  const problems = [];
+  if (buildFolder !== null) {
+    const name = buildFolder
+      .replace(/[\\/]+$/, '')
+      .split(/[\\/]/)
+      .pop();
+    if (name !== '' && text.includes(name)) {
+      problems.push(`main.js names the build folder ${name}`);
+    }
+  }
+  for (const marker of ['GCC trace', 'GCC spike']) {
+    if (text.includes(marker)) {
+      problems.push(`main.js holds diagnosis code ("${marker}")`);
+    }
+  }
+  return problems;
+}
+
+/**
  * US-008 | AC-10: The problems that stop a release, one line each (empty when
  * the tree is ready): the versions of `package.json`, `manifest.json` and
  * `versions.json` agree, the version is `x.y.z` (a test build `x.y.z-mNN.N`

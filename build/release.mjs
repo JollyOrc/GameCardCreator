@@ -34,9 +34,9 @@ import {
   writeFileSync,
 } from 'node:fs';
 import {tmpdir} from 'node:os';
-import {basename, join} from 'node:path';
+import {join} from 'node:path';
 import {crc32, deflateRawSync} from 'node:zlib';
-import {checkRelease} from './release-checks.mjs';
+import {checkBundleText, checkRelease} from './release-checks.mjs';
 
 /** The files of a release, in the order they go into the zip. */
 export const RELEASE_FILES = [
@@ -202,11 +202,14 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     // writes module paths relative to the working directory into main.js,
     // so a build run from elsewhere would name the build folder.
     run('npm', ['run', '-s', 'build'], from);
-    if (
-      temp !== null &&
-      readFileSync(join(from, 'main.js'), 'utf8').includes(basename(temp))
-    ) {
-      throw new Error(`main.js names the build folder ${temp}; not released.`);
+    const bundleProblems = checkBundleText(
+      readFileSync(join(from, 'main.js'), 'utf8'),
+      temp,
+    );
+    if (bundleProblems.length > 0) {
+      throw new Error(
+        `main.js is not released:\n- ${bundleProblems.join('\n- ')}`,
+      );
     }
     const out = join(root, 'dist', 'release', version);
     const {zip, sums} = assembleRelease({from, out, version});

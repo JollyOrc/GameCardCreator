@@ -464,3 +464,17 @@ from this deck note` (the same name as the command), the clicks run the selectio
 give only `Create cards`, no choice none, building reads nothing, and the same through `onFileMenu`
 and `onFilesMenu`. Eight failed against the old code, then green; ten mutants caught. 727 of 727 in
 the tree. **Not measured:** which Obsidian menus show the item (M05, build 0.1.0-m01.6).
+
+## Ticket #16 and the release preparation (2026-11-12)
+
+`tests/tooling/no-diagnosis-code.test.ts` (5): the diagnosis files are gone, no source file names
+a trace or a spike (at least 40 files looked at), `main.ts` registers no spike command and no
+`console.log`, `checkBundleText` of the release script names the build folder and `GCC trace` and
+`GCC spike`, and `release.mjs` calls it. Red against the old code (all 5), green after the removal
+of `trace.ts`, `picker-spike.ts`, `spike-sheet.ts`, their two test files and the spike code in
+`main.ts`; five reintroduction mutants caught. The real built `main.js` has no marker (16 350 921
+bytes). `tests/tooling/min-app-version.test.ts` (3): the manifest's `minAppVersion` is at least the
+highest `@since` of the five Obsidian APIs the plugin uses, read from the pinned type definitions
+(1.6.6, from `getAllFolders`), and `versions.json` maps the release version to it; a mutant with
+1.5.0 fails 2 of 3. Whole suite: 713 plugin, unit and tooling tests and 61 integration tests pass;
+typecheck, eslint, prettier clean.

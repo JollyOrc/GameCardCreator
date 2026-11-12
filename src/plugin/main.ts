@@ -1,7 +1,6 @@
 // US-008 AC-4, AC-5, AC-6, AC-11 (SCAR-031): the entry point. It only builds
 // the dependencies of US-005's runner from Obsidian and registers the command
-// and the menus; every decision lives in a tested function. Keeps the developer
-// command of the spike (ticket #13) until the settings screen exists.
+// and the menus and the settings tab; every decision lives in a tested function.
 import {Modal, Notice, Plugin} from 'obsidian';
 import {createCardCommands} from './commands';
 import {embeddedCompilerDeps} from './compiler/embedded-assets';
@@ -9,12 +8,9 @@ import {createCompiler} from './compiler/index';
 import {createDiskWriter} from './disk-writer';
 import {vaultAccess} from './obsidian-deps';
 import {createCardsRunner} from './runner';
-import {environmentLine, pageEnv, PICKER_SPIKES} from './picker-spike';
 import {readSettingsFile} from './settings-file';
 import {createSettingsStore} from './settings/store';
 import {GameCardCreatorSettingTab} from './settings/tab';
-import {runSpike} from './spike-sheet';
-import {observeLongTasks, traceDeps} from './trace';
 import {
   confirmDialogWith,
   confirmReplaceWith,
@@ -24,15 +20,10 @@ import {
 } from './ui';
 
 export default class GameCardCreatorPlugin extends Plugin {
-  private readonly compiler = createCompiler(
-    // Test builds only (M02 follow-up): steps logged with time stamps.
-    traceDeps(embeddedCompilerDeps(), (line) => console.log(line)),
-  );
+  private readonly compiler = createCompiler(embeddedCompilerDeps());
 
   /** US-008 | AC-4 to AC-6: builds the runner's dependencies and registers. */
   override onload(): void {
-    console.log(`GCC trace onload ${performance.now().toFixed(1)}`);
-    observeLongTasks((line) => console.log(line), PerformanceObserver);
     // US-007 AC-10: the settings screen is the only writer of data.json, through the store.
     const store = createSettingsStore({
       pluginDir: this.manifest.dir ?? '',
@@ -82,27 +73,6 @@ export default class GameCardCreatorPlugin extends Plugin {
     this.registerEvent(
       this.app.workspace.on('files-menu', onFilesMenu(commands)),
     );
-    // Test builds only (US-007 G1, M03): which folder dialog works here.
-    for (const spike of PICKER_SPIKES) {
-      this.addCommand({
-        id: `spike-folder-${spike.id}`,
-        name: `Spike: pick a folder, ${spike.id} (${spike.name})`,
-        callback: () =>
-          void spike.run(pageEnv()).then((line) => {
-            console.log(`GCC spike ${line}; ${environmentLine(pageEnv())}`);
-            new Notice(`Spike ${line}`);
-          }),
-      });
-    }
-    this.addCommand({
-      id: 'spike-compile',
-      name: 'Spike: compile a fixed sheet (developer)',
-      callback: () =>
-        void runSpike(this.compiler).then(({notice, log}) => {
-          console.log(log);
-          new Notice(notice);
-        }),
-    });
   }
 
   /** US-008 | AC-3, AC-7: ends the compile worker when the plugin unloads. */
