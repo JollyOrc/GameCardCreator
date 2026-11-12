@@ -21,7 +21,15 @@ BSD-2-Clause; linkify-it, mdurl, uc.micro, punycode.js MIT) are in
 Dev tools (also `@types/markdown-it` 14.2.0): eslint, typescript-eslint, prettier, typescript, vitest, esbuild,
 `@types/node`, `obsidian` (types), pinned as in Obsidian2Typst.
 
-SCAR-042: no release artefact exists yet (`main.js` is not built: there is no
-plugin entry), so there is no checksum to compare; the first one is recorded
-by the ticket that adds the plugin entry. Measurements of the Typst packages:
+**Measured 2026-11-12 (US-008 #13, `npm run build`, from the metafiles of the
+plugin and the worker bundle):** 10 packages are bundled, all with an allowed
+licence: the three `@myriaddreamin` packages (Apache-2.0; the renderer's glue
+only, its WebAssembly is not embedded), entities (BSD-2-Clause), linkify-it,
+markdown-it, mdurl, punycode.js, uc.micro (MIT), yaml (ISC). `argparse` is
+**not** in the bundle (the build refuses it). `main.js` is 15.6 MB (16 308 950
+bytes; estimate was 16 MB).
+
+SCAR-042: the first artefact, the spike build 0.1.0-m01.1, has `main.js`
+SHA-256 `68b2ba772948c43728ff82b710f37b886a8049ba8eb270bf269e541a49d77787`; the
+checksum is recorded again at each dependency change. Measurements of the Typst packages:
 `spike-typst.md`.

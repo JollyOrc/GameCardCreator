@@ -321,11 +321,11 @@ real link lookup (stand-in until then).
 | AC-5 | `us-008-adapters` (vault access, check callback, menus); `us-008-wiring` (main.ts only hands over) | written |
 | AC-6 | `us-008-adapters` (the modal: focus on Cancel, Escape, Enter on the focused button, composition, close = Cancel, first answer counts); `us-008-wiring` (keys by `dialogKey` only) | written |
 | AC-7 | `us-008-compiler` (nothing at creation; one worker, buffers handed once) | written |
-| AC-8 | `tests/tooling/us-008-build.test.ts` (licence report, allowed list, `argparse`) | written |
-| AC-9 | same file (test install: files, version, not a vault, data.json untouched, a second install) | written |
-| AC-10 | same file (`checkRelease`; the release script never publishes; the scripts exist) | written |
+| AC-8 | `tests/tooling/us-008-build.test.ts` (licence report, allowed list, `argparse`) | passing (2026-11-12, #13); the real bundle's report read with `npm run build`: 10 packages, all allowed, no `argparse` |
+| AC-9 | same file (test install: files, version, not a vault, data.json untouched, a second install) | passing (2026-11-12, #13); installed in a scratch vault, checksums equal the fresh build, the vault's other 12 files unchanged, a second install refused |
+| AC-10 | same file (`checkRelease`; the release script never publishes; the scripts exist) | passing (2026-11-12, #13); `release:build` itself is not run until a release (it needs a committed tree and release notes) |
 | AC-11 | `us-008-wiring` (Node's file system only in the writer; manifest) | written |
-| AC-12 | manual check `M02` (compile in the author's Obsidian), written with the build tickets; M01 follows | pending |
+| AC-12 | manual check `M02` (compile in the author's Obsidian), written with #13; M01 follows | M02 written, spike build installed (0.1.0-m01.1), **waits for the author's measurement** |
 
 Support: `tests/support/fake-dom.ts` (an element that records children, listeners,
 focus and events: carries only what Obsidian's `createEl`, `addEventListener` and
