@@ -11,9 +11,12 @@ import {vaultAccess} from './obsidian-deps';
 import {createCardsRunner} from './runner';
 import {environmentLine, pageEnv, PICKER_SPIKES} from './picker-spike';
 import {readSettingsFile} from './settings-file';
+import {createSettingsStore} from './settings/store';
+import {GameCardCreatorSettingTab} from './settings/tab';
 import {runSpike} from './spike-sheet';
 import {observeLongTasks, traceDeps} from './trace';
 import {
+  confirmDialogWith,
   confirmReplaceWith,
   onFileMenu,
   onFilesMenu,
@@ -30,11 +33,30 @@ export default class GameCardCreatorPlugin extends Plugin {
   override onload(): void {
     console.log(`GCC trace onload ${performance.now().toFixed(1)}`);
     observeLongTasks((line) => console.log(line), PerformanceObserver);
+    // US-007 AC-10: the settings screen is the only writer of data.json, through the store.
+    const store = createSettingsStore({
+      pluginDir: this.manifest.dir ?? '',
+      loadData: () => this.loadData(),
+      saveData: (data) => this.saveData(data),
+      adapter: this.app.vault.adapter,
+    });
+    const access = vaultAccess(this.app);
+    this.addSettingTab(
+      new GameCardCreatorSettingTab(this.app, this, {
+        store,
+        vaultRoot: () => access.vaultRoot(),
+        folders: () => this.app.vault.getAllFolders().map((f) => f.path),
+        folderExists: (folder) =>
+          this.app.vault.getFolderByPath(folder) !== null,
+        confirm: (dialog) => confirmDialogWith(Modal)(this.app, dialog),
+        exists: (path) => createDiskWriter(path).exists(path),
+      }),
+    );
     const runner = createCardsRunner({
-      ...vaultAccess(this.app),
-      // Read when a run starts (never at load); `saveData` is never called.
+      ...access,
+      // Read when a run starts (never at load), through the store.
       settings: async () => {
-        const {settings, notice} = readSettingsFile(await this.loadData());
+        const {settings, notice} = readSettingsFile(await store.read());
         if (notice !== null) new Notice(notice);
         return settings;
       },

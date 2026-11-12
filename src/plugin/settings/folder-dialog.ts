@@ -5,6 +5,8 @@
 // is there the button is not shown. Where the dialog starts (`defaultPath`) is NOT measured
 // in Obsidian yet (M04). Pure functions over an injected `require`: no Electron import.
 
+import type {CommitResult} from './commit';
+
 /** The part of the page's environment the dialog needs: `window.require`. */
 export interface DialogEnv {
   require?: (id: string) => unknown;
@@ -77,6 +79,46 @@ export async function chooseFolder(
     }
   }
   return {kind: 'unavailable'};
+}
+
+/** What the screen shows after the dialog: the picked path, its message, whether it was saved. */
+export interface PickOutcome {
+  /** The path the dialog gave (empty when there was none). */
+  path: string;
+  /** A refusal or a problem to show under the field; empty when there is none. */
+  message: string;
+  /** True when the path was saved: only then is the page drawn again. */
+  saved: boolean;
+}
+
+/**
+ * US-007 | AC-5 (found by M04): opens the dialog, commits the chosen path and says what the
+ * screen must show.
+ *
+ * `startAt` is asked when the dialog opens. A cancel is `null` (nothing to show). When no dialog
+ * could open the message says to type the path. A chosen path is committed through `commit`
+ * (the one `commitSetting`, which classifies it, SCAR-033): refused, the outcome keeps the
+ * check's message and `saved: false`, so the caller shows the message and the path and does not
+ * redraw the page over them (the defect: the page was redrawn at once and the refusal vanished).
+ */
+export async function pickOutputFolder(deps: {
+  env: DialogEnv;
+  startAt(): Promise<string>;
+  commit(path: string): Promise<CommitResult>;
+}): Promise<PickOutcome | null> {
+  const answer = await chooseFolder(deps.env, await deps.startAt());
+  if (answer.kind === 'cancelled') return null;
+  if (answer.kind === 'unavailable') {
+    return {
+      path: '',
+      message: 'No folder dialog is available here: type the path',
+      saved: false,
+    };
+  }
+  const result = await deps.commit(answer.path);
+  return result.ok
+    ? {path: answer.path, message: '', saved: true}
+    : {path: answer.path, message: result.message, saved: false};
 }
 
 /**

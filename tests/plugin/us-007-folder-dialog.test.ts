@@ -5,11 +5,14 @@
 // (Electron 43.8.4, Obsidian 1.15.0); `defaultPath` is not measured there.
 // Red until the tickets.
 import {describe, expect, it} from 'vitest';
+import {commitSetting} from '../../src/plugin/settings/commit';
 import {
   chooseFolder,
   dialogStart,
   folderDialogAvailable,
+  pickOutputFolder,
 } from '../../src/plugin/settings/folder-dialog';
+import {memoryStore} from '../support/memory-store';
 
 interface Call {
   via: string;
@@ -232,5 +235,103 @@ describe('US-007 AC-5: the button is shown only when a dialog could open', () =>
     };
     folderDialogAvailable(env({electron: {remote: {dialog: counting}}}));
     expect(opened).toBe(0);
+  });
+});
+
+describe("US-007 AC-5 (found by M04): what the screen does with the dialog's answer", () => {
+  const answering = (paths: string[], canceled = false) =>
+    env({
+      electron: {
+        remote: {
+          dialog: {
+            showOpenDialog: async () => ({canceled, filePaths: paths}),
+          },
+        },
+      },
+    });
+  it('a refused path comes back with its message and saved: false (the page must not be redrawn over it)', async () => {
+    const asked: string[] = [];
+    const outcome = await pickOutputFolder({
+      env: answering(['/v']),
+      startAt: async () => '/s',
+      commit: async (path) => (
+        asked.push(path),
+        {ok: false, message: 'Output folder "/v" is the vault\'s own folder'}
+      ),
+    });
+    expect(asked).toEqual(['/v']);
+    expect(outcome).toEqual({
+      path: '/v',
+      message: 'Output folder "/v" is the vault\'s own folder',
+      saved: false,
+    });
+  });
+  it('an accepted path: no message, saved: true, the path as the dialog gave it', async () => {
+    const outcome = await pickOutputFolder({
+      env: answering(['/out/cards']),
+      startAt: async () => '/s',
+      commit: async () => ({ok: true, warnings: []}),
+    });
+    expect(outcome).toEqual({path: '/out/cards', message: '', saved: true});
+  });
+  it('a cancel is null and nothing is committed', async () => {
+    let commits = 0;
+    const outcome = await pickOutputFolder({
+      env: answering([], true),
+      startAt: async () => '/s',
+      commit: async () => (commits++, {ok: true, warnings: []}),
+    });
+    expect(outcome).toBeNull();
+    expect(commits).toBe(0);
+  });
+  it('no dialog: a message that says to type the path, nothing committed', async () => {
+    let commits = 0;
+    const outcome = await pickOutputFolder({
+      env: env({}),
+      startAt: async () => '/s',
+      commit: async () => (commits++, {ok: true, warnings: []}),
+    });
+    expect(outcome).toEqual({
+      path: '',
+      message: 'No folder dialog is available here: type the path',
+      saved: false,
+    });
+    expect(commits).toBe(0);
+  });
+  it('the start folder is asked when the dialog opens, not before (SCAR-016)', async () => {
+    const order: string[] = [];
+    await pickOutputFolder({
+      env: env({
+        electron: {
+          remote: {
+            dialog: {
+              showOpenDialog: async (o: {defaultPath: string}) => (
+                order.push(`dialog at ${o.defaultPath}`),
+                {canceled: true, filePaths: []}
+              ),
+            },
+          },
+        },
+      }),
+      startAt: async () => (order.push('start asked'), '/stored'),
+      commit: async () => ({ok: true, warnings: []}),
+    });
+    expect(order).toEqual(['start asked', 'dialog at /stored']);
+  });
+  it("composed with the real commit: the vault itself is refused with the check's message, the old setting is kept, the message reaches the caller", async () => {
+    const store = memoryStore({outputFolder: '/keep'});
+    const outcome = await pickOutputFolder({
+      env: answering(['/v']),
+      startAt: async () => '/s',
+      commit: (path) =>
+        commitSetting({store, vaultRoot: () => '/v'}, 'outputFolder', path),
+    });
+    expect(outcome).toEqual({
+      path: '/v',
+      message: 'Output folder "/v" is the vault\'s own folder',
+      saved: false,
+    });
+    expect(store.writes).toEqual([]);
+    expect(store.file()).toEqual({outputFolder: '/keep'});
   });
 });

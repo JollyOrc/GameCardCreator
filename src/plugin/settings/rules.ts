@@ -19,6 +19,31 @@ export type RuleOp =
 const STALE = 'The rules changed: open the page again';
 
 /**
+ * US-007 AC-6, D4: the vault's folders to suggest for the text typed in a rule's folder
+ * field: those that contain the text (without case), sorted without case, at most `limit`;
+ * the vault's root and hidden folders (a segment starting with a dot) are never suggested.
+ * An empty text suggests the first `limit` folders. `folders` is read when the field is
+ * used, not when the page was drawn (SCAR-016).
+ */
+export function suggestFolders(
+  query: string,
+  folders: readonly string[],
+  limit = 20,
+): string[] {
+  const needle = query.trim().toLowerCase();
+  return folders
+    .filter(
+      (f) =>
+        f !== '' &&
+        f !== '/' &&
+        !f.split('/').some((part) => part.startsWith('.')) &&
+        f.toLowerCase().includes(needle),
+    )
+    .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
+    .slice(0, limit);
+}
+
+/**
  * US-007 AC-6, D4, D15: applies one change to the kind rules.
  *
  * `set` replaces the row at `index`, or appends when `index` is the number of rules; it is

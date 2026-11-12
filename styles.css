@@ -1,1 +1,20 @@
 /* Game Card Creator: no styles yet (the settings screen is US-007). */
+
+/* US-007: the settings tab */
+.gcc-status {
+  white-space: pre-line;
+  margin: 0 0 1em 0;
+}
+.gcc-grid {
+  color: var(--text-muted);
+  margin: 0.5em 0 1em 0;
+}
+.gcc-error {
+  color: var(--text-error);
+}
+.gcc-error.gcc-warning {
+  color: var(--color-orange);
+}
+.gcc-error:empty {
+  display: none;
+}

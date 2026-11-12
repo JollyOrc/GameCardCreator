@@ -58,6 +58,21 @@ export const fieldsOf = (page: PageId): FieldDef[] =>
   FIELDS.filter((f) => f.page === page);
 
 /**
+ * US-007 AC-1: the fields of one page grouped under their headings, in the order of their
+ * first appearance (`Sheet` before `Text size` on the layout page).
+ */
+export function groupsOf(page: PageId): {group: string; fields: FieldDef[]}[] {
+  const groups: {group: string; fields: FieldDef[]}[] = [];
+  for (const field of fieldsOf(page)) {
+    const last = groups[groups.length - 1];
+    if (last !== undefined && last.group === field.group)
+      last.fields.push(field);
+    else groups.push({group: field.group, fields: [field]});
+  }
+  return groups;
+}
+
+/**
  * US-007 AC-8: the value of the setting `id` in `settings`, as the field shows it.
  *
  * Throws `Unknown setting <id>` for an id that is not in `FIELDS` (a bug of the caller,

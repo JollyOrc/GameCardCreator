@@ -447,3 +447,11 @@ all caught.
 `us-007-folder-dialog` and the narrowed `run-sources` pass (28 of 28); `npm test` has 681 passing
 and 15 failing, all of ticket #19; integration 61 of 61; the whole-tree typecheck is clean (it was
 expected red until #19: wrong, #19's tests do not import the tab). Thirteen mutants, all caught.
+
+**#19 (2026-11-12):** the tab, the notice and `main.ts` are written; `us-007-notice`,
+`us-007-wiring` and the amended `us-008-wiring` pass; `us-007-tab-helpers` (8 tests, `groupsOf`
+and `suggestFolders`) was added; `npm test` 704 of 704, integration 61 of 61, typecheck, eslint,
+prettier clean. Two G2 text checks were narrowed at this ticket, each to its criterion: the page
+names come from `PAGE_TITLES` (the tab must use it), and one `bindInput` serves every input (Enter
+by `fieldKey`, blur), each statement matched whole. Twelve mutants on the tab, `main.ts` and the
+runner, all caught. **Measured in Obsidian (M04, build 0.1.0-m01.5, the author's run):** the tab works ("basically all ok"), the dialog starts at the stored folder, the backup is made once and is byte-identical, a hand edit while the tab is open is kept, 6 cards per page with the margin at 15; two findings (F1 fixed, F2 a change request); details in M04.md.

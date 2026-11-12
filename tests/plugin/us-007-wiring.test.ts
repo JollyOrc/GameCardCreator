@@ -59,9 +59,14 @@ describe('US-007 AC-4 (SCAR-017): one path for every field', () => {
   });
   it('the tab builds its field rows from the table (fieldsOf) and decides the Enter key by fieldKey', () => {
     const tab = code(at('tab.ts'));
-    expect(tab).toMatch(/\bfieldsOf\s*\(/);
-    expect(tab).toMatch(/\bfieldKey\s*\(/);
-    expect(tab).toMatch(/addEventListener\(\s*'blur'/);
+    expect(tab).toMatch(/\b(fieldsOf|groupsOf)\s*\(/);
+    // Tightened at #19 (SCAR-023): one binding for every input (fields and rule rows), each
+    // statement matched whole: Enter decided by fieldKey, a blur committing the same way.
+    expect(count(tab, /\bfieldKey\s*\(/g)).toBe(1);
+    expect(tab).toMatch(/if \(fieldKey\(event\) === 'commit'\) fire\(\);/);
+    expect(count(tab, /addEventListener\(\s*'blur'/g)).toBe(1);
+    expect(tab).toMatch(/input\.addEventListener\('blur', fire\);/);
+    expect(count(tab, /\bbindInput\s*\(/g)).toBe(3); // the helper, the fields, the rule rows
   });
   it('the tab never writes a setting another way: no saveData, no store.write, no loadData', () => {
     const tab = code(at('tab.ts'));
@@ -70,7 +75,17 @@ describe('US-007 AC-4 (SCAR-017): one path for every field', () => {
   it('the tab hides the dialog button by folderDialogAvailable and opens it by chooseFolder', () => {
     const tab = code(at('tab.ts'));
     expect(tab).toMatch(/\bfolderDialogAvailable\s*\(/);
-    expect(tab).toMatch(/\bchooseFolder\s*\(/);
+    // Changed at the M04 fix: the tab opens the dialog through pickOutputFolder, which owns
+    // what happens with the answer (a refused path keeps its message).
+    expect(tab).toMatch(/\bpickOutputFolder\s*\(/);
+    expect(tab).not.toMatch(/\bchooseFolder\s*\(/);
+  });
+  // Added at the M04 fix (SCAR-031, SCAR-023): the two statements that kept a refusal visible.
+  it("after the dialog the tab shows the outcome's message and redraws the page only when the path was saved", () => {
+    const tab = code(at('tab.ts'));
+    expect(tab).toMatch(/error\.setText\(outcome\.message\);/);
+    expect(tab).toMatch(/if \(outcome\.saved\) await this\.draw\(\);/);
+    expect(count(tab, /outcome\.saved/g)).toBe(1);
   });
   it('the output folder from the dialog goes through the same commitSetting as the text field (the tab has no second path)', () => {
     const tab = code(at('tab.ts'));
@@ -149,14 +164,13 @@ describe('US-007 (SCAR-031, SCAR-017): the entry point and the layering', () => 
     expect(tab).toMatch(/extends PluginSettingTab\b/);
     expect(tab).toMatch(/'Game Card Creator'/);
   });
-  it('the three pages are named as the story says', () => {
+  // Narrowed at #19 (SCAR-023): the names of the two sub pages are one table, `PAGE_TITLES`
+  // (pinned to the story's wording in us-007-reset); the tab must use it, not copy the names.
+  it('the main page is named Game Card Creator; the sub pages take their names from PAGE_TITLES', () => {
     const tab = readFileSync(at('tab.ts'), 'utf8');
-    for (const name of [
-      'Game Card Creator',
-      'Note properties',
-      'Page and text size',
-    ]) {
-      expect(tab, name).toContain(name);
-    }
+    expect(tab).toContain("'Game Card Creator'");
+    expect(tab).toMatch(/PAGE_TITLES\[/);
+    expect(tab).not.toContain('Note properties');
+    expect(tab).not.toContain('Page and text size');
   });
 });

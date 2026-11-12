@@ -75,7 +75,7 @@ export function createCardsRunner(deps: RunnerDeps): CardsRunner {
   const refuse = (text: string): void =>
     deps.notice(
       deps.settingsFile
-        ? `${text}\nSettings file: ${deps.settingsFile()}`
+        ? `${text}\nSee Settings → Game Card Creator (file: ${deps.settingsFile()})`
         : text,
     );
 

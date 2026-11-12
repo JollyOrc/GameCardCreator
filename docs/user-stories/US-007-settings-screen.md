@@ -65,9 +65,9 @@ English only (D9).
   button is not shown** and the text field remains (the text field always works). A
   cancelled dialog changes nothing and shows nothing. **The dialog starts at the stored
   output folder when it exists, otherwise at the user's Documents folder** (the author's
-  preference, M03); this is passed as Electron's `defaultPath`, **not measured in Obsidian
-  yet** (M04 measures it; if it is ignored the dialog starts where the system chooses and the
-  result is recorded, not hidden). Not used: an `<input webkitdirectory>` (gives no path for
+  preference, M03); this is passed as Electron's `defaultPath` and **was measured in the
+  author's Obsidian 1.15.0 (M04, build 0.1.0-m01.5, 2026-11-12): the dialog starts at the
+  stored folder** (one observation; the Documents fallback for a missing folder was not tried). Not used: an `<input webkitdirectory>` (gives no path for
   an empty folder) and `showDirectoryPicker` (gives a name, no path).
 - **AC-6 (the kind rules, D4).** A list of rows: a folder text field with the vault's
   folders suggested (the list is read when the field is used, not when the page was drawn,
@@ -154,8 +154,8 @@ English only (D9).
 
 ## Open
 
-- That the dialog's `defaultPath` (the stored folder, else Documents) is honoured in
-  Obsidian: measured in M04 (AC-5), not before.
+- The Documents fallback of the dialog (no stored folder, or a missing one) was not tried in
+  Obsidian; the stored-folder case was measured (M04).
 
 ## Interface used by the tests (G2)
 
