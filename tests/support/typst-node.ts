@@ -76,6 +76,22 @@ export async function compilePdf(source: string): Promise<Uint8Array> {
 export async function compileWithFacts(
   source: string,
   label: string,
+  files: readonly {path: string; bytes: Uint8Array}[] = [],
+): Promise<{pdf: Uint8Array; facts: unknown[]; diagnostics: unknown[]}> {
+  const t = typst();
+  // US-004 AC-12: the files of the answer sit at their paths next to the source
+  // for this compile only (unmapped in `finally`, nothing leaks into the next).
+  for (const f of files) await t.mapShadow(`/${f.path}`, f.bytes);
+  try {
+    return await compileMapped(source, label);
+  } finally {
+    for (const f of files) await t.unmapShadow(`/${f.path}`);
+  }
+}
+
+async function compileMapped(
+  source: string,
+  label: string,
 ): Promise<{pdf: Uint8Array; facts: unknown[]; diagnostics: unknown[]}> {
   const pdf = await compilePdf(source);
   const t = typst();

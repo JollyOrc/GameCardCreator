@@ -49,6 +49,25 @@ describe('US-003 AC-11: no second copy of the codes', () => {
   });
 });
 
+describe('US-004 AC-11 (SCAR-017): the creature codes have no second copy either', () => {
+  const root = join(process.cwd(), 'src', 'core');
+  const files: string[] = [];
+  const walk = (dir: string): void => {
+    for (const entry of readdirSync(dir)) {
+      const path = join(dir, entry);
+      if (statSync(path).isDirectory()) walk(path);
+      else if (path.endsWith('.ts')) files.push(path);
+    }
+  };
+  walk(root);
+  it('only src/core/card/warning.ts has a literal CREATURE_ code (the others use cardCode)', () => {
+    const hits = files
+      .filter((f) => /['"`]CREATURE_/.test(readFileSync(f, 'utf8')))
+      .map((f) => f.slice(root.length + 1));
+    expect(hits).toEqual(['card/warning.ts']);
+  });
+});
+
 describe('US-003 AC-4: fit warnings follow the kind of the card', () => {
   const cards = [
     card('a/S1.md'),

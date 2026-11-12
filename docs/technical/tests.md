@@ -478,3 +478,31 @@ highest `@since` of the five Obsidian APIs the plugin uses, read from the pinned
 (1.6.6, from `getAllFolders`), and `versions.json` maps the release version to it; a mutant with
 1.5.0 fails 2 of 3. Whole suite: 713 plugin, unit and tooling tests and 61 integration tests pass;
 typecheck, eslint, prettier clean.
+
+## US-004 creature card (2026-11-12, G2): tests written (red by design)
+
+| AC | Test | State |
+|---|---|---|
+| AC-1 | `unit/creature-read` (example, text rules with the creature codes, other shapes); `integration/creature-card-pdf` AC-1 | written |
+| AC-2 | `creature-read` AC-2 (case, levels, ends, missing, optional Signs, headings as settings) | written |
+| AC-3 | `unit/creature-statblock` (fixture is the real answer, the call, reading an answer) | written |
+| AC-4 | `creature-card-pdf` AC-4 (band 11.5, 9.04, 16.43 pt; data used as given) | written |
+| AC-5 | `unit/creature-fit`; `creature-card-pdf` AC-5 (two scans, overflow, dropped parts gone) | written (invariants; exact triples re-measured at the code ticket) |
+| AC-6 | `creature-card-pdf` AC-6 (the real literal answer; special characters) | written |
+| AC-7 | `creature-card-pdf` AC-7 (order, slots, containment to 0.1 mm) | written |
+| AC-8 | `creature-card-pdf` AC-8 (two fresh processes) | written |
+| AC-9 | `creature-card-pdf` AC-9 (once, 5 pt, centred, band, per page, null, two lines); `run-creature` | written |
+| AC-10 | manual look, 4x, with the code ticket | pending |
+| AC-11 | `creature-statblock`, `run-creature`, `creature-card-pdf` (card without statblock) | written |
+| AC-12 | `plugin/creature-compile` (files, font, nothing leaks); `run-creature` | written |
+| AC-12a | equal files merged (`run-creature`); different bytes: D6 open | partly |
+| AC-13 | `creature-settings`, `plugin/creature-screen`, `unit/us-007-fields` (amended, 20 fields), `card-codes` (no literal `CREATURE_`) | written |
+
+New support: `tests/support/creature-fixtures.ts` (a copy of the real 0.15.0
+answers), `creature-sheet-cli.ts`, `tests/fixtures/fonts/` (DejaVu Sans Mono
+with its licence, a family the plugin does not bundle); `typst-node` and
+`card-sheet` take the answer's files. Interfaces the tests fix: `creature/{read,
+settings,statblock}.ts`; `cardSheetTypst(...)` returns `files`; `RunDeps.statblockApi`
+and `compile(source, extra?)`; the worker's compile message carries `files` and
+`fonts`; the fit fact `dropped`. Result: `npm test` 715 passed, 33 failed in 9
+files, all new or amended; integration 61 passed, the creature file does not load.

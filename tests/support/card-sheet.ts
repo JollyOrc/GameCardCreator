@@ -8,6 +8,7 @@ import {
 } from '../../src/core/sheet/layout';
 import {cardSheetTypst} from '../../src/core/card/sheet';
 import {FIT_LABEL} from '../../src/core/skill/fit';
+import type {CreatureCard} from '../../src/core/creature/read';
 import type {SkillCard} from '../../src/core/skill/read';
 import {DEFAULT_SIZES, type CardSizes} from '../../src/core/skill/settings';
 import {runsIn, textOf} from './card-pdf';
@@ -17,15 +18,17 @@ import {compileWithFacts} from './typst-node';
 
 /** Compiles `cards` onto a sheet; returns pages' runs, the facts and helpers. */
 export async function makeSheet(
-  cards: SkillCard[],
+  cards: (SkillCard | CreatureCard)[],
   sheet: SheetSettings = DEFAULT_SHEET,
   sizes: CardSizes = DEFAULT_SIZES,
 ) {
   const typst = cardSheetTypst(cards, sheet, sizes);
   if (!typst.ok) throw new Error(typst.message);
+  // US-004 AC-12: the files of the creature answers sit next to the source.
   const {pdf, facts, diagnostics} = await compileWithFacts(
     typst.source,
     FIT_LABEL,
+    typst.files,
   );
   const placed = placeCards(cards.length, sheet);
   if (!placed.ok) throw new Error(placed.message);

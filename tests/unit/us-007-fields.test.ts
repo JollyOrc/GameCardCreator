@@ -12,7 +12,7 @@ import {
 } from '../../src/plugin/settings/fields';
 
 describe('US-007 AC-1: the fields of the pages', () => {
-  it('the main page has the output folder; Note properties the skill names and labels and the spell tags; Page and text size the sheet and the sizes', () => {
+  it('the main page has the output folder; Note properties the skill names and labels and the spell tags and the three creature section headings; Page and text size the sheet and the sizes', () => {
     expect(fieldsOf('main').map((f) => f.id)).toEqual(['outputFolder']);
     expect(fieldsOf('properties').map((f) => f.id)).toEqual([
       'skill.tagsProperty',
@@ -23,6 +23,9 @@ describe('US-007 AC-1: the fields of the pages', () => {
       'skill.requiresProperty',
       'skill.requiresLabel',
       'spell.tagsProperty',
+      'creature.instinctsHeading',
+      'creature.actionsHeading',
+      'creature.signsHeading',
     ]);
     expect(fieldsOf('layout').map((f) => f.id)).toEqual([
       'sheet.cardWidth',
@@ -35,9 +38,9 @@ describe('US-007 AC-1: the fields of the pages', () => {
       'skill.sizeStep',
     ]);
   });
-  it('17 fields in all, ids unique, every field has a label and a group', () => {
-    expect(FIELDS).toHaveLength(17);
-    expect(new Set(FIELDS.map((f) => f.id)).size).toBe(17);
+  it('20 fields in all, ids unique, every field has a label and a group', () => {
+    expect(FIELDS).toHaveLength(20);
+    expect(new Set(FIELDS.map((f) => f.id)).size).toBe(20);
     for (const f of FIELDS) {
       expect(f.label, f.id).not.toBe('');
       expect(f.group, f.id).not.toBe('');
@@ -60,6 +63,8 @@ describe('US-007 AC-1: the fields of the pages', () => {
     expect(kinds['outputFolder']).toBe('text');
     expect(kinds['skill.tagsProperty']).toBe('text');
     expect(kinds['spell.tagsProperty']).toBe('text');
+    for (const id of ['instinctsHeading', 'actionsHeading', 'signsHeading'])
+      expect(kinds[`creature.${id}`], id).toBe('text'); // US-004 AC-13
   });
   it('every field is on exactly one of the three pages', () => {
     const all = [
@@ -86,6 +91,9 @@ describe('US-007 AC-8: valueOf shows the setting, the defaults are the story tab
     ['skill.requiresLabel', 'Requires'],
     ['skill.tagsProperty', 'tags'],
     ['spell.tagsProperty', 'tags'],
+    ['creature.instinctsHeading', 'Behaviour'],
+    ['creature.actionsHeading', 'Actions'],
+    ['creature.signsHeading', 'Signs'],
     ['outputFolder', ''],
   ])('%s is %j by default', (id, expected) => {
     expect(valueOf(DEFAULT_CARDS, id)).toBe(expected);
@@ -97,7 +105,9 @@ describe('US-007 AC-8: valueOf shows the setting, the defaults are the story tab
       sheet: {...DEFAULT_CARDS.sheet, margin: 15, cutMarks: false},
       skill: {...DEFAULT_CARDS.skill, maxSize: 8.5, kindLabel: 'Kind'},
       spell: {tagsProperty: 'labels'},
+      creature: {...DEFAULT_CARDS.creature, actionsHeading: 'Moves'},
     };
+    expect(valueOf(s, 'creature.actionsHeading')).toBe('Moves');
     expect(valueOf(s, 'outputFolder')).toBe('/out');
     expect(valueOf(s, 'sheet.margin')).toBe(15);
     expect(valueOf(s, 'sheet.cutMarks')).toBe(false);

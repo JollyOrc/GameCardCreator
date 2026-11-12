@@ -1,6 +1,6 @@
 # US-004 — Creature card
 
-**Status:** Ready (G1 done 2026-11-12; the owner accepted D1 to D5 on 2026-11-12, D2 changed, see AC-11)
+**Status:** Ready (G1 done 2026-11-12; the owner accepted D1 to D5 on 2026-11-12, D2 changed, see AC-11); G2 tests written 2026-11-12; D6 (icon paths) decided: fix in Obsidian2Typst 0.15.1
 (G0 2026-11-11; the owner answered the control project's questions
 2026-11-11: statblock through a new Obsidian2Typst API function, the
 drop-then-shrink rule). The contract (AC-3) is checked against the released
@@ -100,8 +100,10 @@ Flattened reeds in a ring.
     `api.version === 1` and `typeof api.statblockTypst === "function"` and
     `typeof api.compileFonts === "function"`; otherwise the creature card is
     refused with a message naming the plugin and the least version (0.15.0);
-    no other card is affected. The API object is read at each run, never kept
-    (SCAR-016).
+    no other card is affected: one warning `CREATURE_API_UNAVAILABLE` per
+    run (empty path, the message as detail), no creature card is made, the
+    skill and spell cards of the run are. The API object is read at each
+    run, never kept (SCAR-016).
   - `api.statblockTypst(data, options?)`: `data` is the note's properties as
     plain values (keys in any case), `options.heading` the band's text (the
     note's file name). It returns `{ok: true, prelude, data, files, credit,
@@ -157,10 +159,13 @@ Flattened reeds in a ring.
   `CREATURE_TEXT_OVERFLOW` names the note and the size. A given-up Instincts
   section or Skills line gives `CREATURE_PART_DROPPED` (detail `Instincts` or
   `Skills`); a given-up Signs section gives no warning (it is the card's
-  lowest priority by design). The fit facts carry which parts were kept
-  (`CREATURE_FIT_UNKNOWN` when no fact is read). Measured 2026-11-11
+  lowest priority by design). The fit fact of a creature card is `{i, size, fits, dropped}`, `dropped`
+  listing, in the order given up, the parts the card has and gave up
+  (`Signs`, `Instincts`, `Skills`); `CREATURE_FIT_UNKNOWN` when no valid fact
+  is read (also a fact without `dropped`). Measured 2026-11-11
   (typical statblock with a Skills line; invented words of 6.7 letters,
-  paragraphs of 14 words; scope: this layout and this text; words in Signs,
+  paragraphs of 14 words; scope: this layout and this text, with the spike's own
+  statblock, not the fixture's; words in Signs,
   Instincts, Actions): (0, 30, 40) gives Instincts dropped at 7 pt; (20, 25,
   25) gives Signs dropped at 7 pt; (25, 40, 60) gives only the minimum, shrunk
   to 6.75 pt; (25, 40, 100) the minimum at 6 pt; (30, 60, 150) does not fit at
@@ -207,6 +212,14 @@ Flattened reeds in a ring.
   without files and fonts, is the sheet as before (nothing leaks, to the
   byte, the same PDF as before the creature compile). A sheet without a
   creature card never calls the API.
+- **AC-12a (several creature cards, files).** The files of several answers
+  are put together by path: a path with the same bytes is one file (D6: from
+  Obsidian2Typst 0.15.1 the number of an icon file is its position in the
+  preset's track list, so one path is one file for every creature of a
+  preset). Defensive: if two answers give one path with different bytes, the
+  later card is made without its statblock (as AC-11) with one warning
+  `CREATURE_ICON_CONFLICT` (the note's path, the file path as detail); a wrong
+  icon is never drawn. The least version of AC-3 becomes 0.15.1.
 - **AC-13 (settings and rules).** The three section headings are settings of
   the settings file and of the settings screen (US-007: the same commit and
   reset rules as the other text settings, an empty heading refused); the rule
@@ -235,6 +248,16 @@ then shrink (AC-5).
 - **D5.** The three section headings and the rule kind are in this story, not
   a later one (AC-13): without them the card cannot be made from the
   settings screen.
+
+## Decided at G2
+
+- **D6 (owner, 2026-11-12).** Each answer used to number its icon files from 1
+  in the order of first use, so two creatures with different conditions lists
+  could give one path with two files. Decided: the fix is in Obsidian2Typst
+  (number by the preset's track order, release 0.15.1, its own story first),
+  not a rewrite of the data text here. This plugin merges by path and warns on
+  a conflict (AC-12a). The fixture is re-copied from the 0.15.1 output; the
+  least version in AC-3 becomes 0.15.1 then.
 
 ## Not covered
 
