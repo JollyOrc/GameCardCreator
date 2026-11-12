@@ -442,3 +442,8 @@ eight modules of `src/plugin/settings/` and `confirmDialogWith` of `ui.ts`, whic
 `-rules` and `-reset` pass (162 of 162; with `us-008-adapters` 182); `npm test` has 658 passing
 and 17 failing, all of tickets #18 and #19; integration 61 of 61. Sixteen mutants on the code,
 all caught.
+
+**#18 (2026-11-12):** `store.ts` and `folder-dialog.ts` are written. `us-007-store`,
+`us-007-folder-dialog` and the narrowed `run-sources` pass (28 of 28); `npm test` has 681 passing
+and 15 failing, all of ticket #19; integration 61 of 61; the whole-tree typecheck is clean (it was
+expected red until #19: wrong, #19's tests do not import the tab). Thirteen mutants, all caught.
