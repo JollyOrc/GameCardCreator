@@ -9,6 +9,7 @@ import {createCompiler} from './compiler/index';
 import {createDiskWriter} from './disk-writer';
 import {vaultAccess} from './obsidian-deps';
 import {createCardsRunner} from './runner';
+import {environmentLine, pageEnv, PICKER_SPIKES} from './picker-spike';
 import {readSettingsFile} from './settings-file';
 import {runSpike} from './spike-sheet';
 import {observeLongTasks, traceDeps} from './trace';
@@ -59,6 +60,18 @@ export default class GameCardCreatorPlugin extends Plugin {
     this.registerEvent(
       this.app.workspace.on('files-menu', onFilesMenu(commands)),
     );
+    // Test builds only (US-007 G1, M03): which folder dialog works here.
+    for (const spike of PICKER_SPIKES) {
+      this.addCommand({
+        id: `spike-folder-${spike.id}`,
+        name: `Spike: pick a folder, ${spike.id} (${spike.name})`,
+        callback: () =>
+          void spike.run(pageEnv()).then((line) => {
+            console.log(`GCC spike ${line}; ${environmentLine(pageEnv())}`);
+            new Notice(`Spike ${line}`);
+          }),
+      });
+    }
     this.addCommand({
       id: 'spike-compile',
       name: 'Spike: compile a fixed sheet (developer)',
