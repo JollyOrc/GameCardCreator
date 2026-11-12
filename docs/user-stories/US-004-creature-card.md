@@ -1,17 +1,19 @@
 # US-004 — Creature card
 
-**Status:** Draft (G0 done 2026-11-11; the owner answered the control project's
-questions 2026-11-11: statblock through a new Obsidian2Typst API function, the
-drop-then-shrink rule; the contract (AC-3) written 2026-11-11 and checked
-against Obsidian2Typst US-039 at its G1). G1 and the tests wait for that G1.
-Criteria marked *pending* depend on the owner's decisions.
+**Status:** Ready (G1 done 2026-11-12; the owner accepted D1 to D5 on 2026-11-12, D2 changed, see AC-11)
+(G0 2026-11-11; the owner answered the control project's questions
+2026-11-11: statblock through a new Obsidian2Typst API function, the
+drop-then-shrink rule). The contract (AC-3) is checked against the released
+Obsidian2Typst 0.15.0 (US-039): its answer was printed and compiled on
+2026-11-12, and the author ran the icons and the preset's fonts in a real
+compile in Obsidian (its M29, part A).
 
 **As** a game master **I want** one creature per card — its statblock, its
 instincts and its attacks, a picture only if there is room — **so that** I can
 run an encounter from the cards.
 
 Reader of the output, engine, font: as US-002. The statblock is the one that
-Obsidian2Typst draws for the book (route *pending*, see AC-3). The picture is
+Obsidian2Typst draws for the book, taken through its API (AC-3). The picture is
 a later story (US-006): this story reserves no space for it.
 
 All examples use invented names. The property names and the section headings
@@ -98,12 +100,15 @@ Flattened reeds in a ring.
     `api.version === 1` and `typeof api.statblockTypst === "function"` and
     `typeof api.compileFonts === "function"`; otherwise the creature card is
     refused with a message naming the plugin and the least version (0.15.0);
-    no other card is affected.
+    no other card is affected. The API object is read at each run, never kept
+    (SCAR-016).
   - `api.statblockTypst(data, options?)`: `data` is the note's properties as
     plain values (keys in any case), `options.heading` the band's text (the
     note's file name). It returns `{ok: true, prelude, data, files, credit,
-    warnings}` or `{ok: false, reason, message}` with `reason` one of `no-settings`,
-    `no-statblock`, `error`.
+    warnings}` or `{ok: false, reason, message}` with `reason` one of
+    `no-settings` (no active preset, or none with a statblock setup; also a
+    preset that could not be read) and `no-statblock` (no stat and no attack
+    in the data). It never throws; `api.version` stays 1.
   - `prelude`: Typst definitions (the helper functions whose names start with
     `o2t-`), the same text for every call, no content of the note.
   - `data`: a Typst dictionary literal with the keys `band`, `look`, `boxes`,
@@ -115,19 +120,33 @@ Flattened reeds in a ring.
     (`o2t-icons/<n>.svg`, `n` from 1; the reader writes the bytes at that path
     next to its source).
   - `credit`: the icons' credit text, or `null`.
-  - `warnings`: `{code, message}` of the data checks, once each.
+  - `warnings`: `{code, message}` of the data checks (`STAT_SUM_MISMATCH`,
+    `TAG_UNMAPPED`, `HTML_UNSUPPORTED`, ...) and `STATBLOCK_ICON_MISSING`
+    (a missing icon is an empty cell), once each; the message starts with the
+    band's text in quotes.
   - `api.compileFonts()`: the font files the book's export gives its compiler
     (bundled first, then the vault's).
   - The helper draws at the width of its container (`width: 100%`).
   Measured 2026-11-11 with Obsidian2Typst's own code, invented data, no icon
   files, Libertinus: 36 mm tall (vigour 4, one attack) to 55 mm (vigour 35,
-  four attacks, skills, traits) at 54 mm width; not measured: icons and the
-  preset's fonts in a card compile (the first ticket measures them).
-  Example (invented): the answer for the Fen Hare note above, whose `data`
-  starts `(band: "Fen Hare", look: (fill: ...`, and a `files` entry per icon.
+  four attacks, skills, traits) at 54 mm width. Measured 2026-11-12 with the
+  released 0.15.0 answer for the Fen Hare note above under the sample preset
+  (four sample icons, Libertinus, text size 7 pt): **43.0 mm tall** (121.9 pt)
+  at 54 mm width, no diagnostic; the author's own run of icons and the
+  preset's fonts in a compile in Obsidian passed (Obsidian2Typst M29, part A).
+  The answer's `data` for that note starts `(band: "Fen Hare", look: (fill:
+  none, frame: (color: rgb("#000000"), width: 0.75pt), ...` and its `look.sizes`
+  are `band: 11.5pt, value: 11pt, label: 5.5pt, text: 7pt, attacks: 7.5pt,
+  skills: 9pt`; its `files` hold `o2t-icons/1.svg` to `4.svg`. The test
+  fixture of this plugin is a copy of that real output (SCAR-023).
 - **AC-4 (fit, the statblock scales) — numbers measured.** The statblock's
   sizes scale with the card's text size S (factor S / 7); the text is set at
-  S; sizes are tried as in US-002 AC-5.
+  S; sizes are tried as in US-002 AC-5. The scaling is done in the Typst
+  source of the card, on the answer's data text, which is not edited: the
+  card binds `data`, multiplies each entry of `look.sizes` by the factor and
+  hands the result to `o2t-sb-box`. Measured 2026-11-12 (Fen Hare, 54 mm,
+  height auto): factor 1 gives 121.9 pt, factor 5.5 / 7 gives 111.8 pt, no
+  diagnostic; a larger factor grows the box (158.9 pt at 10 / 7).
 - **AC-5 (drop first, then shrink; owner's rule).** The card is tried at the
   largest size (7 pt) with all parts; if it does not fit, the Signs section is
   given up, then the Instincts section, then the Skills line of the statblock,
@@ -148,23 +167,74 @@ Flattened reeds in a ring.
   5.5 pt (`CREATURE_TEXT_OVERFLOW`). **Consequence to confirm:** a creature
   of 70 words loses its Instincts although shrinking to about 6.25 pt would
   have kept them (the rule is drop first, as decided).
-- **AC-6 (text is literal).** As US-002 AC-7 in the title, the section text and, through the API's own escaping, in the statblock values
-  (examples to be written with the contract).
+  Without a statblock (AC-11) the minimum is the Actions section alone and
+  the Skills step does not exist.
+- **AC-6 (text is literal).** As US-002 AC-7 in the title and the section
+  text; in the statblock values through the API's own escaping, which this
+  plugin does not repeat or change. Examples (the API's measured cases, invented
+  data): the attack `**Bite**: 1d6` is set bold (`Bite` then `1d6`); `a#b $c:
+  1d4` shows `a#b $c`; `= x: 1d4` shows `= x`; a link shows its text; `Kick
+  <x>: 1d4` shows the attack `Kick` (the tag is dropped) with `1d4` and gives
+  the forwarded warning `HTML_UNSUPPORTED` (AC-11). In the answer's data these
+  are `([*Bite*], [1d6])`, `([a\#b \$c], [1d4])`, `([\= x], [1d4])` and
+  `([Kick ], [1d4])` (measured 2026-11-12); the card's PDF text holds each.
 - **AC-7 (mixed deck).** Creature, skill and spell cards on one sheet, in the
   given order, every run inside its text area to 0.1 mm (US-003 AC-7).
 - **AC-8 (deterministic).** As US-002 AC-11.
-- **AC-9 (credit) — pending.** If the statblock shows condition icons that
-  carry a credit, the credit line appears once in the bottom margin of every
-  sheet with a creature card, and nowhere else.
+- **AC-9 (credit).** The answer's `credit` (the preset's text, or `null`) is
+  printed once, as one small line (5 pt, centred, wrapped at the sheet's text
+  width, at most two lines) in the bottom margin of every sheet that has a
+  creature card, and nowhere else; with `null` or an empty text no line. The
+  line stays inside the margin band and covers no card (to 0.1 mm). The
+  credit of several creature cards on a sheet is the same text, printed once.
 - **AC-10 (look, SCAR-025).** A sheet with a small, a typical and a long
   creature at printed size, a statblock at 4x.
+- **AC-11 (warnings and refusals).** Every warning of the answer is forwarded
+  as a warning of the run with its own code and message and the note's path
+  (the run goes on). A refusal (`no-settings`, `no-statblock`) gives the card **without its
+  statblock** (D2): the title and the text sections, fitted as AC-5 says
+  without the statblock and without its Skills step, with no credit and no
+  files of its own, and one warning `CREATURE_STATBLOCK_REFUSED` with the
+  note's path and the API's message; the run goes on. A missing
+  or too old plugin refuses every creature card once (AC-3), not the skill and
+  spell cards of the same run. The run's report counts the creature cards as
+  made or refused like the other kinds.
+- **AC-12 (the compile takes the answer's files and fonts).** A sheet with a
+  creature card is compiled with the answer's `files` at their paths next to
+  the source and with the font files of `api.compileFonts()` added to the
+  plugin's own fonts (the card's own text stays Libertinus Serif; the
+  statblock's families come from the book's list). A compile after it,
+  without files and fonts, is the sheet as before (nothing leaks, to the
+  byte, the same PDF as before the creature compile). A sheet without a
+  creature card never calls the API.
+- **AC-13 (settings and rules).** The three section headings are settings of
+  the settings file and of the settings screen (US-007: the same commit and
+  reset rules as the other text settings, an empty heading refused); the rule
+  kind `creature` is accepted in the rules (US-005 AC-3), shown in the rule
+  rows, and selects the creature reader. The card sizes are the shared ones.
 
-## Open decisions (control project, `Creature Card Questions.md`)
+## Decided by the owner (2026-11-11)
 
-Route for the statblock (a new function in Obsidian2Typst, our own, or only
-its data); the contract and the order of work; fonts; the credit; what the
-card shows; the picture as a later story; scaling; the creature that does not
-fit.
+Route A (the API function, released as Obsidian2Typst 0.15.0); the contract
+as AC-3; the statblock's fonts come with the API, the card's own text stays
+Libertinus Serif; the credit line in the bottom margin; what the card shows;
+the picture is US-006; the statblock scales with the text size; drop first,
+then shrink (AC-5).
+
+## Decisions of G1 (accepted by the owner 2026-11-12)
+
+- **D1.** Warnings of the API are forwarded unchanged (AC-11), not renamed to
+  creature codes: the book's codes are the ones the author knows.
+- **D2.** A refused statblock gives a card without its statblock and one
+  warning (AC-11). (The proposal was no card; the owner chose otherwise.)
+- **D3.** The credit is 5 pt, centred, at most two lines (AC-9).
+- **D4.** The compile of a creature sheet adds the API's fonts to the
+  plugin's own (AC-12); how the worker takes them (a fresh compiler for such
+  a compile) is a ticket's measurement, the criterion is what the compile
+  does, not how.
+- **D5.** The three section headings and the rule kind are in this story, not
+  a later one (AC-13): without them the card cannot be made from the
+  settings screen.
 
 ## Not covered
 
