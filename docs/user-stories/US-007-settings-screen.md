@@ -1,8 +1,8 @@
 # US-007 — The settings screen
 
-**Status:** Draft (G0 done 2026-11-12; the decisions D1 to D12 are the author's answers of
-2026-11-12; the folder dialog is measured (M03, 2026-11-12) and decided by the rule written
-before the run, D13). **Not Ready until the author answers A1 to A3** (open at G1).
+**Status:** Ready (G0 and G1 done 2026-11-12; the decisions D1 to D12 are the author's
+answers of 2026-11-12, D13 follows from the measurement M03 by the rule written before the
+run, D14 to D16 are the author's "all ok" to the proposals A1 to A3).
 
 **As** a game master **I want** to set up the plugin on a screen in Obsidian instead of
 editing `data.json` by hand, **so that** I can choose where the cards go, which notes are
@@ -97,7 +97,7 @@ English only (D9).
   `Cancel`, Enter acting on the focused button, Escape and a close being `Cancel` (the
   dialog logic of US-005's `dialogKey`). Only the keys of that page are reset. The main
   page has no reset: the output folder and the kind rules are never reset by the screen.
-  Deleting a kind rule asks nothing (open at G1, A2).
+  Deleting a kind rule asks nothing (D15).
 - **AC-10 (the file, SCAR-018).** The first write by the screen first copies `data.json` to
   `data-before-settings-screen.json` in the plugin's folder (never overwritten once it
   exists; no copy when there was no file); the screen keeps keys it does not know, writes
@@ -136,12 +136,17 @@ English only (D9).
   as the fallback, then no button; the start folder as in AC-5. The measurements are in
   `docs/technical/manual-checks/M03.md`.
 
-## Open at G1 (asked of the author, not decided by me)
+- **D14 (A1)** The backup file is `data-before-settings-screen.json` in the plugin's folder.
+- **D15 (A2)** Deleting a kind rule asks no question: adding it again is the undo; nothing is
+  lost beyond one folder name.
+- **D16 (A3)** The status line reads `Ready: N kind rules, output folder <path>` or `Not
+  ready:` with the problems, one per line; the page headings are `Game Card Creator`, `Note
+  properties` and `Page and text size`.
 
-- **A1:** the name of the backup file (`data-before-settings-screen.json` proposed).
-- **A2:** deleting a kind rule without a question (proposed: no question; adding it again
-  is the undo; no data is lost beyond one folder name).
-- **A3:** the exact wording of the status line and of the page headings.
+## Open
+
+- That the dialog's `defaultPath` (the stored folder, else Documents) is honoured in
+  Obsidian: measured in M04 (AC-5), not before.
 
 ## Interface used by the tests (G1, proposed)
 
