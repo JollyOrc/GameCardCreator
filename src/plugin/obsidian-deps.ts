@@ -93,3 +93,17 @@ export function vaultAccess(app: AppLike): VaultAccess {
     },
   };
 }
+
+/**
+ * US-004 AC-3: the API object another plugin offers, as it is now, or
+ * `undefined` when the plugin is not installed or not enabled. Obsidian keeps
+ * the loaded plugins in `app.plugins.plugins` (not in its typings): read at
+ * each call, never kept (SCAR-016). Nothing is decided here; the run checks the
+ * object (`checkStatblockApi`).
+ */
+export function pluginApi(app: object, id: string): unknown {
+  const plugins = (
+    app as {plugins?: {plugins?: Record<string, {api?: unknown} | undefined>}}
+  ).plugins?.plugins;
+  return plugins?.[id]?.api;
+}

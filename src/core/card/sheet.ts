@@ -285,20 +285,16 @@ export function cardSheetTypst(
   const preludes: string[] = [PRELUDE];
   if (creatures.length > 0) preludes.push(CREATURE_PRELUDE);
   let answerPrelude = false;
-  for (const {card, i} of creatures) {
+  for (const {card} of creatures) {
     const answer = card.statblock;
     if (answer === null) continue;
     if (!answerPrelude) {
       preludes.push(answer.prelude);
       answerPrelude = true;
     }
-    preludes.push(`#let ${sbName(i)} = ${answer.data}`);
     for (const file of answer.files) {
       if (!files.has(file.path)) files.set(file.path, file.bytes);
     }
-  }
-  for (const {card, i} of creatures) {
-    preludes.push(`#let gcc-parts${i} = ${creaturePartsCode(card, i)}`);
   }
 
   const bandTop =
@@ -315,8 +311,16 @@ export function cardSheetTypst(
         `#place(top + left, dx: ${mm(placed.x + PADDING_MM)}, ` +
         `dy: ${mm(placed.y + PADDING_MM)}, `;
       if (isCreature(card)) {
+        // The card's own data and parts are bound just before it, so the source
+        // keeps the order of the cards (US-004 AC-7).
+        const binds = [
+          card.statblock === null
+            ? ''
+            : `#let ${sbName(placed.index)} = ${card.statblock.data}\n`,
+          `#let gcc-parts${placed.index} = ${creaturePartsCode(card, placed.index)}\n`,
+        ].join('');
         return (
-          `${at}gcc-fit-c(${placed.index}, ${sizeList}, ${width}, ${height}, ` +
+          `${binds}${at}gcc-fit-c(${placed.index}, ${sizeList}, ${width}, ${height}, ` +
           `${creatureBuildCode(card, placed.index, headings)}, gcc-parts${placed.index}))`
         );
       }

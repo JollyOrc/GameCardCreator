@@ -1,8 +1,20 @@
-// US-005 AC-4: the run from a list of notes to PDF bytes and warnings. Pure: the
-// notes are read and the Typst compiled through injected dependencies. This is
+// US-005 AC-4, US-004 AC-3, AC-11, AC-12, AC-12a: the run from a list of notes to
+// PDF bytes and warnings. Pure: the notes are read, Obsidian2Typst's statblock
+// API is fetched and the Typst compiled through injected dependencies. This is
 // the one place that turns notes into cards (SCAR-017): it calls the readers of
-// US-002 and US-003, the sheet of US-003 and the fit warnings.
+// US-002, US-003 and US-004, the statblock contract, the sheet and the fit
+// warnings.
 import {cardSheetTypst} from '../card/sheet';
+import {readCreature, type CreatureCard} from '../creature/read';
+import {
+  checkStatblockApi,
+  forwardWarnings,
+  mergeFiles,
+  parseAnswer,
+  refusedWarning,
+  unavailableWarning,
+  type StatblockApi,
+} from '../creature/statblock';
 import {placeCards} from '../sheet/layout';
 import {fitWarnings} from '../skill/fit';
 import {readSkill, type CardWarning, type SkillCard} from '../skill/read';
@@ -10,12 +22,30 @@ import {readSpell} from '../spell/read';
 import {kindOf} from './kinds';
 import {checkCardSettings, type CardsSettings} from './settings';
 
+/** US-004 AC-12: what one compile takes besides its source. */
+export interface CompileExtra {
+  files: {path: string; bytes: Uint8Array}[];
+  fonts: Uint8Array[];
+}
+
 /** US-005 AC-4: what a run needs from the outside. */
 export interface RunDeps {
   /** The text of a note; rejects when it cannot be read. */
   read(path: string): Promise<string>;
-  /** Compiles Typst: the PDF (null when there is none), the `gcc-fit` facts, a message. */
-  compile(source: string): Promise<{
+  /**
+   * US-004 AC-3: the API object of Obsidian2Typst as the plugin has it now, or
+   * anything else when there is none. Read at each run that has a creature note,
+   * never kept (SCAR-016). Without it every creature card is refused.
+   */
+  statblockApi?(): unknown;
+  /**
+   * Compiles Typst: the PDF (null when there is none), the `gcc-fit` facts, a
+   * message. `extra` is given only for a sheet with creature statblocks (AC-12).
+   */
+  compile(
+    source: string,
+    extra?: CompileExtra,
+  ): Promise<{
     pdf: Uint8Array | null;
     facts: unknown[];
     message?: string;
@@ -37,14 +67,54 @@ export type RunResult =
 const firstLine = (text: string): string => text.split('\n')[0] ?? '';
 
 /**
- * US-005 AC-4: makes the cards of `notes`, in order, and compiles the sheet.
+ * US-004 AC-3, AC-11, AC-12a: gives `card` its statblock. Asks the API with the
+ * note's properties and the file name; a throw or a refusal leaves the card
+ * without statblock and warns once (rule 8); the answer's warnings are
+ * forwarded; files that clash with those of an earlier card (one path, other
+ * bytes) leave this card without statblock and warn.
+ */
+async function withStatblock(
+  card: CreatureCard,
+  api: StatblockApi,
+  files: Map<string, Uint8Array>,
+  warnings: CardWarning[],
+): Promise<void> {
+  let raw: unknown;
+  try {
+    raw = await api.statblockTypst(card.properties, {heading: card.name});
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    warnings.push(refusedWarning(card.path, reason));
+    return;
+  }
+  const answer = parseAnswer(raw);
+  if (!answer.ok) {
+    warnings.push(refusedWarning(card.path, answer.message));
+    return;
+  }
+  const conflict = mergeFiles(files, answer, card.path);
+  if (conflict !== null) {
+    warnings.push(conflict);
+    return;
+  }
+  warnings.push(...forwardWarnings(answer, card.path));
+  card.statblock = answer;
+}
+
+/**
+ * US-005 AC-4, US-004: makes the cards of `notes`, in order, and compiles the
+ * sheet.
  *
  * A note without a kind (`CARD_KIND_UNKNOWN`) is not read; a note that cannot
  * be read gives `NOTE_UNREADABLE` (detail: the reason); the other cards are
- * still made (rule 8). The warnings are the notes' own in note order, then the
- * fit warnings in card order. No card gives `There are no cards to print` (the
- * sheet's own refusal) without a compile; a compile without a PDF gives its first diagnostic and no
- * PDF. Invalid card settings are refused before any note is read.
+ * still made (rule 8). A creature note asks the statblock API (fetched at the
+ * first creature note); a missing or too old plugin refuses every creature
+ * card once (the plugin-unavailable warning, empty path) and the other kinds are
+ * made. The warnings are the notes' own in note order, then the fit warnings in
+ * card order. No card gives `There are no cards to print` (the sheet's own
+ * refusal, with the reason when it is a missing plugin) without a compile; a compile without a PDF gives its first
+ * diagnostic and no PDF. Invalid card settings are refused before any note is
+ * read. The API's fonts are asked only when a card has a statblock.
  */
 export async function runCards(
   notes: readonly string[],
@@ -56,21 +126,14 @@ export async function runCards(
     return {ok: false, message: issues.join('; '), warnings: []};
 
   const warnings: CardWarning[] = [];
-  const cards: SkillCard[] = [];
+  const cards: (SkillCard | CreatureCard)[] = [];
+  const files = new Map<string, Uint8Array>();
+  let api: StatblockApi | null | undefined;
+  let unavailable = '';
   for (const path of notes) {
     const kind = kindOf(path, settings.kindRules);
     if (kind === null) {
       warnings.push({code: 'CARD_KIND_UNKNOWN', path, detail: ''});
-      continue;
-    }
-    // US-004 T21 (until ticket #26 wires the creature card): a creature rule
-    // must not give a spell card from a creature note (SCAR-017).
-    if (kind === 'creature') {
-      warnings.push({
-        code: 'CARD_KIND_UNKNOWN',
-        path,
-        detail: 'creature cards are not made yet',
-      });
       continue;
     }
     let text: string;
@@ -81,6 +144,22 @@ export async function runCards(
       warnings.push({code: 'NOTE_UNREADABLE', path, detail: reason});
       continue;
     }
+    if (kind === 'creature') {
+      if (api === undefined) {
+        const checked = checkStatblockApi(deps.statblockApi?.());
+        api = checked.ok ? checked.api : null;
+        if (!checked.ok) {
+          unavailable = checked.message;
+          warnings.push(unavailableWarning(checked.message));
+        }
+      }
+      if (api === null) continue;
+      const read = readCreature(path, text, settings.creature);
+      warnings.push(...read.warnings);
+      await withStatblock(read.card, api, files, warnings);
+      cards.push(read.card);
+      continue;
+    }
     const read =
       kind === 'skill'
         ? readSkill(path, text, settings.skill)
@@ -88,9 +167,26 @@ export async function runCards(
     cards.push(read.card);
     warnings.push(...read.warnings);
   }
-  const sheet = cardSheetTypst(cards, settings.sheet, settings.skill);
-  if (!sheet.ok) return {ok: false, message: sheet.message, warnings};
-  const compiled = await deps.compile(sheet.source);
+  const sheet = cardSheetTypst(
+    cards,
+    settings.sheet,
+    settings.skill,
+    settings.creature,
+  );
+  if (!sheet.ok) {
+    // Nothing but creature notes and no plugin: the notice says why there is no card.
+    const why =
+      cards.length === 0 && unavailable !== '' ? `: ${unavailable}` : '';
+    return {ok: false, message: `${sheet.message}${why}`, warnings};
+  }
+  let extra: CompileExtra | undefined;
+  if (api !== null && api !== undefined && sheet.files.length > 0) {
+    extra = {files: sheet.files, fonts: await api.compileFonts()};
+  }
+  const compiled =
+    extra === undefined
+      ? await deps.compile(sheet.source)
+      : await deps.compile(sheet.source, extra);
   if (compiled.pdf === null) {
     return {
       ok: false,

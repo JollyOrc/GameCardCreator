@@ -25,7 +25,13 @@ const settings: CardsSettings = {
 };
 const NOTES: Record<string, string> = {
   'creatures/Fen Hare.md': EXAMPLE_CREATURE_NOTE,
-  'creatures/Bare.md': '---\ntags: []\n---\n### Actions\nWait.\n',
+  // with a Behaviour section: a missing one is a warning of its own (AC-2)
+  'creatures/Bare.md':
+    '---\ntags: []\n---\n### Behaviour\nStill.\n\n### Actions\nWait.\n',
+  'creatures/Tracked.md': EXAMPLE_CREATURE_NOTE.replace(
+    '### Signs',
+    '### Tracks',
+  ),
   'skills/Reed Sweep.md': EXAMPLE_NOTE,
   'spells/Reed Whisper.md': EXAMPLE_SPELL_NOTE,
 };
@@ -140,6 +146,10 @@ describe("US-004 AC-12: the compile takes the answer's files and the fonts", () 
     const src = log.compile[0]!.source;
     expect(src.split('#let o2t-box-size(').length - 1).toBe(1);
     expect(src.split(FEN_HARE_ANSWER.data).length - 1).toBe(3);
+    // one look-up of the API and one fonts call for the whole run, not one per card
+    expect(log.apiReads).toBe(1);
+    expect(log.fonts).toBe(1);
+    expect(log.api).toHaveLength(3);
     // equal files of the three answers are one file each
     expect(log.compile[0]!.extra!.files.map((f) => f.path)).toEqual(
       FEN_HARE_ANSWER.files.map((f) => f.path),
@@ -164,6 +174,26 @@ describe("US-004 AC-12: the compile takes the answer's files and the fonts", () 
     await runCards(['creatures/Bare.md'], settings, d);
     expect(log.compile[0]!.source).not.toContain('o2t-sb-box');
     expect(log.compile[0]!.extra?.files ?? []).toEqual([]);
+    // no statblock, no fonts needed
+    expect(log.fonts).toBe(0);
+  });
+  it("the card's section headings are the settings' (non-default, SCAR-019)", async () => {
+    const {d, log} = setup();
+    await runCards(
+      ['creatures/Tracked.md'],
+      {
+        ...settings,
+        creature: {
+          instinctsHeading: 'Behaviour',
+          actionsHeading: 'Actions',
+          signsHeading: 'Tracks',
+        },
+      },
+      d,
+    );
+    expect(log.compile[0]!.source).toContain('"Tracks"');
+    // the heading is printed as the setting says (`"Signs"` also names a part to give up)
+    expect(log.compile[0]!.source).toContain('[#"Tracks"]');
   });
 });
 
@@ -316,6 +346,8 @@ describe('US-004 AC-11: warnings and refusals', () => {
     expect(r.ok).toBe(false);
     if (r.ok) return;
     expect(r.message).toMatch(/no cards/i);
+    // the notice says why: the plugin and its least version
+    expect(r.message).toMatch(/Obsidian2Typst 0\.15\.1/);
     expect(log.compile).toHaveLength(0);
     expect(r.warnings.map((w) => w.code)).toEqual(['CREATURE_API_UNAVAILABLE']);
   });

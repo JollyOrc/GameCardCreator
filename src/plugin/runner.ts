@@ -6,7 +6,7 @@ import {planDeck} from '../core/run/deck';
 import {outputNames, runName} from '../core/run/names';
 import {checkOutputFolder} from '../core/run/output';
 import {warningsFile} from '../core/run/report';
-import {runCards} from '../core/run/run';
+import {runCards, type CompileExtra} from '../core/run/run';
 import {expandSelection, type SelectedItem} from '../core/run/select';
 import {checkCardsSettings, type CardsSettings} from '../core/run/settings';
 import type {CardWarning} from '../core/skill/read';
@@ -29,8 +29,20 @@ export interface RunnerDeps {
   notesNamed(name: string): string[];
   /** The files below a folder of the vault. */
   notesBelow(folder: string): string[];
-  /** Compiles Typst: the PDF (null when none), the fit facts, a message. */
-  compile(source: string): Promise<{
+  /**
+   * US-004 AC-3: Obsidian2Typst's API object as the plugin has it now, or
+   * anything else; read at each run, never kept. Optional: without it creature
+   * cards are refused.
+   */
+  statblockApi?(): unknown;
+  /**
+   * Compiles Typst: the PDF (null when none), the fit facts, a message. `extra`
+   * (US-004 AC-12) is the files and fonts of a creature sheet, for this compile.
+   */
+  compile(
+    source: string,
+    extra?: CompileExtra,
+  ): Promise<{
     pdf: Uint8Array | null;
     facts: unknown[];
     message?: string;
@@ -127,7 +139,10 @@ export function createCardsRunner(deps: RunnerDeps): CardsRunner {
       const planned = await plan();
       const result = await runCards(planned.notes, settings, {
         read: (path) => deps.readNote(path),
-        compile: (source) => deps.compile(source),
+        ...(deps.statblockApi === undefined
+          ? {}
+          : {statblockApi: () => deps.statblockApi?.()}),
+        compile: (source, extra) => deps.compile(source, extra),
       });
       if (!result.ok) {
         deps.notice(result.message);

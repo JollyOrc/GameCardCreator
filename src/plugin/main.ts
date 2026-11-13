@@ -6,7 +6,7 @@ import {createCardCommands} from './commands';
 import {embeddedCompilerDeps} from './compiler/embedded-assets';
 import {createCompiler} from './compiler/index';
 import {createDiskWriter} from './disk-writer';
-import {vaultAccess} from './obsidian-deps';
+import {pluginApi, vaultAccess} from './obsidian-deps';
 import {createCardsRunner} from './runner';
 import {readSettingsFile} from './settings-file';
 import {createSettingsStore} from './settings/store';
@@ -53,7 +53,9 @@ export default class GameCardCreatorPlugin extends Plugin {
       },
       settingsFile: () =>
         `${vaultAccess(this.app).vaultRoot()}/${this.manifest.dir}/data.json`,
-      compile: (source) => this.compiler.compile(source),
+      // US-004 AC-3: the plugin's API object as it is now (SCAR-016); the run decides.
+      statblockApi: () => pluginApi(this.app, 'obsidian2typst'),
+      compile: (source, extra) => this.compiler.compile(source, extra),
       isFile: (path) => createDiskWriter(path).isFile(path),
       writerFor: createDiskWriter,
       confirmReplace: (files) => confirmReplaceWith(Modal)(this.app, files),
