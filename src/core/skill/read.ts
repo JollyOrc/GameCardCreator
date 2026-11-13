@@ -40,7 +40,9 @@ export interface SkillCard {
   blocks: Block[];
 }
 
-type Token = ReturnType<InstanceType<typeof MarkdownIt>['parse']>[number];
+export type Token = ReturnType<
+  InstanceType<typeof MarkdownIt>['parse']
+>[number];
 
 /** US-002 AC-1: the header of a note, once: `---` lines around YAML. */
 const FRONT_MATTER = new RegExp(
@@ -56,6 +58,11 @@ const markdown = new MarkdownIt({
   linkify: false,
   typographer: false,
 });
+
+/** US-002 AC-4: the tokens of a note's body (the one Markdown parser of the cards). */
+export function parseBody(body: string): Token[] {
+  return markdown.parse(body, {});
+}
 
 /**
  * US-002 AC-2: the shown form of a tag. A leading `#` goes; a tag with `/`
@@ -80,7 +87,7 @@ function linkText(value: string): string {
 }
 
 /** Collects the pieces of one note's reading; the warnings keep their order. */
-class Reading {
+export class Reading {
   readonly warnings: CardWarning[] = [];
   constructor(
     readonly path: string,
@@ -204,7 +211,7 @@ function plainOf(inline: Token | undefined, reading: Reading): string {
 }
 
 /** Walks a token list into blocks (AC-4); one instance per note. */
-class BlockBuilder {
+export class BlockBuilder {
   private pos = 0;
   constructor(
     private readonly tokens: readonly Token[],
@@ -400,6 +407,27 @@ export interface ReadConfig {
 }
 
 /**
+ * US-002 AC-8, US-004 AC-1: the properties of a header as entries in the order
+ * written. A header that is not a YAML mapping (or has an error) gives no
+ * entries and the warning `PROPERTIES_INVALID` (detail `yaml`); no header gives
+ * none and no warning. The one place that reads the YAML (SCAR-017).
+ */
+export function headerEntries(
+  header: RegExpExecArray | null,
+  reading: Reading,
+): [string, unknown][] {
+  if (header === null) return [];
+  const doc = parseDocument(header[1] ?? '');
+  const data: unknown = doc.errors.length === 0 ? doc.toJS() : undefined;
+  // `undefined` (a YAML error) is not an object either, so it is invalid too.
+  if (data !== null && (typeof data !== 'object' || Array.isArray(data))) {
+    reading.warn('PROPERTIES_INVALID', 'yaml');
+    return [];
+  }
+  return data === null ? [] : Object.entries(data as Record<string, unknown>);
+}
+
+/**
  * US-002 AC-1 to AC-4, AC-8, AC-9, AC-10, US-003 AC-1 to AC-4: reads a note of
  * `kind` into its card; the one reader of a skill or spell note.
  *
@@ -420,17 +448,7 @@ export function readText(
   const name = path.replace(/^.*[\\/]/, '').replace(/\.md$/i, '');
   const {header, body} = splitHeader(text);
 
-  let entries: [string, unknown][] = [];
-  if (header !== null) {
-    const doc = parseDocument(header[1] ?? '');
-    const data: unknown = doc.errors.length === 0 ? doc.toJS() : undefined;
-    // `undefined` (a YAML error) is not an object either, so it is invalid too.
-    if (data !== null && (typeof data !== 'object' || Array.isArray(data))) {
-      reading.warn('PROPERTIES_INVALID', 'yaml');
-    } else if (data !== null) {
-      entries = Object.entries(data as Record<string, unknown>);
-    }
-  }
+  const entries = headerEntries(header, reading);
   const find = (property: string): [string, unknown] | undefined =>
     entries.find(
       ([key]) => key.trim().toLowerCase() === property.trim().toLowerCase(),
@@ -469,7 +487,7 @@ export function readText(
     return value === undefined ? [] : [{label, value}];
   });
 
-  const blocks = new BlockBuilder(markdown.parse(body, {}), reading).blocks();
+  const blocks = new BlockBuilder(parseBody(body), reading).blocks();
   if (tags.length === 0 && details.length === 0 && blocks.length === 0) {
     reading.warn('EMPTY', '');
   }

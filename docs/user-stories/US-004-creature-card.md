@@ -92,6 +92,12 @@ Flattened reeds in a ring.
   have it); a section with a heading and no text gives no block and no
   warning. The example without its Actions section gives one warning; the
   example without its Signs section gives none.
+  **Decided at G4 (the owner, 2026-11-13):** only a heading at the top level of
+  the note counts; a heading inside a callout or a list item is not a section
+  heading (its text stays in the section it is in). A lower heading inside a
+  section is not shown, its text under it is. If the same heading text is
+  found twice, the first section is the card's. (The two last rules follow the
+  tests of G2; the owner confirms them by accepting this ticket.)
 - **AC-3 (statblock, the contract).** The statblock part of the card is what
   Obsidian2Typst's API gives for the note's properties, drawn at the text width
   (54 mm). The reader is this plugin; the writer's story is Obsidian2Typst

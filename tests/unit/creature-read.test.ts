@@ -84,7 +84,7 @@ describe('US-004 AC-1: reading the example note', () => {
 
 describe('US-004 AC-1: the text rules of US-002 with the creature codes', () => {
   const section = (text: string) =>
-    read(`---\nvigour: 1\n---\n### Actions\n${text}\n`);
+    read(`---\nvigour: 1\n---\n### Behaviour\nRun.\n\n### Actions\n${text}\n`);
   it('a link shows its text; an image is left out with CREATURE_IMAGE_OMITTED', () => {
     const r = section('See [[Reed Whisper|the spell]].\n\n![](pics/reed.png)');
     expect(r.card.actions).toHaveLength(1);
@@ -92,10 +92,9 @@ describe('US-004 AC-1: the text rules of US-002 with the creature codes', () => 
     expect(r.warnings.map((w) => w.code)).toEqual(['CREATURE_IMAGE_OMITTED']);
     expect(r.warnings[0]!.path).toBe(PATH);
   });
-  it('a code block is left out with CREATURE_BLOCK_UNSUPPORTED (code)', () => {
+  it('a code block is shown as its plain text lines with CREATURE_BLOCK_UNSUPPORTED (code), as US-002 AC-4 says', () => {
     const r = section(`${FENCE}js\nlet x = 1;\n${FENCE}\n\nText.`);
-    expect(plain(r.card.actions[0])).toBe('Text.');
-    expect(r.card.actions).toHaveLength(1);
+    expect(r.card.actions.map(plain)).toEqual(['let x = 1;', 'Text.']);
     expect(r.warnings).toEqual([
       {code: 'CREATURE_BLOCK_UNSUPPORTED', path: PATH, detail: 'code'},
     ]);
@@ -182,6 +181,13 @@ describe('US-004 AC-2: finding sections', () => {
 });
 
 describe('US-004 AC-1: notes of other shapes', () => {
+  it("the same heading twice: the first section is the card's, the second is ignored", () => {
+    const r = read(
+      `---\nvigour: 1\n---\n### Behaviour\nRun.\n\n### Actions\nBite.\n\n### Actions\nAgain.\n`,
+    );
+    expect(r.card.actions.map(plain)).toEqual(['Bite.']);
+    expect(r.warnings).toEqual([]);
+  });
   it('a note without front matter: no properties, the sections still read', () => {
     const r = read('### Actions\nBite.\n', {}, 'creatures/Plain.md');
     expect(r.card.name).toBe('Plain');
@@ -193,5 +199,42 @@ describe('US-004 AC-1: notes of other shapes', () => {
       `---\nvigour: 1\n---\n${FENCE}\n### Actions\nFake.\n${FENCE}\n`,
     );
     expect(r.card.actions).toEqual([]);
+  });
+});
+
+describe('US-004 AC-2 (the owner, 2026-11-13): a heading inside a callout or a list is not a section heading', () => {
+  const note = (body: string) => `---\nvigour: 3\n---\nLead.\n\n${body}\n`;
+  it('a heading in a callout does not start the section; the real one after it does', () => {
+    const r = read(
+      note(
+        '> [!note]\n> ### Actions\n> Fake.\n\n### Behaviour\nRun.\n\n### Actions\nBite.',
+      ),
+    );
+    expect(r.card.actions.map(plain)).toEqual(['Bite.']);
+    expect(JSON.stringify(r.card)).not.toContain('Fake.');
+    expect(r.warnings).toEqual([]);
+  });
+  it('a heading in a callout gives no section at all: Actions is missing', () => {
+    const r = read(note('### Behaviour\nRun.\n\n> ### Actions\n> Fake.'));
+    expect(r.card.actions).toEqual([]);
+    expect(r.warnings).toEqual([
+      {code: 'CREATURE_SECTION_MISSING', path: PATH, detail: 'Actions'},
+    ]);
+  });
+  it('a heading in a list item gives no section: Behaviour is missing', () => {
+    const r = read(note('- ### Behaviour\n  Fake.\n\n### Actions\nBite.'));
+    expect(r.card.instincts).toEqual([]);
+    expect(r.warnings).toEqual([
+      {code: 'CREATURE_SECTION_MISSING', path: PATH, detail: 'Behaviour'},
+    ]);
+  });
+  it('a heading in a callout inside a section ends nothing: its lines stay in that section', () => {
+    const r = read(
+      note('### Actions\nBite.\n\n> ### Behaviour\n> Inside.\n\nMore.'),
+    );
+    expect(
+      r.card.actions.map((b) => (b.kind === 'paragraph' ? plain(b) : '?')),
+    ).toContain('More.');
+    expect(r.card.instincts).toEqual([]);
   });
 });

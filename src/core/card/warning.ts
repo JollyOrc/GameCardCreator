@@ -1,13 +1,14 @@
 // US-003 AC-4, AC-11: the one place where the kind of a card and the name of a
 // problem are put together into a warning code (SCAR-017). No other source
-// file of `src/core` writes a literal `SKILL_` or `SPELL_` code.
+// file of `src/core` writes a literal `SKILL_`, `SPELL_` or `CREATURE_` code.
 
-/** US-003: the kinds of text card. A card without a kind is a skill card. */
-export type CardKind = 'skill' | 'spell';
+/** US-003, US-004: the kinds of card. A card without a kind is a skill card. */
+export type CardKind = 'skill' | 'spell' | 'creature';
 
 const PREFIX: Readonly<Record<CardKind, string>> = {
   skill: 'SKILL_',
   spell: 'SPELL_',
+  creature: 'CREATURE_',
 };
 
 /**
