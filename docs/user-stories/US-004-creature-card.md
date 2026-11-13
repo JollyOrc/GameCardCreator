@@ -178,6 +178,12 @@ Flattened reeds in a ring.
   5.5 pt (`CREATURE_TEXT_OVERFLOW`). **Consequence to confirm:** a creature
   of 70 words loses its Instincts although shrinking to about 6.25 pt would
   have kept them (the rule is drop first, as decided).
+  **Measured again 2026-11-13 (ticket #24)** with the real 0.15.1 answer of the
+  Fen Hare note (scope: this layout, this statblock with a Skills line, invented
+  words, default sizes): the five triples above give the same size and the same
+  given-up parts (the Signs-only and Instincts-only cases at 7 pt, 6.75 pt, 6 pt,
+  5.5 pt with `CREATURE_TEXT_OVERFLOW`); the PDF is 25.8 kB for one creature
+  card and 67.1 kB for nine (about 5 kB per further card).
   Without a statblock (AC-11) the minimum is the Actions section alone and
   the Skills step does not exist.
 - **AC-6 (text is literal).** As US-002 AC-7 in the title and the section

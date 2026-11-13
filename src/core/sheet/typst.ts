@@ -23,6 +23,8 @@ export interface SheetContent {
   prelude?: string;
   /** Typst code for one card, placed inside the sheet; given its position. */
   card?: (card: PlacedCard) => string;
+  /** Typst code for a whole page, given its number (from 0) and its cards (US-004 AC-9). */
+  page?: (page: number, cards: readonly PlacedCard[]) => string;
 }
 
 /**
@@ -60,6 +62,11 @@ export function sheetTypst(
           `height: ${mm(settings.cardHeight)}, stroke: ${STROKE_PT}pt))`,
       );
       if (content.card !== undefined) lines.push(content.card(card));
+    }
+    if (content.page !== undefined) {
+      const onPage = placed.cards.filter((c) => c.page === page);
+      const code = content.page(page, onPage);
+      if (code !== '') lines.push(code);
     }
     for (const t of marks) {
       lines.push(

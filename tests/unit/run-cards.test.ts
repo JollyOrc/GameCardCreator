@@ -184,7 +184,7 @@ describe('US-005 AC-4: the run', () => {
     if (!r.ok) throw new Error(r.message);
     expect(log.compile[0]).toContain('"Field Craft"');
     expect(log.compile[0]).not.toContain('"Other"');
-    expect(log.compile[0]).toContain('(6, 5.5, 5)');
+    expect(log.compile[0]).toContain('(6, 5.5, 5,)');
   });
   it('the spell settings reach the spell reader (a non-default tags property)', async () => {
     const {d, log} = deps();

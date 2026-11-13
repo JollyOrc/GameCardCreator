@@ -275,6 +275,55 @@ describe("US-004 AC-5: drop first, then shrink (the owner's rule, as invariants)
   );
 });
 
+describe("US-004 AC-5: the story's triples, measured again at ticket #24 against the real answer (2026-11-13)", () => {
+  // (Signs, Instincts, Actions words) -> size, fits, dropped. Scope: this layout,
+  // this fixture statblock (with a Skills line), invented words, default sizes.
+  const triples: [[number, number, number], number, boolean, string[]][] = [
+    [[0, 30, 40], 7, true, ['Instincts']],
+    [[20, 25, 25], 7, true, ['Signs']],
+    [[25, 40, 60], 6.75, true, ['Signs', 'Instincts', 'Skills']],
+    [[25, 40, 100], 6, true, ['Signs', 'Instincts', 'Skills']],
+    [[30, 60, 150], 5.5, false, ['Signs', 'Instincts', 'Skills']],
+  ];
+  it(
+    "the five triples give the story's size and dropped parts",
+    async () => {
+      const m = await makeSheet(
+        triples.map(([w], k) =>
+          sized(w[0]!, w[1]!, w[2]!, `creatures/T${k}.md`),
+        ),
+      );
+      const facts = factsOf(m);
+      expect(facts).toHaveLength(triples.length);
+      triples.forEach(([w, size, fits, dropped], k) => {
+        expect(facts[k], JSON.stringify(w)).toEqual({
+          i: k,
+          size,
+          fits,
+          dropped,
+        });
+      });
+    },
+    LIMIT,
+  );
+  it("two creature cards share one copy of the answer's definitions", () => {
+    const r = cardSheetTypst(
+      [creature(), creature({path: 'creatures/B.md'})],
+      DEFAULT_SHEET,
+      {maxSize: 7, minSize: 5.5, sizeStep: 0.25},
+    );
+    if (!r.ok) throw new Error(r.message);
+    expect(r.source.split(FEN_HARE_ANSWER.prelude).length - 1).toBe(1);
+    expect(r.source.split(FEN_HARE_ANSWER.data).length - 1).toBe(2);
+    expect(r.files.map((f) => f.path)).toEqual([
+      'o2t-icons/1.svg',
+      'o2t-icons/2.svg',
+      'o2t-icons/3.svg',
+      'o2t-icons/5.svg',
+    ]);
+  });
+});
+
 describe('US-004 AC-11 (D2): a card without a statblock', () => {
   it(
     'is the title and the sections, fitted without the statblock; no prelude, no icon file',
@@ -386,7 +435,8 @@ describe('US-004 AC-7: creature, skill and spell cards on one sheet', () => {
       expect(m.textOf(1)).toContain('Time: action');
       expect(m.textOf(2)).toContain('Reed Whisper');
       expect(m.textOf(2)).not.toContain('Behaviour');
-      expect(m.textOf(3)).toContain('Two');
+      // the band of a statblock is the API's (the fixture's answer says Fen Hare)
+      expect(m.textOf(3)).toContain('Fen Hare');
       expect(m.textOf(3)).toContain('Behaviour');
     },
     LIMIT,

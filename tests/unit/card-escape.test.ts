@@ -43,8 +43,8 @@ describe('US-002 AC-7: the emitter writes user text only through typstString', (
   const userText =
     /\b(card\.(name|tags|path|details|blocks)|run\.text|d\.(label|value)|item\.|tags\b|row\b|\bt\b)/;
 
-  it('writes user text through typstString at exactly four places: name, tag, row, run', () => {
-    expect(withoutEscaped.match(/ESCAPED/g)?.length).toBe(4);
+  it('writes user text through typstString at exactly seven places: name, tag, row, run (US-002), and since US-004 a creature title, a section heading, the credit', () => {
+    expect(withoutEscaped.match(/ESCAPED/g)?.length).toBe(7);
   });
   it('no interpolation left outside typstString names a user-text field', () => {
     expect(interpolations.length).toBeGreaterThan(10); // the check looked at the templates

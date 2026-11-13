@@ -22,7 +22,7 @@ describe('US-003 #6: cardSheetTypst', () => {
   it('writes the shared sizes: the defaults, and custom ones for both kinds', () => {
     const d = cardSheetTypst(cards, DEFAULT_SHEET, DEFAULT_SIZES);
     if (!d.ok) throw new Error(d.message);
-    expect(d.source).toContain('(7, 6.75, 6.5, 6.25, 6, 5.75, 5.5)');
+    expect(d.source).toContain('(7, 6.75, 6.5, 6.25, 6, 5.75, 5.5,)');
     expect(d.source.match(/gcc-fit\(/g)).toHaveLength(2 + 1); // 2 calls + the definition
     const c = cardSheetTypst(cards, DEFAULT_SHEET, {
       maxSize: 6,
@@ -30,7 +30,7 @@ describe('US-003 #6: cardSheetTypst', () => {
       sizeStep: 0.5,
     });
     if (!c.ok) throw new Error(c.message);
-    expect(c.source).toContain('(6, 5.5, 5)');
+    expect(c.source).toContain('(6, 5.5, 5,)');
     expect(c.source).not.toContain('6.75');
   });
   it('writes every card of every kind, in order, with its index', () => {
@@ -85,7 +85,7 @@ describe('US-003 #6: skillSheetTypst is the same sheet with the skill check adde
       sizeStep: 0.5,
     });
     if (!r.ok) throw new Error(r.message);
-    expect(r.source).toContain('(6, 5.5, 5)');
+    expect(r.source).toContain('(6, 5.5, 5,)');
   });
   it('still refuses what only the skill settings know: a property clash', () => {
     const r = skillSheetTypst(cards, DEFAULT_SHEET, {
