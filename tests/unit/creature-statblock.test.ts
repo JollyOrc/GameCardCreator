@@ -7,7 +7,9 @@ import {
   checkStatblockApi,
   forwardWarnings,
   parseAnswer,
+  mergeFiles,
   refusedWarning,
+  unavailableWarning,
 } from '../../src/core/creature/statblock';
 import {
   FEN_HARE_ANSWER,
@@ -91,6 +93,18 @@ describe('US-004 AC-3: reading an answer', () => {
     ],
     ['ok with files not a list', {...FEN_HARE_ANSWER, files: 'x'}],
     ['ok with a credit that is a number', {...FEN_HARE_ANSWER, credit: 3}],
+    [
+      'a file without bytes',
+      {...FEN_HARE_ANSWER, files: [{path: 'o2t-icons/1.svg'}]},
+    ],
+    [
+      'a file whose bytes are a plain array',
+      {...FEN_HARE_ANSWER, files: [{path: 'o2t-icons/1.svg', bytes: [1]}]},
+    ],
+    [
+      'a warning without a message',
+      {...FEN_HARE_ANSWER, warnings: [{code: 'X'}]},
+    ],
   ])('%s is a refusal with a message, never a throw (rule 8)', (_n, raw) => {
     const r = parseAnswer(raw);
     expect(r.ok).toBe(false);
@@ -135,5 +149,80 @@ describe('US-004 AC-11: warnings made from an answer', () => {
       path: 'creatures/Bare.md',
       detail: 'The note has no stat and no attack',
     });
+  });
+});
+
+describe('US-004 AC-3, AC-12a: the other warnings and the files of several answers', () => {
+  it('a missing plugin: one warning with an empty path and the message', () => {
+    expect(unavailableWarning('No plugin')).toEqual({
+      code: 'CREATURE_API_UNAVAILABLE',
+      path: '',
+      detail: 'No plugin',
+    });
+  });
+  it('a duplicate of the same path with the same bytes is one file; nothing is a conflict', () => {
+    const merged = new Map<string, Uint8Array>();
+    expect(mergeFiles(merged, FEN_HARE_ANSWER, 'c/A.md')).toBeNull();
+    expect(mergeFiles(merged, FEN_HARE_ANSWER, 'c/B.md')).toBeNull();
+    expect([...merged.keys()]).toEqual([
+      'o2t-icons/1.svg',
+      'o2t-icons/2.svg',
+      'o2t-icons/3.svg',
+      'o2t-icons/5.svg',
+    ]);
+  });
+  it('a path with other bytes is a conflict naming the file path; nothing of that answer is added', () => {
+    const merged = new Map<string, Uint8Array>();
+    mergeFiles(merged, FEN_HARE_ANSWER, 'c/A.md');
+    const other: StatblockOk = {
+      ...FEN_HARE_ANSWER,
+      files: [
+        {path: 'o2t-icons/9.svg', bytes: new Uint8Array([1])},
+        {path: 'o2t-icons/2.svg', bytes: new Uint8Array([9, 9, 9])},
+      ],
+    };
+    expect(mergeFiles(merged, other, 'c/B.md')).toEqual({
+      code: 'CREATURE_ICON_CONFLICT',
+      path: 'c/B.md',
+      detail: 'o2t-icons/2.svg',
+    });
+    expect(merged.has('o2t-icons/9.svg')).toBe(false);
+    expect(merged.size).toBe(4);
+  });
+  it('bytes that are a prefix of the known bytes are a conflict, not the same file', () => {
+    const merged = new Map<string, Uint8Array>([
+      ['o2t-icons/1.svg', new Uint8Array([1, 2, 3])],
+    ]);
+    const shorter: StatblockOk = {
+      ...FEN_HARE_ANSWER,
+      files: [{path: 'o2t-icons/1.svg', bytes: new Uint8Array([1, 2])}],
+    };
+    expect(mergeFiles(merged, shorter, 'c/B.md')?.code).toBe(
+      'CREATURE_ICON_CONFLICT',
+    );
+    const longer: StatblockOk = {
+      ...FEN_HARE_ANSWER,
+      files: [{path: 'o2t-icons/1.svg', bytes: new Uint8Array([1, 2, 3, 4])}],
+    };
+    expect(mergeFiles(merged, longer, 'c/C.md')?.code).toBe(
+      'CREATURE_ICON_CONFLICT',
+    );
+  });
+  it('non-consecutive numbers (1, 2, 3, 5) and consecutive ones (1 to 4) merge alike', () => {
+    const merged = new Map<string, Uint8Array>();
+    const old: StatblockOk = {
+      ...FEN_HARE_ANSWER,
+      files: [1, 2, 3, 4].map((n) => ({
+        path: `o2t-icons/${n}.svg`,
+        bytes: new Uint8Array([n]),
+      })),
+    };
+    expect(mergeFiles(merged, old, 'c/A.md')).toBeNull();
+    expect(merged.size).toBe(4);
+  });
+  it('an answer with a refusal reason it does not know is not understood', () => {
+    const r = parseAnswer({ok: false, reason: 'other', message: 'x'});
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.message).toMatch(/malformed/);
   });
 });

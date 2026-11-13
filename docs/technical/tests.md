@@ -485,7 +485,7 @@ typecheck, eslint, prettier clean.
 |---|---|---|
 | AC-1 | `unit/creature-read` (example, text rules with the creature codes, other shapes); `integration/creature-card-pdf` AC-1 | `creature-read` green (ticket #22, 2026-11-13; two G2 expectations corrected, see the ledger); the PDF part with #24 |
 | AC-2 | `creature-read` AC-2 (case, levels, ends, missing, optional Signs, headings as settings; callout and list headings are no sections; the first of two equal headings) | green (ticket #22) |
-| AC-3 | `unit/creature-statblock` (fixture is the real answer, the call, reading an answer) | written |
+| AC-3 | `unit/creature-statblock` (fixture is the real answer, the call, reading an answer; added at #23: unavailable warning, files of several answers, malformed shapes) | green (ticket #23, 2026-11-13) |
 | AC-4 | `creature-card-pdf` AC-4 (band 11.5, 9.04, 16.43 pt; data used as given) | written |
 | AC-5 | `unit/creature-fit`; `creature-card-pdf` AC-5 (two scans, overflow, dropped parts gone) | written (invariants; exact triples re-measured at the code ticket) |
 | AC-6 | `creature-card-pdf` AC-6 (the real literal answer; special characters) | written |
