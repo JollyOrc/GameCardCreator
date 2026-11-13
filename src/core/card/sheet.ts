@@ -99,6 +99,8 @@ function buildCode(card: SkillCard): string {
 const CREDIT_PT = 5;
 /** US-004 AC-9: the room the credit needs inside the bottom band, in mm. */
 const CREDIT_ROOM_MM = 5;
+/** US-004 AC-9: a band lower than this has no room for the credit line, in mm. */
+const MIN_BAND_MM = 3;
 /** US-004 AC-4: the statblock's sizes are given for this text size, in pt. */
 const STATBLOCK_BASE_PT = 7;
 
@@ -253,8 +255,8 @@ function creaturePartsCode(card: CreatureCard, i: number): string {
  * to refuse, AC-12a). `headings` are the section headings printed on creature
  * cards. On each page that has a creature card with a credit, the credit is set
  * once at 5 pt, centred, at most two lines, in the band between the last card
- * row and the bottom edge; a band under 3 mm has no room and the line is left
- * out. Refuses invalid sizes, 0 cards and what the sheet refuses, with a
+ * row and the bottom edge; a band under 3 mm has no room: the line is left
+ * out and `creditOmitted` says how high the band was (the run warns). Refuses invalid sizes, 0 cards and what the sheet refuses, with a
  * message and no source.
  */
 export function cardSheetTypst(
@@ -267,6 +269,8 @@ export function cardSheetTypst(
       ok: true;
       source: string;
       files: {path: string; bytes: Uint8Array}[];
+      /** US-004 AC-9: the band's height in mm when a credit had no room, else null. */
+      creditOmitted: number | null;
     }
   | {ok: false; message: string} {
   const issues = checkSizes(sizes);
@@ -302,6 +306,9 @@ export function cardSheetTypst(
   const bandHeight = 297 - bandTop;
   const creditTop = bandTop + Math.max(0.5, (bandHeight - CREDIT_ROOM_MM) / 2);
 
+  const creditWanted = creatures.some(
+    ({card}) => (card.statblock?.credit ?? '').trim() !== '',
+  );
   const result = sheetTypst(cards.length, sheet, {
     prelude: preludes.join('\n'),
     card: (placed) => {
@@ -327,7 +334,7 @@ export function cardSheetTypst(
       return `${at}gcc-fit(${placed.index}, ${sizeList}, ${width}, ${height}, ${buildCode(card)}))`;
     },
     page: (_page, onPage) => {
-      if (bandHeight < 3) return '';
+      if (bandHeight < MIN_BAND_MM) return '';
       const credit = onPage
         .map((p) => cards[p.index])
         .flatMap((c) =>
@@ -348,5 +355,9 @@ export function cardSheetTypst(
     ok: true,
     source: result.source,
     files: [...files].map(([path, bytes]) => ({path, bytes})),
+    creditOmitted:
+      creditWanted && bandHeight < MIN_BAND_MM
+        ? Math.round(bandHeight * 10) / 10
+        : null,
   };
 }

@@ -204,6 +204,14 @@ Flattened reeds in a ring.
   creature card, and nowhere else; with `null` or an empty text no line. The
   line stays inside the margin band and covers no card (to 0.1 mm). The
   credit of several creature cards on a sheet is the same text, printed once.
+  **Amended 2026-11-13 (the owner's decision, ticket #27):** when the band under
+  the last card row is under 3 mm high (cards almost as tall as the sheet,
+  for example 98 mm cards with a 1 mm margin: band 1.5 mm) the line has no room
+  and is not printed; the run then gives one warning
+  `CREATURE_CREDIT_OMITTED` (empty path, detail `bottom band <h> mm`, h with up to
+  one decimal) and only when a credit was to be printed. A band of 3 mm or
+  more prints the line as before.
+
 - **AC-10 (look, SCAR-025).** A sheet with a small, a typical and a long
   creature at printed size, a statblock at 4x.
 - **AC-11 (warnings and refusals).** Every warning of the answer is forwarded

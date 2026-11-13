@@ -5,6 +5,7 @@
 // US-002, US-003 and US-004, the statblock contract, the sheet and the fit
 // warnings.
 import {cardSheetTypst} from '../card/sheet';
+import {cardCode} from '../card/warning';
 import {readCreature, type CreatureCard} from '../creature/read';
 import {
   checkStatblockApi,
@@ -178,6 +179,13 @@ export async function runCards(
     const why =
       cards.length === 0 && unavailable !== '' ? `: ${unavailable}` : '';
     return {ok: false, message: `${sheet.message}${why}`, warnings};
+  }
+  if (sheet.creditOmitted !== null) {
+    warnings.push({
+      code: cardCode('creature', 'CREDIT_OMITTED'),
+      path: '',
+      detail: `bottom band ${sheet.creditOmitted} mm`,
+    });
   }
   let extra: CompileExtra | undefined;
   if (api !== null && api !== undefined && sheet.files.length > 0) {

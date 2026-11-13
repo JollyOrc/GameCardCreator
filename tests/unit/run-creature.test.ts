@@ -354,6 +354,37 @@ describe('US-004 AC-11: warnings and refusals', () => {
 });
 
 describe('US-004 AC-7, AC-9: a mixed deck and the credit', () => {
+  it('a band with no room for the credit: one warning for the run, the cards are made (ticket #27)', async () => {
+    const {d} = setup({
+      answer: () => FEN_HARE_WITH_CREDIT,
+      facts: [
+        {i: 0, size: 7, fits: true, dropped: []},
+        {i: 1, size: 7, fits: true, dropped: []},
+      ],
+    });
+    const r = await runCards(
+      ['creatures/Fen Hare.md', 'creatures/Fen Hare.md'],
+      {...settings, sheet: {...settings.sheet, cardHeight: 98, margin: 1}},
+      d,
+    );
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.cards).toBe(2);
+    expect(r.warnings).toEqual([
+      {
+        code: 'CREATURE_CREDIT_OMITTED',
+        path: '',
+        detail: 'bottom band 1.5 mm',
+      },
+    ]);
+  });
+  it('the default sheet gives no such warning', async () => {
+    const {d} = setup({answer: () => FEN_HARE_WITH_CREDIT});
+    const r = await runCards(['creatures/Fen Hare.md'], settings, d);
+    expect(r.ok && r.warnings.map((w) => w.code)).not.toContain(
+      'CREATURE_CREDIT_OMITTED',
+    );
+  });
   it('creature, skill and spell cards in the given order; the report counts them', async () => {
     const {d, log} = setup({
       facts: [

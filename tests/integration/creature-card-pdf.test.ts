@@ -577,6 +577,45 @@ describe('US-004 AC-9: the credit', () => {
   );
 });
 
+describe('US-004 AC-9 (amended 2026-11-13, ticket #27): a band with no room for the credit', () => {
+  const sizes = {maxSize: 7, minSize: 5.5, sizeStep: 0.25};
+  // three rows of 98 mm cards with a 1 mm margin: the block is 294 mm high, the band 1.5 mm
+  const tall = {...DEFAULT_SHEET, cardHeight: 98, margin: 1};
+  const make = (sheet: typeof DEFAULT_SHEET, answer = FEN_HARE_WITH_CREDIT) => {
+    const r = cardSheetTypst([creature({}, answer)], sheet, sizes);
+    if (!r.ok) throw new Error(r.message);
+    return r;
+  };
+  it('a band under 3 mm: no credit in the source, the band height reported', () => {
+    const r = make(tall);
+    expect(r.creditOmitted).toBe(1.5);
+    expect(r.source).not.toContain('gcc-credit("'); // the call; the definition stays
+    expect(r.source).not.toContain(CREDIT_TEXT);
+  });
+  it('the default sheet (band 16.5 mm) prints it and reports nothing', () => {
+    const r = make(DEFAULT_SHEET);
+    expect(r.creditOmitted).toBeNull();
+    expect(r.source).toContain(CREDIT_TEXT);
+  });
+  it('the height is reported to one decimal', () => {
+    // 3 rows of 98.27 mm: block 294.81 mm, band 1.095 mm
+    const r = make({...DEFAULT_SHEET, cardHeight: 98.27, margin: 1});
+    expect(r.creditOmitted).toBe(1.1);
+  });
+  it('no credit to print, no report, even with a narrow band (null and an empty text)', () => {
+    expect(make(tall, FEN_HARE_ANSWER).creditOmitted).toBeNull();
+    expect(
+      make(tall, {...FEN_HARE_ANSWER, credit: '  '}).creditOmitted,
+    ).toBeNull();
+  });
+  it('a band of exactly 3 mm prints the line (the limit is inclusive)', () => {
+    // 3 rows of 97 mm: 291 mm, band 3 mm
+    const r = make({...DEFAULT_SHEET, cardHeight: 97, margin: 1});
+    expect(r.creditOmitted).toBeNull();
+    expect(r.source).toContain(CREDIT_TEXT);
+  });
+});
+
 describe("US-004 AC-12: icons come from the answer's files", () => {
   it(
     'the card compiles with the files at their paths and without a compiler warning',
