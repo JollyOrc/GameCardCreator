@@ -42,7 +42,11 @@ const buf = (b: Uint8Array): ArrayBuffer =>
   b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength) as ArrayBuffer;
 
 const MONO = '#text(font: "DejaVu Sans Mono")[mono text]\n';
-const PLAIN = '#set text(font: "Libertinus Serif")\nplain text\n';
+// `document(date: none)`: without it Typst writes the current time into the PDF
+// and two compiles a second apart differ (spike-typst.md); the byte comparisons
+// below would then fail by chance (found at ticket #25).
+const PLAIN =
+  '#set document(date: none)\n#set text(font: "Libertinus Serif")\nplain text\n';
 const WITH_ICON = '#image("o2t-icons/1.svg", width: 5mm)\n';
 
 async function ready() {
@@ -119,6 +123,84 @@ describe('US-004 AC-12: files and fonts of one compile', () => {
     expect(Array.from(new Uint8Array(afterCreature.pdf!))).toEqual(
       Array.from(new Uint8Array(fresh.pdf!)),
     );
+  }, 60_000);
+});
+
+describe('US-004 AC-12 (ticket #25): the diagnostic and the kept compiler', () => {
+  it('a missing icon names the file as the source wrote it, in the diagnostic', async () => {
+    const {compile} = await ready();
+    const r = await compile(WITH_ICON);
+    expect(r.type).toBe('failed');
+    expect(r.message).toMatch(/^\/sheet\.typ:1:8: error: failed to load file/);
+    expect(r.message).toContain('["o2t-icons/1.svg"]');
+  }, 60_000);
+  it('the same fonts twice, then another list, then none: each compile has exactly its own fonts', async () => {
+    const {compile} = await ready();
+    const dejavu = [buf(new Uint8Array(DEJAVU))];
+    const other = [buf(new Uint8Array(LIBERTINUS[0]!))];
+    expect(text((await compile(MONO, {fonts: dejavu})).pdf)).toContain(
+      'DejaVuSansMono',
+    );
+    expect(text((await compile(MONO, {fonts: dejavu})).pdf)).toContain(
+      'DejaVuSansMono',
+    );
+    // another list replaces the kept compiler: DejaVu is not in it
+    expect(text((await compile(MONO, {fonts: other})).pdf)).not.toContain(
+      'DejaVuSansMono',
+    );
+    // none: the held compiler, without DejaVu
+    expect(text((await compile(MONO)).pdf)).not.toContain('DejaVuSansMono');
+    // and the first list again is used again
+    expect(text((await compile(MONO, {fonts: dejavu})).pdf)).toContain(
+      'DejaVuSansMono',
+    );
+  }, 60_000);
+  it("a compile with extra fonts still has the plugin's own fonts (Libertinus Serif)", async () => {
+    const {compile} = await ready();
+    const r = await compile(PLAIN, {fonts: [buf(new Uint8Array(DEJAVU))]});
+    expect(r.type).toBe('compiled');
+    expect(text(r.pdf)).toContain('LibertinusSerif');
+  }, 60_000);
+  it('a new init drops the kept compiler: the fonts of the new init are the base', async () => {
+    const {createWorkerCore} = await load<{
+      createWorkerCore(post: Post): {handle(m: unknown): Promise<void>};
+    }>(CORE);
+    const out: Out[] = [];
+    const core = createWorkerCore((m) => void out.push(m as Out));
+    const init = (fontTexts: string[], id: string) =>
+      core.handle({
+        type: 'init',
+        id,
+        compilerText: gz(new Uint8Array(WASM)),
+        fontTexts,
+      });
+    const extra = [buf(new Uint8Array(DEJAVU))];
+    await init(
+      LIBERTINUS.map((f) => gz(new Uint8Array(f))),
+      'i1',
+    );
+    await core.handle({type: 'compile', id: 'a', source: PLAIN, fonts: extra});
+    expect(text(out.find((o) => o.id === 'a')!.pdf)).toContain(
+      'LibertinusSerif',
+    );
+    // the second init has no Libertinus: the same extra fonts must not bring it back
+    await init([gz(new Uint8Array(DEJAVU))], 'i2');
+    await core.handle({type: 'compile', id: 'b', source: PLAIN, fonts: extra});
+    expect(text(out.find((o) => o.id === 'b')!.pdf)).not.toContain(
+      'LibertinusSerif',
+    );
+  }, 60_000);
+  it('files with extra fonts: both are used by that compile only', async () => {
+    const {compile} = await ready();
+    const both = await compile(`${WITH_ICON}${MONO}`, {
+      files,
+      fonts: [buf(new Uint8Array(DEJAVU))],
+    });
+    expect(both.type).toBe('compiled');
+    expect(text(both.pdf)).toContain('DejaVuSansMono');
+    expect(
+      (await compile(WITH_ICON, {fonts: [buf(new Uint8Array(DEJAVU))]})).type,
+    ).toBe('failed');
   }, 60_000);
 });
 

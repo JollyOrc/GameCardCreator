@@ -21,6 +21,16 @@ export interface CompilerDeps {
   fontTexts(): string[];
 }
 
+/**
+ * US-004 AC-12: what one compile takes besides its source: files at their paths
+ * next to the source and font files added to the plugin's own. The worker keeps
+ * neither for the next compile.
+ */
+export interface CompileExtra {
+  files?: readonly {path: string; bytes: Uint8Array}[];
+  fonts?: readonly Uint8Array[];
+}
+
 /** The outcome of one compile; `message` is set exactly when `pdf` is null. */
 export interface CompileResult {
   pdf: Uint8Array | null;
@@ -30,7 +40,8 @@ export interface CompileResult {
 
 /** The service: `compile` never rejects. */
 export interface Compiler {
-  compile(source: string): Promise<CompileResult>;
+  /** US-004 AC-12: `extra` is for this compile only. */
+  compile(source: string, extra?: CompileExtra): Promise<CompileResult>;
   dispose(): void;
 }
 
@@ -141,13 +152,32 @@ export function createCompiler(deps: CompilerDeps): Compiler {
   /** A started worker, a new one when the last one ended. */
   const ensure = async (): Promise<WorkerLike> => worker ?? start();
 
-  const run = async (source: string): Promise<CompileResult> => {
+  const run = async (
+    source: string,
+    extra?: CompileExtra,
+  ): Promise<CompileResult> => {
     if (disposed) return failed(UNLOADED);
     try {
       const w = await ensure();
       if (disposed) return failed(UNLOADED);
       const id = `compile-${++counter}`;
-      const answer = await ask(w, id, {type: 'compile', id, source});
+      // Copies, so the caller's buffers stay usable; nothing is sent when none is given.
+      const own = (b: Uint8Array): ArrayBuffer =>
+        b.buffer.slice(
+          b.byteOffset,
+          b.byteOffset + b.byteLength,
+        ) as ArrayBuffer;
+      const message: Record<string, unknown> = {type: 'compile', id, source};
+      if (extra?.files !== undefined && extra.files.length > 0) {
+        message.files = extra.files.map((f) => ({
+          path: f.path,
+          bytes: own(f.bytes),
+        }));
+      }
+      if (extra?.fonts !== undefined && extra.fonts.length > 0) {
+        message.fonts = extra.fonts.map(own);
+      }
+      const answer = await ask(w, id, message);
       if (answer.type === 'compiled' && answer.pdf instanceof ArrayBuffer) {
         return {
           pdf: new Uint8Array(answer.pdf),
@@ -163,9 +193,9 @@ export function createCompiler(deps: CompilerDeps): Compiler {
   };
 
   return {
-    compile(source: string): Promise<CompileResult> {
+    compile(source: string, extra?: CompileExtra): Promise<CompileResult> {
       if (disposed) return Promise.resolve(failed(UNLOADED));
-      const result = tail.then(() => run(source));
+      const result = tail.then(() => run(source, extra));
       tail = result;
       return result;
     },

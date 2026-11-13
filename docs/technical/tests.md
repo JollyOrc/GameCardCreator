@@ -494,7 +494,7 @@ typecheck, eslint, prettier clean.
 | AC-9 | `creature-card-pdf` AC-9 (once, 5 pt, centred, band, per page, null, two lines); `run-creature` | PDF part green (ticket #24); the run with #26 |
 | AC-10 | manual look, 4x, with the code ticket | looked at by the developer at #24 (450 ppi, seven cards: small, typical, long, overflow, a dropped part, no statblock; a gap under the headings found and fixed); the author's look is in M06 (#26) |
 | AC-11 | `creature-statblock`, `run-creature`, `creature-card-pdf` (card without statblock) | written |
-| AC-12 | `plugin/creature-compile` (files, font, nothing leaks); `run-creature` | written |
+| AC-12 | `plugin/creature-compile` (files, font, nothing leaks; added at #25: the diagnostic names the file, the kept compiler, init drops it, own fonts stay, files with fonts); `run-creature` | compile part green (ticket #25, 2026-11-13); the run with #26; the worker inside Obsidian: M06 |
 | AC-12a | equal files merged (`run-creature`); different bytes: D6 open | partly |
 | AC-13 | `creature-settings` (with the fields' labels), `plugin/creature-screen`, `unit/us-007-fields` (amended, 20 fields), `card-codes` (no literal `CREATURE_`) | green for the settings, the screen and the fields (ticket #21, 2026-11-13); `card-codes` with #22 |
 | #24 side effects | new `card-single-size` (one size is a list of one; a defect of the older kinds, found by AC-4), `creature-card-headings`, the triples and prelude tests in `creature-card-pdf`, `fit` mixes; amended: `card-sheet`, `run-cards` (the size list has a trailing comma), `card-escape` (seven escaped places) | green |
