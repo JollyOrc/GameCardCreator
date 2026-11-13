@@ -1,7 +1,7 @@
 # US-009 — Colour-coded headers and icons on skill and spell cards
 
 **Status:** Ready 2026-11-13 (G0 and G1 done; all decisions D1 to D14 answered by the owner and the five
-points under "Please read" confirmed by "go"); tests written (G2), red by design.
+points under "Please read" confirmed by "go"); tests written (G2), red by design; tickets #28 to #34 (G3).
 **Introduced:** 0.3.0 (planned)
 
 **As** a game master **I want** the header of a skill or spell card to carry the colour and the icon
