@@ -362,6 +362,8 @@ describe('US-007 (SCAR-019): non-default values committed one by one are what th
       ['sheet.margin', '15'],
       ['sheet.gap', '2'],
       ['sheet.cutMarks', false],
+      ['sheet.bleed', '1.5'], // US-009 AC-15 (cut marks are off by now)
+      ['schemeNote', 'Layouting/Branch Scheme.md'], // US-009 AC-1
       ['skill.maxSize', '8.5'],
       ['skill.minSize', '6'],
       ['skill.sizeStep', '0.5'],
@@ -381,7 +383,9 @@ describe('US-007 (SCAR-019): non-default values committed one by one are what th
       margin: 15,
       gap: 2,
       cutMarks: false,
+      bleed: 1.5,
     });
+    expect(read.settings.schemeNote).toBe('Layouting/Branch Scheme.md');
     expect(read.settings.skill).toMatchObject({
       maxSize: 8.5,
       minSize: 6,

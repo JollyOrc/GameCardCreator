@@ -26,7 +26,7 @@ const field = (
 
 /**
  * US-007 AC-1, AC-4: every field of the screen, in the order of its page. The kind rules
- * are not fields (a list of rows, `rules.ts`). Twenty fields (US-004 AC-13 added three).
+ * are not fields (a list of rows, `rules.ts`). Twenty-two fields (US-004 AC-13 added three, US-009 AC-11 two).
  */
 export const FIELDS: readonly FieldDef[] = [
   field('outputFolder', 'main', 'Output', 'Output folder'),
@@ -61,11 +61,13 @@ export const FIELDS: readonly FieldDef[] = [
     'Creature notes',
     'Signs heading',
   ),
+  field('schemeNote', 'properties', 'Scheme note', 'Scheme note'),
   field('sheet.cardWidth', 'layout', 'Sheet', 'Card width', 'number'),
   field('sheet.cardHeight', 'layout', 'Sheet', 'Card height', 'number'),
   field('sheet.margin', 'layout', 'Sheet', 'Margin', 'number'),
   field('sheet.gap', 'layout', 'Sheet', 'Gap', 'number'),
   field('sheet.cutMarks', 'layout', 'Sheet', 'Cut marks', 'toggle'),
+  field('sheet.bleed', 'layout', 'Sheet', 'Bleed', 'number'),
   field('skill.maxSize', 'layout', 'Text size', 'Largest size', 'number'),
   field('skill.minSize', 'layout', 'Text size', 'Smallest size', 'number'),
   field('skill.sizeStep', 'layout', 'Text size', 'Size step', 'number'),

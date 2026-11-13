@@ -34,6 +34,13 @@ describe('US-009 AC-11: the scheme note field', () => {
       'Layouting/Branch Scheme.md',
     );
   });
+  it('spaces only are trimmed to empty like any text field: saved, the feature is off', async () => {
+    const store = memoryStore({schemeNote: 'a.md'});
+    expect(await commitSetting(deps(store), 'schemeNote', '   ')).toMatchObject(
+      {ok: true},
+    );
+    expect(readSettingsFile(store.file()).settings.schemeNote).toBe('');
+  });
   it('an empty value is saved: the feature is off', async () => {
     const store = memoryStore({schemeNote: 'a.md'});
     expect(await commitSetting(deps(store), 'schemeNote', '')).toMatchObject({
@@ -41,7 +48,7 @@ describe('US-009 AC-11: the scheme note field', () => {
     });
     expect(readSettingsFile(store.file()).settings.schemeNote).toBe('');
   });
-  it.each(['/abs.md', '../up.md', 'note.txt', 'a\\b.md', '   '])(
+  it.each(['/abs.md', '../up.md', 'note.txt', 'a\\b.md'])(
     '%j is refused with the checks message and nothing is written',
     async (bad) => {
       const store = memoryStore(null);

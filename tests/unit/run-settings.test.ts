@@ -28,6 +28,7 @@ describe('US-005 settings table: the defaults', () => {
       skill: DEFAULT_SKILL,
       spell: DEFAULT_SPELL,
       creature: DEFAULT_CREATURE,
+      schemeNote: '', // US-009 AC-1
     });
   });
 });

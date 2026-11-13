@@ -22,6 +22,7 @@ import {
   checkCreatureSettings,
   type CreatureSettings,
 } from '../creature/settings';
+import {checkSchemeNote} from '../scheme/settings';
 import {checkKindRules, type KindRule} from './kinds';
 import {checkOutputFolder} from './output';
 
@@ -35,6 +36,8 @@ export interface CardsSettings {
   skill: SkillSettings;
   spell: SpellSettings;
   creature: CreatureSettings;
+  /** US-009 AC-1: the vault path of the scheme note; empty: no colours and icons. */
+  schemeNote: string;
 }
 
 /** US-005 settings table: the defaults. No rule and no folder: the author adds theirs. */
@@ -45,6 +48,7 @@ export const DEFAULT_CARDS: Readonly<CardsSettings> = Object.freeze({
   skill: DEFAULT_SKILL,
   spell: DEFAULT_SPELL,
   creature: DEFAULT_CREATURE,
+  schemeNote: '',
 });
 
 /**
@@ -59,6 +63,7 @@ export function checkCardSettings(settings: CardsSettings): string[] {
     ...checkSkillSettings(settings.skill),
     ...checkSpellSettings(settings.spell),
     ...checkCreatureSettings(settings.creature),
+    ...checkSchemeNote(settings.schemeNote),
   ];
 }
 

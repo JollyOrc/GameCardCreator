@@ -111,6 +111,14 @@ describe('US-009 AC-15: the bleed setting', () => {
       'bleed 2 is above 1 mm, the distance of the cut marks',
     ]);
   });
+  it('a margin that is itself refused is not compared with the bleed (one mistake, one message)', () => {
+    expect(checkSheet(sheet({margin: -1, bleed: 0}))).toEqual([
+      'margin -1 is outside 0 to 50 mm',
+    ]);
+    expect(
+      checkSheet(sheet({margin: Number.NaN, bleed: 1, cutMarks: false})),
+    ).toEqual(['margin NaN is outside 0 to 50 mm']);
+  });
   it('one mistake gives one message: a bleed outside the range is not also above the margin', () => {
     expect(checkSheet(sheet({bleed: 5, margin: 1, cutMarks: false}))).toEqual([
       'bleed 5 is outside 0 to 3 mm',

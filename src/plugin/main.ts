@@ -39,6 +39,8 @@ export default class GameCardCreatorPlugin extends Plugin {
         folders: () => this.app.vault.getAllFolders().map((f) => f.path),
         folderExists: (folder) =>
           this.app.vault.getFolderByPath(folder) !== null,
+        // US-009 AC-11: the vault's answer only; the tab decides what it means.
+        noteExists: (path) => this.app.vault.getFileByPath(path) !== null,
         confirm: (dialog) => confirmDialogWith(Modal)(this.app, dialog),
         exists: (path) => createDiskWriter(path).exists(path),
       }),

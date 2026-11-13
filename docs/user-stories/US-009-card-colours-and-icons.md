@@ -85,8 +85,7 @@ Spark.md` (spell): tags `Pyromancy`. `Scorch Hex.md` (spell): tags `Pyromancy`, 
 
 - **AC-1 (the scheme note).** With `schemeNote` set, each run that has a skill or spell card reads that note
   from the vault (as the notes themselves are read: through the vault, never from the cache, never kept
-  between runs, SCAR-016) and takes the mapping from it as under "The scheme note". The path is a vault
-  path: it is refused (setting check, one message) when it is only spaces, starts with `/`, contains a
+  between runs, SCAR-016) and takes the mapping from it as under "The scheme note". The path is a vault path: it is refused (setting check, one message; the screen trims what is typed, so spaces only become empty and switch the feature off) when it is only spaces in the settings file, starts with `/`, contains a
   backslash or a path part `..` (`a..b.md` is fine), or does not end in `.md`. The header is removed once before anything is read (SCAR-034). Tags compare
   without case, a leading `#`, backticks and surrounding spaces (`#swordplay ` is `Swordplay`). With
   `schemeNote` empty the source of every card is the same text as before. The example note gives four

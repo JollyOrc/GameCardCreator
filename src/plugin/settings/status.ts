@@ -40,3 +40,18 @@ export function statusLine(settings: CardsSettings, vaultRoot: string): string {
   const n = settings.kindRules.length;
   return `Ready: ${n} kind rule${n === 1 ? '' : 's'}, output folder ${folder}`;
 }
+
+/**
+ * US-009 AC-11: the line under the scheme note field: nothing when no scheme note is set
+ * or the vault has not answered yet (`exists` null); `Scheme note: <path>` when the note
+ * is in the vault; `Scheme note: not found` when it is not. Pure: the vault's answer is
+ * an argument (SCAR-031).
+ */
+export function schemeLine(
+  settings: CardsSettings,
+  exists: boolean | null,
+): string | null {
+  const path = settings.schemeNote.trim();
+  if (path === '' || exists === null) return null;
+  return exists ? `Scheme note: ${path}` : 'Scheme note: not found';
+}

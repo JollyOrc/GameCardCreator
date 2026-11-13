@@ -54,7 +54,7 @@ function mergeObject<T extends object>(
  * `null` (no file) gives the defaults and no notice; a value that is not an
  * object gives the defaults and `Settings file: not an object, using the
  * defaults`; a key of the wrong type is ignored and named, in the order
- * `outputFolder`, `sheet.*`, `skill.*`, `spell.*`, `creature.*`, `kindRules`. Values are
+ * `outputFolder`, `sheet.*`, `skill.*`, `spell.*`, `creature.*`, `kindRules`, `schemeNote`. Values are
  * passed on as they are: refusing a value out of range is the check of
  * US-005. The result is a copy.
  */
@@ -66,6 +66,7 @@ export function readSettingsFile(raw: unknown): SettingsFileResult {
     skill: {...DEFAULT_CARDS.skill},
     spell: {...DEFAULT_CARDS.spell},
     creature: {...DEFAULT_CARDS.creature},
+    schemeNote: DEFAULT_CARDS.schemeNote,
   });
   if (raw === null) return {settings: fresh(), notice: null};
   if (!isObject(raw)) {
@@ -91,8 +92,19 @@ export function readSettingsFile(raw: unknown): SettingsFileResult {
   if (Array.isArray(raw.kindRules) && raw.kindRules.every(isKindRule)) {
     kindRules = raw.kindRules.map((rule) => ({...rule}));
   } else if (raw.kindRules !== undefined) ignored.push('kindRules');
+  let schemeNote: string = DEFAULT_CARDS.schemeNote;
+  if (typeof raw.schemeNote === 'string') schemeNote = raw.schemeNote;
+  else if (raw.schemeNote !== undefined) ignored.push('schemeNote');
   return {
-    settings: {kindRules, outputFolder, sheet, skill, spell, creature},
+    settings: {
+      kindRules,
+      outputFolder,
+      sheet,
+      skill,
+      spell,
+      creature,
+      schemeNote,
+    },
     notice:
       ignored.length === 0
         ? null

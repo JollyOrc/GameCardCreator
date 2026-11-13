@@ -31,6 +31,7 @@ describe('US-001 AC-1: default grid', () => {
       margin: 10,
       gap: 0,
       cutMarks: true,
+      bleed: 0, // US-009 AC-15
     });
   });
   it('is 3 x 3 = 9 cards, block centred at 12 / 16.5 mm', () => {

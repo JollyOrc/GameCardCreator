@@ -14,6 +14,8 @@ export interface SheetSettings {
   gap: number;
   /** Draw cut marks in the margins (D4). */
   cutMarks: boolean;
+  /** US-009 AC-15: mm the colour band reaches beyond the card's frame, 0 to 3. */
+  bleed: number;
 }
 
 /** US-001 AC-1: the defaults, 62 x 88 mm cards, 10 mm margin, no gap. */
@@ -23,6 +25,7 @@ export const DEFAULT_SHEET: Readonly<SheetSettings> = Object.freeze({
   margin: 10,
   gap: 0,
   cutMarks: true,
+  bleed: 0,
 });
 
 /** US-001: the sheet is A4. */
@@ -36,6 +39,29 @@ const TICK_EDGE_MIN = 3;
 
 /** Rounding that removes floating-point dust (1e-6 mm) from positions. */
 const round = (value: number): number => Math.round(value * 1e6) / 1e6;
+
+/**
+ * US-009 AC-15: checks the bleed; at most one message (one mistake, one message). While
+ * the cut marks are on, more than the tick offset (1 mm: the marks start that far from
+ * the block of cards) is refused first; otherwise a value outside 0 to 3 mm (also not a
+ * number) is refused; otherwise a value above the margin.
+ */
+function checkBleed(settings: SheetSettings): string[] {
+  const {bleed, margin, cutMarks} = settings;
+  if (cutMarks && bleed > TICK_OFFSET) {
+    return [
+      `bleed ${bleed} is above ${TICK_OFFSET} mm, the distance of the cut marks`,
+    ];
+  }
+  if (!Number.isFinite(bleed) || bleed < 0 || bleed > 3) {
+    return [`bleed ${bleed} is outside 0 to 3 mm`];
+  }
+  // A margin that is itself refused is not compared (one mistake, one message).
+  const marginOk = Number.isFinite(margin) && margin >= 0 && margin <= 50;
+  if (marginOk && bleed > margin)
+    return [`bleed ${bleed} is above the margin ${margin} mm`];
+  return [];
+}
 
 /**
  * US-001 AC-12: checks every setting against its allowed range.
@@ -57,6 +83,7 @@ export function checkSettings(settings: SheetSettings): string[] {
       issues.push(`${name} ${value} is outside ${low} to ${high} mm`);
     }
   }
+  issues.push(...checkBleed(settings));
   return issues;
 }
 

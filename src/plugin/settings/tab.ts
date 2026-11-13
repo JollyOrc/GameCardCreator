@@ -34,7 +34,7 @@ import {
 } from './folder-dialog';
 import {PAGE_TITLES, resetDialog, resetPage, type ResetPage} from './reset';
 import {commitRule, suggestFolders} from './rules';
-import {gridLine, statusLine} from './status';
+import {gridLine, schemeLine, statusLine} from './status';
 
 /** What `main.ts` hands to the tab. */
 export interface TabDeps {
@@ -43,6 +43,8 @@ export interface TabDeps {
   /** The vault's folders now (for the suggestions). */
   folders(): string[];
   folderExists(folder: string): boolean;
+  /** US-009 AC-11: whether the vault has a note at this path now (read at each draw). */
+  noteExists(path: string): boolean;
   /** Asks the question; `false` is Cancel. */
   confirm(dialog: ReplaceDialog): Promise<boolean>;
   /** Whether a folder of the disk exists (the dialog's start folder). */
@@ -88,6 +90,7 @@ export class GameCardCreatorSettingTab extends PluginSettingTab {
   private pending: PendingRule | null = null;
   private statusEl: HTMLElement | null = null;
   private gridEl: HTMLElement | null = null;
+  private schemeEl: HTMLElement | null = null;
   private drawn = 0;
 
   constructor(
@@ -130,6 +133,7 @@ export class GameCardCreatorSettingTab extends PluginSettingTab {
     el.empty();
     this.statusEl = null;
     this.gridEl = null;
+    this.schemeEl = null;
     if (this.page === 'main') this.drawMain(el, settings);
     else this.drawSub(el, settings, this.page);
     await this.refresh();
@@ -140,6 +144,12 @@ export class GameCardCreatorSettingTab extends PluginSettingTab {
     const settings = await this.current();
     this.statusEl?.setText(statusLine(settings, this.deps.vaultRoot()));
     this.gridEl?.setText(gridLine(settings.sheet));
+    // US-009 AC-11: the vault is asked now, at every draw and every change (SCAR-016).
+    const path = settings.schemeNote.trim();
+    this.schemeEl?.setText(
+      schemeLine(settings, path === '' ? null : this.deps.noteExists(path)) ??
+        '',
+    );
   }
 
   private drawMain(el: HTMLElement, settings: CardsSettings): void {
@@ -188,6 +198,8 @@ export class GameCardCreatorSettingTab extends PluginSettingTab {
       new Setting(el).setName(group).setHeading();
       this.drawFields(el, settings, page, fields);
       if (group === 'Sheet') this.gridEl = el.createDiv({cls: 'gcc-grid'});
+      if (group === 'Scheme note')
+        this.schemeEl = el.createDiv({cls: 'gcc-grid'});
     }
     new Setting(el).setName('Reset this page to defaults').addButton((button) =>
       button
