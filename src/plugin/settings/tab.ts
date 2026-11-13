@@ -77,7 +77,11 @@ interface PendingRule {
   kind: NoteKind;
 }
 
-const KIND_OPTIONS: Record<NoteKind, string> = {skill: 'skill', spell: 'spell'};
+const KIND_OPTIONS: Record<NoteKind, string> = {
+  skill: 'skill',
+  spell: 'spell',
+  creature: 'creature',
+};
 
 export class GameCardCreatorSettingTab extends PluginSettingTab {
   private page: PageId = 'main';

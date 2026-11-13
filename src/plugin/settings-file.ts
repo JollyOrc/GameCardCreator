@@ -17,7 +17,9 @@ const isObject = (value: unknown): value is Record<string, unknown> =>
 const isKindRule = (value: unknown): value is KindRule =>
   isObject(value) &&
   typeof value.folder === 'string' &&
-  (value.kind === 'skill' || value.kind === 'spell');
+  (value.kind === 'skill' ||
+    value.kind === 'spell' ||
+    value.kind === 'creature');
 
 /**
  * US-008 | AC-4: `defaults` with every key of `raw` that has the type of the
@@ -52,7 +54,7 @@ function mergeObject<T extends object>(
  * `null` (no file) gives the defaults and no notice; a value that is not an
  * object gives the defaults and `Settings file: not an object, using the
  * defaults`; a key of the wrong type is ignored and named, in the order
- * `outputFolder`, `sheet.*`, `skill.*`, `spell.*`, `kindRules`. Values are
+ * `outputFolder`, `sheet.*`, `skill.*`, `spell.*`, `creature.*`, `kindRules`. Values are
  * passed on as they are: refusing a value out of range is the check of
  * US-005. The result is a copy.
  */
@@ -63,6 +65,7 @@ export function readSettingsFile(raw: unknown): SettingsFileResult {
     sheet: {...DEFAULT_CARDS.sheet},
     skill: {...DEFAULT_CARDS.skill},
     spell: {...DEFAULT_CARDS.spell},
+    creature: {...DEFAULT_CARDS.creature},
   });
   if (raw === null) return {settings: fresh(), notice: null};
   if (!isObject(raw)) {
@@ -78,12 +81,18 @@ export function readSettingsFile(raw: unknown): SettingsFileResult {
   const sheet = mergeObject('sheet', DEFAULT_CARDS.sheet, raw.sheet, ignored);
   const skill = mergeObject('skill', DEFAULT_CARDS.skill, raw.skill, ignored);
   const spell = mergeObject('spell', DEFAULT_CARDS.spell, raw.spell, ignored);
+  const creature = mergeObject(
+    'creature',
+    DEFAULT_CARDS.creature,
+    raw.creature,
+    ignored,
+  );
   let kindRules: KindRule[] = [];
   if (Array.isArray(raw.kindRules) && raw.kindRules.every(isKindRule)) {
     kindRules = raw.kindRules.map((rule) => ({...rule}));
   } else if (raw.kindRules !== undefined) ignored.push('kindRules');
   return {
-    settings: {kindRules, outputFolder, sheet, skill, spell},
+    settings: {kindRules, outputFolder, sheet, skill, spell, creature},
     notice:
       ignored.length === 0
         ? null

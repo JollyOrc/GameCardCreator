@@ -49,7 +49,7 @@ describe('US-005 AC-3: checkKindRules', () => {
     [[{folder: '', kind: 'skill'}], /folder/i],
     [[{folder: '   ', kind: 'skill'}], /folder/i],
     [[{folder: '/', kind: 'skill'}], /folder/i],
-    [[{folder: 'A', kind: 'creature'}], /kind/i],
+    [[{folder: 'A', kind: 'monster'}], /kind/i], // creature is a kind since US-004
     [
       [
         {folder: 'A', kind: 'skill'},

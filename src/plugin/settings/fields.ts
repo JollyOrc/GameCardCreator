@@ -26,7 +26,7 @@ const field = (
 
 /**
  * US-007 AC-1, AC-4: every field of the screen, in the order of its page. The kind rules
- * are not fields (a list of rows, `rules.ts`). Seventeen fields.
+ * are not fields (a list of rows, `rules.ts`). Twenty fields (US-004 AC-13 added three).
  */
 export const FIELDS: readonly FieldDef[] = [
   field('outputFolder', 'main', 'Output', 'Output folder'),
@@ -43,6 +43,24 @@ export const FIELDS: readonly FieldDef[] = [
   ),
   field('skill.requiresLabel', 'properties', 'Skill notes', 'Requires label'),
   field('spell.tagsProperty', 'properties', 'Spell notes', 'Tags property'),
+  field(
+    'creature.instinctsHeading',
+    'properties',
+    'Creature notes',
+    'Instincts heading',
+  ),
+  field(
+    'creature.actionsHeading',
+    'properties',
+    'Creature notes',
+    'Actions heading',
+  ),
+  field(
+    'creature.signsHeading',
+    'properties',
+    'Creature notes',
+    'Signs heading',
+  ),
   field('sheet.cardWidth', 'layout', 'Sheet', 'Card width', 'number'),
   field('sheet.cardHeight', 'layout', 'Sheet', 'Card height', 'number'),
   field('sheet.margin', 'layout', 'Sheet', 'Margin', 'number'),

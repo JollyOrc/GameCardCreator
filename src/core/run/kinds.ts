@@ -2,8 +2,11 @@
 // contains a note when the note's path starts with the folder and a `/`, never
 // a bare prefix (SCAR-033); the longest folder wins; case matters.
 
-/** US-005 AC-3: the kinds a rule can give (the creature card is US-004). */
-export type NoteKind = 'skill' | 'spell';
+/** US-005 AC-3: the kinds a rule can give. */
+export type NoteKind = 'skill' | 'spell' | 'creature';
+
+/** US-005 AC-3, US-004 AC-13: every kind a rule can give. */
+const KINDS: readonly NoteKind[] = ['skill', 'spell', 'creature'];
 
 /** US-005 AC-3: one rule of the settings. */
 export interface KindRule {
@@ -37,7 +40,7 @@ export function kindOf(
 
 /**
  * US-005 AC-3: checks the rules; one message per problem, empty when valid. A
- * folder must not be empty or `/`, the kind must be `skill` or `spell`, and a
+ * folder must not be empty or `/`, the kind must be `skill`, `spell` or `creature`, and a
  * folder must not be named by two rules.
  */
 export function checkKindRules(rules: readonly KindRule[]): string[] {
@@ -55,9 +58,9 @@ export function checkKindRules(rules: readonly KindRule[]): string[] {
     } else {
       seen.add(folder);
     }
-    if (rule.kind !== 'skill' && rule.kind !== 'spell') {
+    if (!KINDS.includes(rule.kind)) {
       issues.push(
-        `${place}: the kind "${String(rule.kind)}" is not skill or spell`,
+        `${place}: the kind "${String(rule.kind)}" is not skill, spell or creature`,
       );
     }
   });

@@ -10,6 +10,7 @@ import {
 import {checkKindRules, kindOf} from '../../src/core/run/kinds';
 import {DEFAULT_CARDS, checkCardSettings} from '../../src/core/run/settings';
 import {readSettingsFile} from '../../src/plugin/settings-file';
+import {FIELDS} from '../../src/plugin/settings/fields';
 
 describe('US-004 settings: the defaults and their check', () => {
   it('the defaults are Behaviour, Actions, Signs (invented, SCAR-035)', () => {
@@ -91,5 +92,34 @@ describe('US-004 AC-13: the settings file', () => {
       {folder: 'Creatures', kind: 'creature'},
     ]);
     expect(r.notice).toBeNull();
+  });
+});
+
+describe('US-004 AC-13: the fields on the settings screen', () => {
+  it('three text fields under Creature notes with their labels, on the properties page', () => {
+    const f = FIELDS.filter((x) => x.id.startsWith('creature.'));
+    expect(f.map((x) => [x.id, x.label, x.group, x.page, x.kind])).toEqual([
+      [
+        'creature.instinctsHeading',
+        'Instincts heading',
+        'Creature notes',
+        'properties',
+        'text',
+      ],
+      [
+        'creature.actionsHeading',
+        'Actions heading',
+        'Creature notes',
+        'properties',
+        'text',
+      ],
+      [
+        'creature.signsHeading',
+        'Signs heading',
+        'Creature notes',
+        'properties',
+        'text',
+      ],
+    ]);
   });
 });

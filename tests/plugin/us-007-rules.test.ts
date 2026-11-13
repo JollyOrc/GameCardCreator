@@ -82,8 +82,8 @@ describe('US-007 AC-6: refused rules are not saved, with the messages of checkKi
     [{folder: '', kind: 'skill'}, 'Kind rule 1: the folder is empty'],
     [{folder: '  ', kind: 'skill'}, 'Kind rule 1: the folder is empty'],
     [
-      {folder: 'Skills', kind: 'creature'},
-      'Kind rule 1: the kind "creature" is not skill or spell',
+      {folder: 'Skills', kind: 'monster'},
+      'Kind rule 1: the kind "monster" is not skill, spell or creature',
     ],
   ])('%j gives %s', async (rule, message) => {
     const store = memoryStore(null);

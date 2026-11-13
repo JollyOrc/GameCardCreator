@@ -117,7 +117,7 @@ describe('US-007 AC-9: resetting changes only the keys of its page', () => {
     const store = memoryStore(null);
     await resetPage({store}, 'properties');
     const file = store.file() as Record<string, unknown>;
-    expect(Object.keys(file).sort()).toEqual(['skill', 'spell']);
+    expect(Object.keys(file).sort()).toEqual(['creature', 'skill', 'spell']); // US-004 AC-13: the properties page has the creature headings
   });
   it('the same defaults as DEFAULT_CARDS: a page reset then read back changes no setting from the default', async () => {
     const store = memoryStore({

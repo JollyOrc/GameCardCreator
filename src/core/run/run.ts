@@ -63,6 +63,16 @@ export async function runCards(
       warnings.push({code: 'CARD_KIND_UNKNOWN', path, detail: ''});
       continue;
     }
+    // US-004 T21 (until ticket #26 wires the creature card): a creature rule
+    // must not give a spell card from a creature note (SCAR-017).
+    if (kind === 'creature') {
+      warnings.push({
+        code: 'CARD_KIND_UNKNOWN',
+        path,
+        detail: 'creature cards are not made yet',
+      });
+      continue;
+    }
     let text: string;
     try {
       text = await deps.read(path);

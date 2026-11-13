@@ -1,6 +1,6 @@
 // US-005 settings table, AC-9: the settings of the run and their check. The
 // card settings are those of US-001 (sheet), US-002 (skill, with the sizes both
-// kinds share, US-003 D2) and US-003 (spell); the new ones are the kind rules
+// kinds share, US-003 D2) US-003 (spell) and US-004 (creature); the new ones are the kind rules
 // and the output folder.
 import {
   DEFAULT_SHEET,
@@ -17,6 +17,11 @@ import {
   checkSpellSettings,
   type SpellSettings,
 } from '../spell/settings';
+import {
+  DEFAULT_CREATURE,
+  checkCreatureSettings,
+  type CreatureSettings,
+} from '../creature/settings';
 import {checkKindRules, type KindRule} from './kinds';
 import {checkOutputFolder} from './output';
 
@@ -29,6 +34,7 @@ export interface CardsSettings {
   sheet: SheetSettings;
   skill: SkillSettings;
   spell: SpellSettings;
+  creature: CreatureSettings;
 }
 
 /** US-005 settings table: the defaults. No rule and no folder: the author adds theirs. */
@@ -38,10 +44,12 @@ export const DEFAULT_CARDS: Readonly<CardsSettings> = Object.freeze({
   sheet: DEFAULT_SHEET,
   skill: DEFAULT_SKILL,
   spell: DEFAULT_SPELL,
+  creature: DEFAULT_CREATURE,
 });
 
 /**
- * US-005 AC-4: checks the card settings (sheet, skill with its sizes, spell);
+ * US-005 AC-4: checks the card settings (sheet, skill with its sizes, spell,
+ * creature);
  * one message per problem, empty when valid. Does not look at the output
  * folder or the kind rules (the runner does, with the vault's folder).
  */
@@ -50,6 +58,7 @@ export function checkCardSettings(settings: CardsSettings): string[] {
     ...checkSheet(settings.sheet),
     ...checkSkillSettings(settings.skill),
     ...checkSpellSettings(settings.spell),
+    ...checkCreatureSettings(settings.creature),
   ];
 }
 

@@ -5,6 +5,7 @@ import {describe, expect, it} from 'vitest';
 import {DEFAULT_SHEET} from '../../src/core/sheet/layout';
 import {DEFAULT_SKILL} from '../../src/core/skill/settings';
 import {DEFAULT_SPELL} from '../../src/core/spell/settings';
+import {DEFAULT_CREATURE} from '../../src/core/creature/settings';
 import {
   DEFAULT_CARDS,
   checkCardsSettings,
@@ -26,6 +27,7 @@ describe('US-005 settings table: the defaults', () => {
       sheet: DEFAULT_SHEET,
       skill: DEFAULT_SKILL,
       spell: DEFAULT_SPELL,
+      creature: DEFAULT_CREATURE,
     });
   });
 });

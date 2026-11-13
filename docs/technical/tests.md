@@ -496,7 +496,8 @@ typecheck, eslint, prettier clean.
 | AC-11 | `creature-statblock`, `run-creature`, `creature-card-pdf` (card without statblock) | written |
 | AC-12 | `plugin/creature-compile` (files, font, nothing leaks); `run-creature` | written |
 | AC-12a | equal files merged (`run-creature`); different bytes: D6 open | partly |
-| AC-13 | `creature-settings`, `plugin/creature-screen`, `unit/us-007-fields` (amended, 20 fields), `card-codes` (no literal `CREATURE_`) | written |
+| AC-13 | `creature-settings` (with the fields' labels), `plugin/creature-screen`, `unit/us-007-fields` (amended, 20 fields), `card-codes` (no literal `CREATURE_`) | green for the settings, the screen and the fields (ticket #21, 2026-11-13); `card-codes` with #22 |
+| #21 side effects | amended old tests: `us-007-reset` and `us-007-tab-helpers` (the creature page keys and group), `us-007-rules` and `run-kinds` (the unknown kind in their examples is now `monster`), `run-settings` (defaults); new `run-creature-rule` (an interim guard, removed with #26) | green |
 
 New support: `tests/support/creature-fixtures.ts` (a copy of the real 0.15.1
 answers), `creature-sheet-cli.ts`, `tests/fixtures/fonts/` (DejaVu Sans Mono

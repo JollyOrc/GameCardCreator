@@ -18,12 +18,13 @@ describe('US-007 AC-1: groupsOf', () => {
       'skill.sizeStep',
     ]);
   });
-  it('the properties page has Skill notes (7) then Spell notes (1); the main page one group', () => {
+  it('the properties page has Skill notes (7), Spell notes (1) then Creature notes (3); the main page one group', () => {
     expect(
       groupsOf('properties').map((g) => [g.group, g.fields.length]),
     ).toEqual([
       ['Skill notes', 7],
       ['Spell notes', 1],
+      ['Creature notes', 3],
     ]);
     expect(groupsOf('main').map((g) => [g.group, g.fields.length])).toEqual([
       ['Output', 1],
