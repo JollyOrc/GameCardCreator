@@ -138,6 +138,13 @@ describe('US-009 AC-1: the table, one syntax rule at a time', () => {
     );
     expect(r.warnings).toEqual([warn('TABLE_MISSING', '')]);
   });
+  it('a front matter that is not valid YAML: SCHEME_UNSUPPORTED, and the table is still read', () => {
+    const r = read(
+      `---\nschemeVersion: [1\n---\n${table('| Hexes | #E4F0A8 | skull |')}`,
+    );
+    expect(r.warnings).toEqual([warn('UNSUPPORTED', 'front matter: yaml')]);
+    expect(r.scheme.rows.map((x) => x.tag)).toEqual(['Hexes']);
+  });
   it('never throws: an empty note, plain prose and binary-looking text give the table warning', () => {
     for (const text of ['', 'just words\n', '\u0000\u0001|||\n|\n']) {
       const r = read(text);

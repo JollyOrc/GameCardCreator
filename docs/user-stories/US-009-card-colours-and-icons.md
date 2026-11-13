@@ -119,7 +119,7 @@ Spark.md` (spell): tags `Pyromancy`. `Scorch Hex.md` (spell): tags `Pyromancy`, 
   scheme (AC-1) or no valid row there is no such warning. `Plain.md` gives one warning with the detail `Misc`.
 - **AC-7 (checks and failures; the run goes on).** Problems of the scheme note are warnings of the run, with
   the note's path, never a stop (rule 8): `SCHEME_NOTE_UNREADABLE` (detail: the reason; the note is missing
-  or cannot be read), `SCHEME_UNSUPPORTED` (detail `schemeVersion: 2` or `iconSet: other`, as written),
+  or cannot be read), `SCHEME_UNSUPPORTED` (detail `schemeVersion: 2` or `iconSet: other`, as written; for a front matter that is not valid YAML the detail `front matter: yaml` and the table is still read),
   `SCHEME_TABLE_MISSING` (no table with the three columns), `SCHEME_ROW_INVALID` (detail `line <n>:
   <reason>`, with the line of the row in the note: an empty tag, a colour that is not `#` and six
   hexadecimal digits in either case, an icon name not in the list, or a tag already used by an earlier row:

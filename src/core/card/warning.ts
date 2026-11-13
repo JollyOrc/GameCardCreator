@@ -18,3 +18,12 @@ const PREFIX: Readonly<Record<CardKind, string>> = {
 export function cardCode(kind: CardKind, name: string): string {
   return `${PREFIX[kind]}${name}`;
 }
+
+/**
+ * US-009 AC-7: the warning code of a problem with the scheme note:
+ * `schemeCode('ROW_INVALID')` is `SCHEME_ROW_INVALID`. The one place these codes are
+ * put together (SCAR-017), like `cardCode` for the cards.
+ */
+export function schemeCode(name: string): string {
+  return `SCHEME_${name}`;
+}
