@@ -1,5 +1,6 @@
 # US-004 — Creature card
 
+**Implemented:** 0.2.0 (tickets #21 to #27; M06 passed 2026-11-13)
 **Status:** Ready (G1 done 2026-11-12; the owner accepted D1 to D5 on 2026-11-12, D2 changed, see AC-11); G2 tests written 2026-11-12; D6 (icon paths) decided and fixed in Obsidian2Typst 0.15.1 (released 2026-11-13); G3 tickets #21 to #26 written 2026-11-13
 (G0 2026-11-11; the owner answered the control project's questions
 2026-11-11: statblock through a new Obsidian2Typst API function, the

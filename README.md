@@ -5,7 +5,8 @@ cards and writes them as an A4 PDF: cards of 62 mm x 88 mm, as many per page as 
 marks. The PDF is made by [Typst](https://typst.app), which is inside the plugin: nothing to
 install and nothing is downloaded.
 
-**Status:** version 0.1.0 makes **skill** and **spell** cards. The creature card is not done yet.
+**Status:** version 0.2.0 makes **skill**, **spell** and **creature** cards. The creature card needs
+the plugin [Obsidian2Typst](https://github.com/JollyOrc/Obsidian2Typst) 0.15.1 or newer.
 Tested on Obsidian 1.15.0 on macOS only (see the release notes).
 
 ## What it does
@@ -13,6 +14,12 @@ Tested on Obsidian 1.15.0 on macOS only (see the release notes).
 - A **skill card** shows the tags of the note, its title (the note's file name), a details row
   (`Time`, `Type`, `Requires`, from the note's properties) and the text of the note. A **spell
   card** shows the tags, the title and the text.
+- A **creature card** shows the statblock exactly as Obsidian2Typst draws it for a book (drawn by
+  that plugin's own code, with its preset's icons and fonts), then the creature's **Behaviour**,
+  **Actions** and **Signs** sections (the headings are settings). If it does not fit, the Signs
+  section is given up first, then Behaviour, then the Skills line of the statblock, and only then
+  does the text shrink; what is given up is reported. The icons' credit line is printed once at
+  the foot of each sheet that has a creature card.
 - Pictures are left out (with a warning). The text shrinks from 7 pt towards 5.5 pt to fit the card
   and is cut, with a warning, when it still does not.
 - You choose the cards in two ways:
@@ -33,17 +40,17 @@ Tested on Obsidian 1.15.0 on macOS only (see the release notes).
    - **Output folder**: type an absolute path or choose it with the system's folder dialog (a
      folder inside the vault is allowed);
    - **Which note is which card**: add a rule for each folder (for example your skills folder is
-     `skill`, your spells folder is `spell`); a note takes the kind of the longest matching folder;
+     `skill`, your spells folder `spell`, your creatures folder `creature`); a note takes the kind of the longest matching folder;
    - **Note properties**: the names of the properties the plugin reads (tags, timing, kind,
-     requires) and the labels shown on the card; **Page and text size**: the card size, margin,
+     requires), the labels shown on the card and the three section headings of creature notes; **Page and text size**: the card size, margin,
      gap, cut marks and the text sizes.
 3. The status line at the top says `Ready: ...` or what is still missing. Settings are saved as you
    change them; a value that is not valid is refused with the reason under the field.
 
 ## Limits
 
-No creature card yet; no pictures on cards; no warning yet when a text has a character the font
-lacks; desktop only; Windows, Linux and mobile are not tested. See `releases/v0.1.0.md`.
+Creature cards need Obsidian2Typst 0.15.1 or newer, installed and enabled; no pictures on cards; no warning yet when a text has a character the font
+lacks; desktop only; Windows, Linux and mobile are not tested. See `releases/v0.2.0.md`.
 
 ## Development
 

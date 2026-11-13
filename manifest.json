@@ -1,9 +1,9 @@
 {
   "id": "game-card-creator",
   "name": "Game Card Creator",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "minAppVersion": "1.6.6",
-  "description": "Create print-ready game cards (skills and spells) as an A4 PDF from notes in the vault.",
+  "description": "Create print-ready game cards (skills, spells and creatures) as an A4 PDF from notes in the vault.",
   "author": "JollyOrc",
   "isDesktopOnly": true
 }
