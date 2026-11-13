@@ -13,12 +13,14 @@ const modules = join(process.cwd(), 'node_modules', '@myriaddreamin');
 const wasm = (pkg: string, file: string) => () =>
   readFileSync(join(modules, pkg, 'pkg', file));
 
-/** The bundled font files (Libertinus Serif, SIL OFL 1.1; assets/fonts). */
+/** The bundled font files (Libertinus Serif and, for US-009, RPG Awesome; assets/fonts). */
 const FONT_FILES = [
   'LibertinusSerif-Regular.otf',
   'LibertinusSerif-Bold.otf',
   'LibertinusSerif-Italic.otf',
   'LibertinusSerif-BoldItalic.otf',
+  // US-009: the icon font (RPG Awesome, family `rpg-awesome`, SIL OFL 1.1)
+  'RPGAwesome.ttf',
 ];
 const fontBytes = () =>
   FONT_FILES.map((f) =>

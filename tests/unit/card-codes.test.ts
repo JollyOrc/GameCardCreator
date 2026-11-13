@@ -98,3 +98,33 @@ describe('US-003 AC-4: fit warnings follow the kind of the card', () => {
     ).toBe('SKILL_TEXT_OVERFLOW');
   });
 });
+
+describe('US-009 (SCAR-017): the scheme codes have no second copy', () => {
+  const root = join(process.cwd(), 'src', 'core');
+  const files: string[] = [];
+  const walk = (dir: string): void => {
+    for (const entry of readdirSync(dir)) {
+      const path = join(dir, entry);
+      if (statSync(path).isDirectory()) walk(path);
+      else if (path.endsWith('.ts')) files.push(path);
+    }
+  };
+  walk(root);
+  it('schemeCode(X) is SCHEME_X', async () => {
+    const {schemeCode} = await import('../../src/core/card/warning');
+    expect(schemeCode('ROW_INVALID')).toBe('SCHEME_ROW_INVALID');
+    expect(schemeCode('NOTE_UNREADABLE')).toBe('SCHEME_NOTE_UNREADABLE');
+  });
+  it('only src/core/card/warning.ts has a literal SCHEME_ code (the others use schemeCode)', () => {
+    const hits = files
+      .filter((f) => /['"`]SCHEME_/.test(readFileSync(f, 'utf8')))
+      .map((f) => f.slice(root.length + 1));
+    expect(hits).toEqual(['card/warning.ts']);
+  });
+  it('the branch warnings are made by cardCode too: no literal SKILL_BRANCH or SPELL_BRANCH', () => {
+    const hits = files
+      .filter((f) => /['"`](SKILL|SPELL)_BRANCH/.test(readFileSync(f, 'utf8')))
+      .map((f) => f.slice(root.length + 1));
+    expect(hits).toEqual([]);
+  });
+});

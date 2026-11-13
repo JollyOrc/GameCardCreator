@@ -26,6 +26,7 @@ describe('US-007 AC-1: the fields of the pages', () => {
       'creature.instinctsHeading',
       'creature.actionsHeading',
       'creature.signsHeading',
+      'schemeNote', // US-009 AC-11
     ]);
     expect(fieldsOf('layout').map((f) => f.id)).toEqual([
       'sheet.cardWidth',
@@ -33,14 +34,15 @@ describe('US-007 AC-1: the fields of the pages', () => {
       'sheet.margin',
       'sheet.gap',
       'sheet.cutMarks',
+      'sheet.bleed', // US-009 AC-11
       'skill.maxSize',
       'skill.minSize',
       'skill.sizeStep',
     ]);
   });
-  it('20 fields in all, ids unique, every field has a label and a group', () => {
-    expect(FIELDS).toHaveLength(20);
-    expect(new Set(FIELDS.map((f) => f.id)).size).toBe(20);
+  it('22 fields in all, ids unique, every field has a label and a group', () => {
+    expect(FIELDS).toHaveLength(22);
+    expect(new Set(FIELDS.map((f) => f.id)).size).toBe(22);
     for (const f of FIELDS) {
       expect(f.label, f.id).not.toBe('');
       expect(f.group, f.id).not.toBe('');

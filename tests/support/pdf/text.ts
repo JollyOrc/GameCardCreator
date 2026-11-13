@@ -157,7 +157,7 @@ function pageFonts(file: PdfFile, page: string): Map<string, number> {
 }
 
 /** The page's content streams joined (`/Contents n 0 R` or an array). */
-function pageContent(file: PdfFile, page: string): string {
+export function pageContent(file: PdfFile, page: string): string {
   const list = arrayOf(file, page, 'Contents');
   if (list !== '' && list.trimStart().startsWith('[')) {
     return [...list.matchAll(/(\d+)\s+0\s+R/g)]

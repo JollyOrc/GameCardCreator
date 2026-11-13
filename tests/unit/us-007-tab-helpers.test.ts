@@ -5,10 +5,10 @@ import {groupsOf} from '../../src/plugin/settings/fields';
 import {suggestFolders} from '../../src/plugin/settings/rules';
 
 describe('US-007 AC-1: groupsOf', () => {
-  it('the layout page has the Sheet group (5 fields) then Text size (3)', () => {
+  it('the layout page has the Sheet group (6 fields, with the bleed of US-009) then Text size (3)', () => {
     const groups = groupsOf('layout');
     expect(groups.map((g) => [g.group, g.fields.length])).toEqual([
-      ['Sheet', 5],
+      ['Sheet', 6],
       ['Text size', 3],
     ]);
     expect(groups[0]!.fields[0]!.id).toBe('sheet.cardWidth');
@@ -18,13 +18,14 @@ describe('US-007 AC-1: groupsOf', () => {
       'skill.sizeStep',
     ]);
   });
-  it('the properties page has Skill notes (7), Spell notes (1) then Creature notes (3); the main page one group', () => {
+  it('the properties page has Skill notes (7), Spell notes (1), Creature notes (3) then Scheme note (1); the main page one group', () => {
     expect(
       groupsOf('properties').map((g) => [g.group, g.fields.length]),
     ).toEqual([
       ['Skill notes', 7],
       ['Spell notes', 1],
       ['Creature notes', 3],
+      ['Scheme note', 1],
     ]);
     expect(groupsOf('main').map((g) => [g.group, g.fields.length])).toEqual([
       ['Output', 1],

@@ -510,3 +510,27 @@ settings,statblock}.ts`; `cardSheetTypst(...)` returns `files`; `RunDeps.statblo
 and `compile(source, extra?)`; the worker's compile message carries `files` and
 `fonts`; the fit fact `dropped`. Result: `npm test` 715 passed, 33 failed in 9
 files, all new or amended; integration 61 passed, the creature file does not load.
+
+## US-009 colour-coded headers and icons (2026-11-13, G2): tests written (red by design)
+
+| AC | Test | State |
+|---|---|---|
+| AC-1 | `unit/scheme-read` (the note, 35: the example, every table form one by one, front matter, CRLF and BOM); `unit/scheme-settings` (the path check, defaults, the settings file); `unit/run-scheme` (when the note is read, at every run, never kept); `unit/card-sheet-golden` (no scheme: the source is the golden text, 6 decks, **green already: it guards the old output**) | written; the golden test green |
+| AC-2 | `unit/scheme-branches` (order of the note's tags, spelling, duplicates); `unit/run-scheme` | written |
+| AC-3 | `integration/scheme-card-pdf` (flat band: box, colour, header on it, text 2 mm under, frame over the band); `integration/pdf-graphics` (the instrument, SCAR-028) | written |
+| AC-4 | `scheme-card-pdf` (gradient: stops, offsets, axis; 2 and 3 colours; order) | written |
+| AC-5 | `scheme-card-pdf` (icons: glyph, order, right edge, wrap before icons, band grows); `unit/scheme-icons` (496 names, code points read from the font's CSS); `plugin/scheme-font` (the glyph is drawn with the build's font list, absent without it) | written |
+| AC-6 | `unit/run-scheme` (the warning and its detail; none without scheme or valid row) | written |
+| AC-7 | `unit/scheme-read` (every refusal with its detail), `unit/run-scheme` (a bad note never stops a run), `unit/scheme-icons` | written |
+| AC-8 | `scheme-card-pdf` (sizes unchanged at 7 pt, text below the band, the rules of US-002 kept) | written |
+| AC-9 | `scheme-card-pdf` (mixed deck), `unit/run-scheme` (a creature card gets nothing) | written |
+| AC-10 | `unit/run-scheme` (the text), `scheme-card-pdf` (5 pt, centred, joined with the creature credit, per sheet) | written |
+| AC-11 | `unit/scheme-settings` (fields, the line under the field), `plugin/scheme-screen` (commit, reset, the tab and `main.ts` only hand over); amended: `us-007-fields`, `us-007-tab-helpers`, `us-007-reset` | written |
+| AC-12 | `tooling/rpg-awesome` (font file, `fontFiles`, the OFL text, the notices), `plugin/scheme-font` | written |
+| AC-13 | `scheme-card-pdf` (two fresh processes, `support/scheme-sheet-cli.ts`) | written |
+| AC-14 | manual look at 4x and the contrast over every gradient of the author's scheme: with the code ticket (M07) | pending |
+| AC-15 | `unit/scheme-settings` (range, margin, cut marks), `scheme-card-pdf` (six cases of gap and bleed, the last card of four, the gradient axis, the bottom, the text unmoved), `plugin/scheme-screen` | written |
+
+New support: `tests/support/pdf/graphics.ts` (fills, gradients, strokes and their drawing order; checked on a known PDF in `integration/pdf-graphics`, 3 tests, green), `scheme-fixtures.ts`, `scheme-sheet-cli.ts`; `makeSheet` takes `{iconCredit}`; `typst-node` loads the icon font (`assets/fonts/RPGAwesome.ttf`, added at G2 because the tests compile glyphs with it); `pageContent` of `pdf/text.ts` is exported. Interfaces the tests fix: `src/core/scheme/{read,branches,icons,settings}.ts` (`readScheme`, `branchesOf`, `iconCodePoint`, `ICON_NAMES`, `checkSchemeNote`); `schemeCode` in `card/warning.ts`; `SkillCard.rawTags` and `.branches`; `SheetSettings.bleed`; `CardsSettings.schemeNote`; `cardSheetTypst(cards, sheet, sizes, headings, {iconCredit})` (the result is unchanged); the fields `schemeNote` and `sheet.bleed`; `schemeLine` in `settings/status.ts`; `noteExists` in the tab's dependencies; `fontFiles(dir)` in `build/build-plugin.mjs`; the notice file `assets/fonts/RPGAwesome-OFL.txt`.
+
+Result: `npm test` 838 passed, 46 failed in 12 files (all new or amended); `npm run test:integration` 103 passed, 23 failed (the PDF tests of the card; the instrument's 3 and the earlier ones green). Proven against a throwaway reference (scratch copy, discarded): the card and PDF tests (28), the reader, branches and icons tests (49, plus two mutants of the reader caught). **Not proven against a reference** (named for the tickets): `run-scheme`, `scheme-settings`, `scheme-screen`, `tooling/rpg-awesome`, `scheme-font`.

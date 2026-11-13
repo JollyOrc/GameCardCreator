@@ -7,6 +7,7 @@ import {
   DEFAULT_SHEET,
 } from '../../src/core/sheet/layout';
 import {cardSheetTypst} from '../../src/core/card/sheet';
+import {DEFAULT_CREATURE} from '../../src/core/creature/settings';
 import {FIT_LABEL} from '../../src/core/skill/fit';
 import type {CreatureCard} from '../../src/core/creature/read';
 import type {SkillCard} from '../../src/core/skill/read';
@@ -21,8 +22,10 @@ export async function makeSheet(
   cards: (SkillCard | CreatureCard)[],
   sheet: SheetSettings = DEFAULT_SHEET,
   sizes: CardSizes = DEFAULT_SIZES,
+  // US-009 AC-10: the icon credit text the run resolves ('' prints nothing).
+  options: {iconCredit?: string} = {},
 ) {
-  const typst = cardSheetTypst(cards, sheet, sizes);
+  const typst = cardSheetTypst(cards, sheet, sizes, DEFAULT_CREATURE, options);
   if (!typst.ok) throw new Error(typst.message);
   // US-004 AC-12: the files of the creature answers sit next to the source.
   const {pdf, facts, diagnostics} = await compileWithFacts(
