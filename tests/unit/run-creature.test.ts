@@ -304,7 +304,7 @@ describe('US-004 AC-11: warnings and refusals', () => {
       expect(refusals).toHaveLength(1);
       expect(refusals[0]!.path).toBe('');
       expect(refusals[0]!.detail).toContain('Obsidian2Typst');
-      expect(refusals[0]!.detail).toContain('0.15.0');
+      expect(refusals[0]!.detail).toContain('0.15.1');
       expect(log.api).toHaveLength(0);
       expect(log.compile[0]!.source).not.toContain('"Fen Hare"');
       expect(log.compile[0]!.extra).toBeUndefined();

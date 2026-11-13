@@ -498,7 +498,7 @@ typecheck, eslint, prettier clean.
 | AC-12a | equal files merged (`run-creature`); different bytes: D6 open | partly |
 | AC-13 | `creature-settings`, `plugin/creature-screen`, `unit/us-007-fields` (amended, 20 fields), `card-codes` (no literal `CREATURE_`) | written |
 
-New support: `tests/support/creature-fixtures.ts` (a copy of the real 0.15.0
+New support: `tests/support/creature-fixtures.ts` (a copy of the real 0.15.1
 answers), `creature-sheet-cli.ts`, `tests/fixtures/fonts/` (DejaVu Sans Mono
 with its licence, a family the plugin does not bundle); `typst-node` and
 `card-sheet` take the answer's files. Interfaces the tests fix: `creature/{read,

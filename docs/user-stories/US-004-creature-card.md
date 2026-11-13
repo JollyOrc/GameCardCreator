@@ -1,11 +1,11 @@
 # US-004 — Creature card
 
-**Status:** Ready (G1 done 2026-11-12; the owner accepted D1 to D5 on 2026-11-12, D2 changed, see AC-11); G2 tests written 2026-11-12; D6 (icon paths) decided: fix in Obsidian2Typst 0.15.1
+**Status:** Ready (G1 done 2026-11-12; the owner accepted D1 to D5 on 2026-11-12, D2 changed, see AC-11); G2 tests written 2026-11-12; D6 (icon paths) decided and fixed in Obsidian2Typst 0.15.1 (released 2026-11-13); G3 tickets #21 to #26 written 2026-11-13
 (G0 2026-11-11; the owner answered the control project's questions
 2026-11-11: statblock through a new Obsidian2Typst API function, the
 drop-then-shrink rule). The contract (AC-3) is checked against the released
-Obsidian2Typst 0.15.0 (US-039): its answer was printed and compiled on
-2026-11-12, and the author ran the icons and the preset's fonts in a real
+Obsidian2Typst 0.15.1 (US-039, US-040): its answer was printed and compiled on
+2026-11-12 with 0.15.0 and copied again from 0.15.1 on 2026-11-13 (only the icon numbers differ), and the author ran the icons and the preset's fonts in a real
 compile in Obsidian (its M29, part A).
 
 **As** a game master **I want** one creature per card — its statblock, its
@@ -99,7 +99,7 @@ Flattened reeds in a ring.
   - **Call.** `app.plugins.plugins["obsidian2typst"].api` with
     `api.version === 1` and `typeof api.statblockTypst === "function"` and
     `typeof api.compileFonts === "function"`; otherwise the creature card is
-    refused with a message naming the plugin and the least version (0.15.0);
+    refused with a message naming the plugin and the least version (0.15.1);
     no other card is affected: one warning `CREATURE_API_UNAVAILABLE` per
     run (empty path, the message as detail), no creature card is made, the
     skill and spell cards of the run are. The API object is read at each
@@ -119,7 +119,7 @@ Flattened reeds in a ring.
     `value`, `label`, `text`, `attacks`, `skills`; `look.fonts` the families by
     role; a part without data is `none` (`skills: none`) or `()` (`attacks`).
   - `files`: `{path, bytes}` for each icon the data names, at that Typst path
-    (`o2t-icons/<n>.svg`, `n` from 1; the reader writes the bytes at that path
+    (`o2t-icons/<n>.svg`, `n` the 1-based position of the icon in the preset's track, so not always consecutive; the reader writes the bytes at that path
     next to its source).
   - `credit`: the icons' credit text, or `null`.
   - `warnings`: `{code, message}` of the data checks (`STAT_SUM_MISMATCH`,
@@ -139,7 +139,7 @@ Flattened reeds in a ring.
   The answer's `data` for that note starts `(band: "Fen Hare", look: (fill:
   none, frame: (color: rgb("#000000"), width: 0.75pt), ...` and its `look.sizes`
   are `band: 11.5pt, value: 11pt, label: 5.5pt, text: 7pt, attacks: 7.5pt,
-  skills: 9pt`; its `files` hold `o2t-icons/1.svg` to `4.svg`. The test
+  skills: 9pt`; its `files` hold `o2t-icons/1.svg`, `2`, `3` and `5` (0.15.1 numbers by the preset track; 0.15.0 gave 1 to 4). The test
   fixture of this plugin is a copy of that real output (SCAR-023).
 - **AC-4 (fit, the statblock scales) — numbers measured.** The statblock's
   sizes scale with the card's text size S (factor S / 7); the text is set at

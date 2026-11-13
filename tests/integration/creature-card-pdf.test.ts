@@ -1,6 +1,6 @@
 // US-004 AC-1, AC-4 to AC-9, AC-12 at the PDF level: creature cards on the sheet,
 // compiled with the pinned Typst and read back (text, size, position, fit facts).
-// The statblock is the REAL 0.15.0 answer (fixtures, SCAR-023). Expected values
+// The statblock is the REAL 0.15.1 answer (fixtures, SCAR-023). Expected values
 // come from the story. Where the story's numbers were measured with the spike's
 // statblock (AC-5), these tests state the owner's rule as invariants that hold
 // for any statblock height; the story's exact triples are re-measured at the

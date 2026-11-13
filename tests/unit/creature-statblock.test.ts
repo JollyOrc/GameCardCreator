@@ -1,5 +1,5 @@
 // US-004 AC-3, AC-11: the contract with Obsidian2Typst's API (the reader's side)
-// and the warnings made from an answer. The fixture is a copy of the real 0.15.0
+// and the warnings made from an answer. The fixture is a copy of the real 0.15.1
 // output (SCAR-023); the first block checks that it is what the story says it is.
 // Red until the code ticket.
 import {describe, expect, it} from 'vitest';
@@ -29,7 +29,7 @@ describe('US-004 AC-3: the fixture is the real answer the story describes', () =
       'o2t-icons/1.svg',
       'o2t-icons/2.svg',
       'o2t-icons/3.svg',
-      'o2t-icons/4.svg',
+      'o2t-icons/5.svg',
     ]);
     expect(FEN_HARE_ANSWER.data).toContain(
       'attacks: (([Kick], [2d6]), ([*Bite*], [1d6]))',
@@ -62,13 +62,13 @@ describe('US-004 AC-3: the call (version, two functions, one message)', () => {
     ['no compileFonts', {version: 1, statblockTypst: api.statblockTypst}],
     ['statblockTypst not a function', {...api, statblockTypst: 'x'}],
   ])(
-    '%s is refused with a message naming the plugin and 0.15.0',
+    '%s is refused with a message naming the plugin and 0.15.1',
     (_n, value) => {
       const r = checkStatblockApi(value);
       expect(r.ok).toBe(false);
       if (!r.ok) {
         expect(r.message).toContain('Obsidian2Typst');
-        expect(r.message).toContain('0.15.0');
+        expect(r.message).toContain('0.15.1');
       }
     },
   );
