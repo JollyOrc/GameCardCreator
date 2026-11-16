@@ -42,6 +42,7 @@ describe('US-011 AC-10: the groups and fields', () => {
       'Text size',
       'Skill titles',
       'Spell titles',
+      'Creature titles', // US-012 AC-9 (tested in creature-titles-screen.test.ts)
     ]);
     for (const kind of ['skill', 'spell'] as const) {
       const g = groups.find((x) =>
@@ -86,13 +87,14 @@ describe('US-011 AC-10: the two numbers are shown only while the switch is on', 
     const others = FIELDS.filter(
       (f) => !/\.(titleSize|minTitleSize)$/.test(f.id),
     );
-    expect(others).toHaveLength(24);
+    expect(others).toHaveLength(25); // 24 before US-012 (its toggle is always shown)
     for (const f of others) expect(isShown(f, DEFAULT_CARDS), f.id).toBe(true);
   });
   it('the page is drawn again after a commit of exactly the two switches', () => {
     expect(FIELDS.filter((f) => redraws(f.id)).map((f) => f.id)).toEqual([
       'skill.equalTitles',
       'spell.equalTitles',
+      'creature.equalTitles', // US-012 AC-9
     ]);
   });
 });

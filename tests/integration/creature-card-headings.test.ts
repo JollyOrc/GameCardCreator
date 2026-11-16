@@ -4,6 +4,7 @@
 import {describe, expect, it} from 'vitest';
 import {cardSheetTypst} from '../../src/core/card/sheet';
 import type {CreatureCard} from '../../src/core/creature/read';
+import {DEFAULT_CREATURE} from '../../src/core/creature/settings';
 import {DEFAULT_SHEET} from '../../src/core/sheet/layout';
 import {DEFAULT_SIZES} from '../../src/core/skill/settings';
 import {compileWithFacts} from '../support/typst-node';
@@ -29,6 +30,7 @@ const card = (over: Partial<CreatureCard>): CreatureCard => ({
 });
 const textOf = async (c: CreatureCard, headings: object): Promise<string> => {
   const r = cardSheetTypst([c], DEFAULT_SHEET, DEFAULT_SIZES, {
+    ...DEFAULT_CREATURE, // US-012: the title keys (the headings below are what this test sets)
     instinctsHeading: 'Instinct',
     actionsHeading: ' Moves ',
     signsHeading: 'Tracks',

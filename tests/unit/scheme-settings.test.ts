@@ -182,7 +182,7 @@ describe('US-009 AC-11: the fields', () => {
       ),
     ).toBe(1);
     expect(valueOf(DEFAULT_CARDS, 'sheet.bleed')).toBe(0);
-    expect(FIELDS).toHaveLength(28);
+    expect(FIELDS).toHaveLength(31); // 28 before US-012
   });
 });
 

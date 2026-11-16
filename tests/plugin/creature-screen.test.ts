@@ -27,6 +27,10 @@ describe('US-004 AC-13: the headings are committed like the other text settings'
       instinctsHeading: 'Behaviour',
       actionsHeading: 'Moves',
       signsHeading: 'Signs',
+      // US-012 D14: the creature title keys, at their defaults
+      equalTitles: false,
+      titleSize: 11.5,
+      minTitleSize: 7,
     });
   });
   it.each([

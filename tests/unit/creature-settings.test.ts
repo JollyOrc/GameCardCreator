@@ -18,6 +18,10 @@ describe('US-004 settings: the defaults and their check', () => {
       instinctsHeading: 'Behaviour',
       actionsHeading: 'Actions',
       signsHeading: 'Signs',
+      // US-012 D14: the title keys of the creature kind
+      equalTitles: false,
+      titleSize: 11.5,
+      minTitleSize: 7,
     });
     expect(DEFAULT_CARDS.creature).toEqual(DEFAULT_CREATURE);
     expect(checkCreatureSettings(DEFAULT_CREATURE)).toEqual([]);
@@ -97,7 +101,10 @@ describe('US-004 AC-13: the settings file', () => {
 
 describe('US-004 AC-13: the fields on the settings screen', () => {
   it('three text fields under Creature notes with their labels, on the properties page', () => {
-    const f = FIELDS.filter((x) => x.id.startsWith('creature.'));
+    // US-012 AC-9: the creature title fields are on the layout page (creature-titles-screen)
+    const f = FIELDS.filter(
+      (x) => x.id.startsWith('creature.') && x.page === 'properties',
+    );
     expect(f.map((x) => [x.id, x.label, x.group, x.page, x.kind])).toEqual([
       [
         'creature.instinctsHeading',

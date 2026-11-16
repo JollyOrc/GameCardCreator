@@ -652,3 +652,41 @@ the code of `db5a9d6`: 5 of the 6 new tests red (Parry's is unchanged by D8), ev
 | US-011 AC-1 (amended) | `unit/titles-source` (no scheme: golden, unchanged), `integration/band-icon-padding` (off: the band follows US-009 AC-3) |
 
 **Ticket #45 (2026-11-16), green:** `band-icon-padding` (7 after one added: Scorch Hex with Glow in equal mode, so the kind's height takes the lowest of two icons), `scheme-card-pdf` (amended at G2), `equal-titles-pdf`, the golden sources unchanged; mutation round: 7 mutants caught, one sharper variant (the first icon without failing on a card without icons) survived and was closed with that test. The whole suite: `npm test` 1132, integration 168, typecheck clean.
+
+## US-012 equal title bands on creature cards (2026-11-16, G2): tests written (red by design)
+
+New files: `unit/band-fixtures` (guard: the answer model equals Obsidian2Typst 0.15.2's recorded real answers; green),
+`unit/creature-titles-settings` (defaults, checks naming the kind, the sizes tried at the default, ends, middle and step
+0.3), `unit/creature-titles-warning` (the warning from the creature fact; the order skill, spell, creature; facts ignored),
+`unit/creature-titles-source` (off is the 0.5.0 golden source; the fact; the sizes array; the name through `typstString`),
+`unit/run-creature-titles` (the settings reach the sheet; the warning's place), `plugin/creature-titles-screen` (the group,
+`isShown`, `redraws`, commits, both page resets), `integration/creature-titles-pdf` (the story's examples compiled with
+typst.ts and read back: band sizes and lines, the fact, the band rules level, the settings, composed with skills, two
+fresh processes); support `support/band-fixtures`, `support/creature-titles-cli`; fixtures `fixtures/us-012-answers.json`
+(recorded real answers), `fixtures/golden/creature-sources.json` (written by the 0.5.0 code). Amended (SCAR-027): see the
+story's table, last row (nine files).
+
+Proven against a throwaway reference implementation (a scratch copy, deleted): every test green there (`npm test` 1192,
+integration 186), typecheck clean, lint clean; ten mutants on the reference, ten caught (the band still scaled, no creature
+warning kind, no shrinking, the refused card left out of the check, the run without the creature settings, the size always
+shown, the creature titles unchecked, the refused card's title at 1.3 em, the height of the first card only, nothing
+wrapped). Found while proving: one story number (AC-3: 200 words give 6.5 pt today, not 6; amended to 260 words); the test
+reader counted the ◆ marks of a wrapped name as a third line (they sit between its lines, US-041; fixed in the reader,
+SCAR-028); six earlier tests pinned the old membership (listed in the story). On the code of 0.5.0: `npm test` 1156 passed,
+36 red (US-012 files and the amended pins); integration 172 passed, 14 red (the new file); typecheck red only in the new
+test files (green with the settings and sheet tickets, SCAR-044).
+
+| AC | Test |
+|---|---|
+| AC-1 | `unit/creature-titles-source` (golden with the option absent, off, off with odd sizes, skills on), `unit/run-creature-titles`, `integration/creature-titles-pdf` (off: 11.5 and 9.86 pt) |
+| AC-2 | `unit/creature-titles-settings` (sizes tried), `integration/creature-titles-pdf` (run A 11.5, run B 7.75, the one-word name) |
+| AC-3 | `integration/creature-titles-pdf` (260-word Fen Hare: band 11.5, VIGOUR at 5.5 S / 7) |
+| AC-4 | `unit/creature-titles-warning`, `unit/run-creature-titles`, `integration/creature-titles-pdf` (smallest 9: two lines, 10.24 mm, the warning) |
+| AC-5 | `integration/creature-titles-pdf` (the refused ferryman: 8.5); `unit/creature-titles-source` (its name escaped) |
+| AC-6 | `integration/creature-titles-pdf` (two compiles, same facts) |
+| AC-7 | `unit/creature-titles-source` (one fact under `gcc-fit`), `unit/creature-titles-warning` (fit warnings unchanged) |
+| AC-8 | `unit/creature-titles-settings`, `plugin/creature-titles-screen` (refusals), `integration/creature-titles-pdf` (20, 14, 6/4, 11.5/11.5, step 0.3) |
+| AC-9 | `plugin/creature-titles-screen`, `unit/us-007-fields`, `unit/us-007-tab-helpers`, `plugin/titles-screen` |
+| AC-10 | `unit/creature-titles-warning` (order), `integration/creature-titles-pdf` (skill 8.1, creature 7.75) |
+| AC-11 | `integration/creature-titles-pdf` (order of the notes; the same bytes in two fresh processes) |
+| AC-12 | `integration/creature-titles-pdf` (band rules level to 0.1 mm, counted; off: not level); the author's look at the manual check |

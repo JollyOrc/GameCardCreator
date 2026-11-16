@@ -13,6 +13,8 @@ describe('US-007 AC-1: groupsOf', () => {
       // US-011 AC-10: the two title groups
       ['Skill titles', 3],
       ['Spell titles', 3],
+      // US-012 AC-9: the creature title group
+      ['Creature titles', 3],
     ]);
     expect(groups[0]!.fields[0]!.id).toBe('sheet.cardWidth');
     expect(groups[1]!.fields.map((f) => f.id)).toEqual([

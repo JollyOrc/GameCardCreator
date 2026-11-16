@@ -45,11 +45,15 @@ describe('US-007 AC-1: the fields of the pages', () => {
       'spell.equalTitles',
       'spell.titleSize',
       'spell.minTitleSize',
+      // US-012 AC-9: the creature title group after the spell's
+      'creature.equalTitles',
+      'creature.titleSize',
+      'creature.minTitleSize',
     ]);
   });
-  it('28 fields in all (22 before US-011), ids unique, every field has a label and a group', () => {
-    expect(FIELDS).toHaveLength(28);
-    expect(new Set(FIELDS.map((f) => f.id)).size).toBe(28);
+  it('31 fields in all (22 before US-011, 28 before US-012), ids unique, every field has a label and a group', () => {
+    expect(FIELDS).toHaveLength(31);
+    expect(new Set(FIELDS.map((f) => f.id)).size).toBe(31);
     for (const f of FIELDS) {
       expect(f.label, f.id).not.toBe('');
       expect(f.group, f.id).not.toBe('');

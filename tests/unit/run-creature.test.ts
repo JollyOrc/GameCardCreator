@@ -184,6 +184,7 @@ describe("US-004 AC-12: the compile takes the answer's files and the fonts", () 
       {
         ...settings,
         creature: {
+          ...settings.creature, // US-012: the title keys, at their defaults
           instinctsHeading: 'Behaviour',
           actionsHeading: 'Actions',
           signsHeading: 'Tracks',

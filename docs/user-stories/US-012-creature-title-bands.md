@@ -1,6 +1,6 @@
 # US-012 — Equal title bands on creature cards: one name size for all creature cards of a run
 
-**Status:** Draft (G1 written 2026-11-16; decisions D11 to D16 answered by the owner, "all proposals")
+**Status:** Ready (G1 2026-11-16; G2 tests written 2026-11-16, red by design; decisions D11 to D16 answered by the owner, "all proposals")
 **Introduced:** 0.6.0 (planned)
 **Follows:** US-011 (equal title bars on skill and spell cards; its D7 left creature cards for this story)
 **Tickets:** — (G3)
@@ -90,8 +90,10 @@ Run A: `Fen Hare`, `Reedmother`, `Marsh Lantern Wisp`. Run B: run A and `Old Gre
   - `Thornwhisperingbramblequeen` with run A: `t` = 11.5 (one line, US-041 D3 composed).
 - **AC-3 (the name size does not follow the text size, D11).** In equal mode the card sets
   `look.sizes.band` to `t`; every other entry of `look.sizes` is still multiplied by S / 7 as today (US-004
-  AC-4). Example: run A with a 200-word `Fen Hare` (today 6 pt, band 9.86 pt): its band is 11.5 pt and
-  6.67 mm high like the others; its other statblock sizes stay at S / 7.
+  AC-4). Example: run A with a 260-word `Fen Hare` (today 6 pt with Signs, Instincts and Skills dropped,
+  band 9.86 pt): its band is 11.5 pt and 6.67 mm high like the others; its other statblock sizes stay at
+  S / 7. (Amended at G2: the draft said 200 words; measured through the plugin's compile, 200 words give
+  6.5 pt today, 260 give 6 pt.)
 - **AC-4 (still too long: wrap, one warning, D13).** When a name is not one line even at `Tmin`, `t` =
   `Tmin`, that band takes two lines and stays taller (no height input of Obsidian2Typst is used; the other
   bands keep their one-line height), and the run gives **one** warning `CREATURE_TITLE_WRAPPED` (made by
@@ -139,6 +141,21 @@ Run A: `Fen Hare`, `Reedmother`, `Marsh Lantern Wisp`. Run B: run A and `Old Gre
   equals the number of creature cards drawn, SCAR-023). The author's run on their own vault in Obsidian
   (manual check, SCAR-045).
 
+## Interfaces fixed by the tests (G2)
+
+So that the tickets agree: `src/core/card/titles.ts` gains `DEFAULT_CREATURE_TITLES` (off, 11.5, 7); `checkTitleSettings`
+and the title facts take the kind `creature`, whose warning comes after skill and spell (`titleWarnings`).
+`CreatureSettings` extends `TitleSettings` and `DEFAULT_CREATURE` holds the three keys; `checkCreatureSettings` gives the
+headings' messages, then the title messages. `cardSheetTypst`'s options take `titles: {skill?, spell?, creature?}`; the run
+passes `settings.creature`. The sizes tried are written as an array; the fact is written once under `gcc-fit` with
+`titles: "creature"`; `height` is the tallest band (a band-only statblock measured with `o2t-sb-box`) or own title. The
+name of a creature without a statblock is written once more into the kind's data, through `typstString` (a ninth escaped
+place, `card-escape`); a statblock's name is never written by this plugin (it is in the answer's data). The fields are
+`creature.equalTitles`, `creature.titleSize`, `creature.minTitleSize` in the group `Creature titles` of the layout page,
+with `shownWhen` the toggle. Fixtures: `tests/support/band-fixtures.ts` builds each name's answer from the US-004 fixture
+(measured equal to Obsidian2Typst's real answers, recorded in `tests/fixtures/us-012-answers.json` and replayed by a guard
+test); the 0.5.0 creature sources are in `tests/fixtures/golden/creature-sources.json`.
+
 ## Measured on the author's vault (numbers only, SCAR-035; 2026-11-16)
 
 38 creature notes, the author's preset and settings (largest text size 10 pt), read-only. Today: 12
@@ -172,6 +189,7 @@ smaller, 10 got larger (by up to 1 pt), one card drops one part fewer, the same 
 | `core/run/run.ts`, `core/card/warning.ts` (`cardCode`) | title warnings for two kinds | `CREATURE_TITLE_WRAPPED` after the spell's (AC-7) |
 | `plugin/settings/fields.ts`, `reset.ts`, the tab | 28 fields | 31 fields (AC-9) |
 | golden sources, `tests/unit/sheet-*`, `settings-*`, `fields`, `titles` | the 0.5.0 output, the two kinds, the field count | unchanged output with the switch off (AC-1); counts and kinds amended |
+| found at G2 (amended): `us-007-fields`, `us-007-tab-helpers`, `scheme-settings`, `titles-screen` (28 fields, two title groups, two redrawing toggles); `creature-settings`, `creature-screen`, `run-creature`, `integration/creature-card-headings` (creature settings are three headings; every `creature.` field is a heading); `card-escape` (eight escaped places) | the 0.5.0 membership | 31 fields, three groups and toggles; creature settings with the title keys; nine escaped places |
 | Obsidian2Typst `o2t-sb-box` (read, not changed) | — | measured with a band-only statblock (AC-2) |
 | `docs/technical/architecture.md`, `tests.md`, the manual-check index | — | amended; a new manual check |
 
