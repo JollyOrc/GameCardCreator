@@ -582,3 +582,5 @@ checked spaces, which are not in the set by design, and one expected the wrong f
 
 **Ticket #37 (2026-11-17), green:** `run-glyph` (15) and the existing run tests unchanged; typecheck clean; mutation round on the real run: 11 of 11 caught. The whole suite: `npm test` 1039 passed and 14 red (#38: `glyph-client`, `glyph-worker`; #39: `glyph-runner`), integration 134 passed and 3 red (`glyph-check`: green with #38).
 
+**Ticket #38 (2026-11-17), green:** `glyph-worker` (7: one added for the order of the faces, one for a request before `init`), `glyph-client` (8: two added: a font given as a view into a larger buffer, a worker that stops or cannot start), `glyph-check` (the end to end, green with the real worker); `creature-compile`, `us-008-compiler`, `scheme-font` unchanged; mutation round: 14 mutants, 13 caught and one equivalent. The whole suite: `npm test` 1054 passed and 3 red (#39's `glyph-runner`), integration 137 passed.
+

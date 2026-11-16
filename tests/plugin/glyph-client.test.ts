@@ -104,6 +104,21 @@ describe('US-010 AC-4: the compile service asks the worker for the coverage', ()
     expect([...new Uint8Array(ask.fonts[0]!)]).toEqual([9, 8, 7]);
     expect(font.buffer.byteLength).toBeGreaterThan(0); // not detached
   });
+  it('a font given as a view into a larger buffer is sent as exactly its own bytes', async () => {
+    const {createCompiler} = await load();
+    const {deps, sent} = fake((m) => ({
+      type: 'font-info-result',
+      id: m.id,
+      faces: FACES,
+    }));
+    const c = createCompiler(deps);
+    const whole = new Uint8Array([0, 1, 2, 3, 4, 5]);
+    await c.coverage([whole.subarray(2, 5)]);
+    const ask = sent.find((m) => m.type === 'font-info') as {
+      fonts: ArrayBuffer[];
+    };
+    expect([...new Uint8Array(ask.fonts[0]!)]).toEqual([2, 3, 4]);
+  });
   it('a failure of the worker is an `ok: false` answer with the first line of the message, never a rejection', async () => {
     const {createCompiler} = await load();
     const {deps} = fake((m) => ({
@@ -113,6 +128,39 @@ describe('US-010 AC-4: the compile service asks the worker for the coverage', ()
     }));
     const c = createCompiler(deps);
     expect(await c.coverage()).toEqual({ok: false, message: 'No font'});
+  });
+  it('a worker that stops during the request, or cannot start, is an `ok: false` answer, never a rejection', async () => {
+    const {createCompiler} = await load();
+    const {deps} = fake(() => undefined);
+    const stopping = {
+      ...deps,
+      startWorker: () => {
+        const worker = (deps.startWorker as () => WorkerLike)();
+        const post = worker.postMessage.bind(worker);
+        worker.postMessage = (message, transfer) => {
+          if ((message as {type: string}).type === 'font-info')
+            queueMicrotask(() =>
+              worker.onerror?.({message: 'The worker stopped'}),
+            );
+          else post(message, transfer);
+        };
+        return worker;
+      },
+    };
+    expect(await createCompiler(stopping).coverage()).toEqual({
+      ok: false,
+      message: 'The worker stopped',
+    });
+    const broken = {
+      ...deps,
+      startWorker: () => {
+        throw new Error('No worker here');
+      },
+    };
+    expect(await createCompiler(broken).coverage()).toEqual({
+      ok: false,
+      message: 'No worker here',
+    });
   });
   it('the request waits in the queue of the compiles: compile, coverage, compile in that order', async () => {
     const {createCompiler} = await load();

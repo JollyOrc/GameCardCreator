@@ -42,8 +42,19 @@ export interface CompileResult {
 export interface Compiler {
   /** US-004 AC-12: `extra` is for this compile only. */
   compile(source: string, extra?: CompileExtra): Promise<CompileResult>;
+  /**
+   * US-010 AC-4: the faces of the fonts a compile will have: the plugin's own
+   * and `fonts` (none: an empty list is none). In the queue of the compiles;
+   * never rejects.
+   */
+  coverage(fonts?: readonly Uint8Array[]): Promise<CoverageResult>;
   dispose(): void;
 }
+
+/** US-010 AC-4: the answer of `coverage`: the faces, or why there are none. */
+export type CoverageResult =
+  | {ok: true; faces: {family: string; coverage: number[]}[]}
+  | {ok: false; message: string};
 
 /** The message every request gets once the plugin is unloaded. */
 export const UNLOADED = 'The plugin was unloaded';
@@ -62,6 +73,7 @@ interface Answer {
   message?: string;
   pdf?: ArrayBuffer;
   facts?: unknown;
+  faces?: unknown;
 }
 
 /** A waiter for the answer to one request id. */
@@ -192,10 +204,61 @@ export function createCompiler(deps: CompilerDeps): Compiler {
     }
   };
 
+  /**
+   * US-010 AC-4: asks the worker for the coverage of its fonts and `fonts`.
+   * The buffers are copies (the caller's bytes stay usable); no `fonts` key is
+   * sent for none. Every failure is an `ok: false` answer with the first line of
+   * the message.
+   */
+  const coverageRun = async (
+    fonts?: readonly Uint8Array[],
+  ): Promise<CoverageResult> => {
+    if (disposed) return {ok: false, message: UNLOADED};
+    try {
+      const w = await ensure();
+      if (disposed) return {ok: false, message: UNLOADED};
+      const id = `font-info-${++counter}`;
+      const message: Record<string, unknown> = {type: 'font-info', id};
+      if (fonts !== undefined && fonts.length > 0) {
+        message.fonts = fonts.map(
+          (b) =>
+            b.buffer.slice(
+              b.byteOffset,
+              b.byteOffset + b.byteLength,
+            ) as ArrayBuffer,
+        );
+      }
+      const answer = await ask(w, id, message);
+      if (answer.type === 'font-info-result' && Array.isArray(answer.faces)) {
+        return {
+          ok: true,
+          faces: answer.faces as {family: string; coverage: number[]}[],
+        };
+      }
+      return {
+        ok: false,
+        message: firstLine(answer.message ?? 'The font information failed'),
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        message: firstLine(
+          error instanceof Error ? error.message : String(error),
+        ),
+      };
+    }
+  };
+
   return {
     compile(source: string, extra?: CompileExtra): Promise<CompileResult> {
       if (disposed) return Promise.resolve(failed(UNLOADED));
       const result = tail.then(() => run(source, extra));
+      tail = result;
+      return result;
+    },
+    coverage(fonts?: readonly Uint8Array[]): Promise<CoverageResult> {
+      if (disposed) return Promise.resolve({ok: false, message: UNLOADED});
+      const result = tail.then(() => coverageRun(fonts));
       tail = result;
       return result;
     },

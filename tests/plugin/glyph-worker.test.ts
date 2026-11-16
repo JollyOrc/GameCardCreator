@@ -100,7 +100,31 @@ describe('US-010 AC-7: what the bundled fonts cover (read by the compiler)', () 
   }, 60_000);
 });
 
+describe('US-010 AC-4: a request before init', () => {
+  it('answers `failed` with its id and a message (never throws, never an empty answer)', async () => {
+    const {createWorkerCore} = await load<{
+      createWorkerCore(post: Post): {handle(m: unknown): Promise<void>};
+    }>(CORE);
+    const out: Out[] = [];
+    const core = createWorkerCore((m) => void out.push(m as Out));
+    await core.handle({type: 'font-info', id: 'early'});
+    expect(out).toHaveLength(1);
+    expect(out[0]).toMatchObject({type: 'failed', id: 'early'});
+    expect(out[0]!.message).toBeTruthy();
+  }, 60_000);
+});
+
 describe('US-010 AC-3, AC-4: the extra fonts of one compile', () => {
+  it("the plugin's own faces come first and the extra fonts' after them", async () => {
+    const {info} = await ready();
+    const own = (await info()).faces!;
+    const withFont = (await info([buf(new Uint8Array(DEJAVU))])).faces!;
+    expect(withFont.slice(0, own.length)).toEqual(own);
+    expect(withFont.slice(own.length).map((f) => f.family)).toEqual([
+      'DejaVu Sans Mono',
+    ]);
+  }, 60_000);
+
   it('an extra font adds its faces and its characters (DejaVu Sans Mono draws ✓ and ⌘)', async () => {
     const {info} = await ready();
     const withFont = await info([buf(new Uint8Array(DEJAVU))]);

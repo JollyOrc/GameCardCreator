@@ -3,7 +3,10 @@
 // entry only connects it to `self`. Adapted from Obsidian2Typst's
 // worker-core.ts (same author, MIT licence), cut down: no renderer, no font
 // info, no scan.
-import {CompileFormatEnum} from '@myriaddreamin/typst.ts/dist/esm/compiler.mjs';
+import {
+  CompileFormatEnum,
+  TypstFontBuilderDriver,
+} from '@myriaddreamin/typst.ts/dist/esm/compiler.mjs';
 import {TypstSnippet} from '@myriaddreamin/typst.ts/dist/esm/contrib/snippet.mjs';
 import {loadFonts} from '@myriaddreamin/typst.ts/dist/esm/options.init.mjs';
 import {FIT_LABEL} from '../../core/skill/fit';
@@ -18,6 +21,13 @@ interface InitMessage {
   id: string;
   compilerText: string;
   fontTexts: string[];
+}
+/** US-010 AC-4: the request for the coverage of the compile's fonts. */
+interface FontInfoMessage {
+  type: 'font-info';
+  id: string;
+  /** The extra fonts of the compile this request is for (none: the plugin's own only). */
+  fonts?: ArrayBuffer[];
 }
 interface CompileMessage {
   type: 'compile';
@@ -94,6 +104,8 @@ export function createWorkerCore(post: Post): {
    * compile keeps about 3.5 MB each in Node, so one is kept, not many.
    */
   let withExtra: {key: string; snippet: TypstSnippet} | null = null;
+  /** US-010 AC-4: the font information driver of the held compiler, started at the first request. */
+  let driver: TypstFontBuilderDriver | null = null;
 
   /** A SHA-256 of the font files (length-prefixed), the key of `withExtra`. */
   const keyOf = async (fonts: readonly Uint8Array[]): Promise<string> => {
@@ -135,6 +147,7 @@ export function createWorkerCore(post: Post): {
     typst = null;
     held = null;
     withExtra = null;
+    driver = null;
     // US-008 AC-13: the decode happens here, in the worker, never on the main thread.
     const wasm = await decodeWasm(message.compilerText);
     const fonts = await Promise.all(message.fontTexts.map(decodeWasm));
@@ -225,6 +238,38 @@ export function createWorkerCore(post: Post): {
     post({type: 'compiled', id: message.id, pdf: buffer, facts}, [buffer]);
   };
 
+  /**
+   * US-010 AC-4, AC-7: answers `font-info-result` with the faces of the fonts a
+   * compile will have: the plugin's own first, then the extra fonts of this
+   * request, each face as `{family, coverage}` (alternating run lengths, the first
+   * run not covered) read by the compiler's own `getFontInfo`. Nothing of the
+   * extra fonts is kept for the next request. Bytes that are no font (the driver
+   * throws or finds no face) are a failure naming that, never an empty answer.
+   * Runs in the worker, never on the main thread. Assumes `init` came first.
+   */
+  const fontInfo = async (message: FontInfoMessage): Promise<void> => {
+    if (held === null) throw new Error('font-info before init');
+    const wasm = held.wasm;
+    if (driver === null) {
+      const started = new TypstFontBuilderDriver();
+      await started.init({getModule: () => wasm} as never);
+      driver = started;
+    }
+    const faces: {family: string; coverage: number[]}[] = [];
+    const extra = (message.fonts ?? []).map((b) => new Uint8Array(b));
+    for (const buffer of [...held.fonts, ...extra]) {
+      const result = (await driver.getFontInfo(buffer)) as {
+        info?: {family: string; coverage: ArrayLike<number>}[];
+      };
+      const list = result.info ?? [];
+      if (list.length === 0) throw new Error('The bytes are not a font');
+      for (const face of list) {
+        faces.push({family: face.family, coverage: Array.from(face.coverage)});
+      }
+    }
+    post({type: 'font-info-result', id: message.id, faces});
+  };
+
   return {
     async handle(raw: unknown): Promise<void> {
       const message = (raw ?? {}) as {type?: string; id?: string};
@@ -232,6 +277,8 @@ export function createWorkerCore(post: Post): {
         if (message.type === 'init') await init(raw as InitMessage);
         else if (message.type === 'compile')
           await compile(raw as CompileMessage);
+        else if (message.type === 'font-info')
+          await fontInfo(raw as FontInfoMessage);
         else throw new Error(`unknown message ${String(message.type)}`);
       } catch (error) {
         post({type: 'failed', id: message.id, message: text(error)});
