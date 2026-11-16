@@ -22,6 +22,8 @@ import {
   fieldKey,
   fieldsOf,
   groupsOf,
+  isShown,
+  redraws,
   valueOf,
   type FieldDef,
   type PageId,
@@ -196,7 +198,13 @@ export class GameCardCreatorSettingTab extends PluginSettingTab {
     new Setting(el).setName(PAGE_TITLES[page]).setHeading();
     for (const {group, fields} of groupsOf(page)) {
       new Setting(el).setName(group).setHeading();
-      this.drawFields(el, settings, page, fields);
+      // US-011 AC-10: a group's fields as the settings of now show them
+      this.drawFields(
+        el,
+        settings,
+        page,
+        fields.filter((f) => isShown(f, settings)),
+      );
       if (group === 'Sheet') this.gridEl = el.createDiv({cls: 'gcc-grid'});
       if (group === 'Scheme note')
         this.schemeEl = el.createDiv({cls: 'gcc-grid'});
@@ -222,9 +230,13 @@ export class GameCardCreatorSettingTab extends PluginSettingTab {
       const value = valueOf(settings, def.id);
       if (def.kind === 'toggle') {
         row.addToggle((toggle) =>
-          toggle
-            .setValue(value === true)
-            .onChange((on) => void this.commit(def.id, on, error)),
+          toggle.setValue(value === true).onChange(
+            (on) =>
+              // US-011 AC-10 (SCAR-016): after the commit, the page from the file of now
+              void this.commit(def.id, on, error).then(() => {
+                if (redraws(def.id)) void this.draw();
+              }),
+          ),
         );
         continue;
       }

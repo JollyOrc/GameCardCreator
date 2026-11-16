@@ -14,6 +14,8 @@ export interface FieldDef {
   group: string;
   label: string;
   kind: 'text' | 'number' | 'toggle';
+  /** US-011 AC-10: the id of the toggle that must be on for this field to be shown. */
+  shownWhen?: string;
 }
 
 const field = (
@@ -22,11 +24,16 @@ const field = (
   group: string,
   label: string,
   kind: FieldDef['kind'] = 'text',
-): FieldDef => ({id, page, group, label, kind});
+  shownWhen?: string,
+): FieldDef =>
+  shownWhen === undefined
+    ? {id, page, group, label, kind}
+    : {id, page, group, label, kind, shownWhen};
 
 /**
  * US-007 AC-1, AC-4: every field of the screen, in the order of its page. The kind rules
- * are not fields (a list of rows, `rules.ts`). Twenty-two fields (US-004 AC-13 added three, US-009 AC-11 two).
+ * are not fields (a list of rows, `rules.ts`). Twenty-eight fields (US-004 AC-13 added three, US-009 AC-11 two,
+ * US-011 AC-10 six).
  */
 export const FIELDS: readonly FieldDef[] = [
   field('outputFolder', 'main', 'Output', 'Output folder'),
@@ -71,6 +78,53 @@ export const FIELDS: readonly FieldDef[] = [
   field('skill.maxSize', 'layout', 'Text size', 'Largest size', 'number'),
   field('skill.minSize', 'layout', 'Text size', 'Smallest size', 'number'),
   field('skill.sizeStep', 'layout', 'Text size', 'Size step', 'number'),
+  // US-011 AC-10: per kind a toggle and the two sizes shown only while it is on
+  field(
+    'skill.equalTitles',
+    'layout',
+    'Skill titles',
+    'Equal title bars',
+    'toggle',
+  ),
+  field(
+    'skill.titleSize',
+    'layout',
+    'Skill titles',
+    'Title size',
+    'number',
+    'skill.equalTitles',
+  ),
+  field(
+    'skill.minTitleSize',
+    'layout',
+    'Skill titles',
+    'Smallest title size',
+    'number',
+    'skill.equalTitles',
+  ),
+  field(
+    'spell.equalTitles',
+    'layout',
+    'Spell titles',
+    'Equal title bars',
+    'toggle',
+  ),
+  field(
+    'spell.titleSize',
+    'layout',
+    'Spell titles',
+    'Title size',
+    'number',
+    'spell.equalTitles',
+  ),
+  field(
+    'spell.minTitleSize',
+    'layout',
+    'Spell titles',
+    'Smallest title size',
+    'number',
+    'spell.equalTitles',
+  ),
 ];
 
 /** US-007 AC-1: the fields of one page, in order. */
@@ -110,6 +164,24 @@ export function valueOf(
     value = (value as Record<string, unknown>)[part];
   }
   return value as string | number | boolean;
+}
+
+/**
+ * US-011 | AC-10: whether field `def` is shown with `settings`: always, unless it names a
+ * toggle (`shownWhen`) that is not on. Read with the settings of now (SCAR-016).
+ */
+export function isShown(def: FieldDef, settings: CardsSettings): boolean {
+  return (
+    def.shownWhen === undefined || valueOf(settings, def.shownWhen) === true
+  );
+}
+
+/**
+ * US-011 | AC-10: whether a commit of field `id` changes which fields are shown, so the
+ * page is drawn again after it: true for a toggle that another field names.
+ */
+export function redraws(id: string): boolean {
+  return FIELDS.some((f) => f.shownWhen === id);
 }
 
 /**
