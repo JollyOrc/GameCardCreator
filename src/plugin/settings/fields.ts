@@ -125,6 +125,30 @@ export const FIELDS: readonly FieldDef[] = [
     'number',
     'spell.equalTitles',
   ),
+  // US-012 AC-9: the creature kind's toggle and sizes, after the spell's
+  field(
+    'creature.equalTitles',
+    'layout',
+    'Creature titles',
+    'Equal title bars',
+    'toggle',
+  ),
+  field(
+    'creature.titleSize',
+    'layout',
+    'Creature titles',
+    'Title size',
+    'number',
+    'creature.equalTitles',
+  ),
+  field(
+    'creature.minTitleSize',
+    'layout',
+    'Creature titles',
+    'Smallest title size',
+    'number',
+    'creature.equalTitles',
+  ),
 ];
 
 /** US-007 AC-1: the fields of one page, in order. */
