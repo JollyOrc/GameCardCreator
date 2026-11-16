@@ -18,6 +18,8 @@ import {
 } from '../creature/statblock';
 import {branchesOf} from '../scheme/branches';
 import {DEFAULT_ICON_CREDIT, readScheme, type SchemeRow} from '../scheme/read';
+import {glyphWarnings} from '../glyph/check';
+import {createCoverage, type FaceInfo} from '../glyph/coverage';
 import {placeCards} from '../sheet/layout';
 import {fitWarnings} from '../skill/fit';
 import {readSkill, type CardWarning, type SkillCard} from '../skill/read';
@@ -41,6 +43,13 @@ export interface RunDeps {
    * never kept (SCAR-016). Without it every creature card is refused.
    */
   statblockApi?(): unknown;
+  /**
+   * US-010 AC-3, AC-4: the faces of the fonts the compile will have: the
+   * plugin's own and `fonts`, the extra fonts of a creature sheet (none: an empty
+   * list). Rejects when the coverage cannot be read. Optional: without it there
+   * is no glyph check and no warning.
+   */
+  coverage?(fonts: readonly Uint8Array[]): Promise<FaceInfo[]>;
   /**
    * Compiles Typst: the PDF (null when there is none), the `gcc-fit` facts, a
    * message. `extra` is given only for a sheet with creature statblocks (AC-12).
@@ -139,6 +148,30 @@ async function readSchemeNote(
 }
 
 /**
+ * US-010 AC-1, AC-3, AC-4: the glyph warnings of `cards`. Asks `deps.coverage`
+ * for the faces of the compile's fonts (`fonts`: the extra fonts of the sheet,
+ * none for a sheet without statblocks) and gives one warning per note whose card
+ * has a character no face covers. When the faces cannot be read the result is
+ * one `GLYPH_CHECK_UNAVAILABLE` warning (path empty, detail the reason: rule 8,
+ * never a stop). Without a `coverage` dependency: no check, no warning.
+ */
+async function glyphStep(
+  cards: readonly (SkillCard | CreatureCard)[],
+  settings: CardsSettings,
+  fonts: readonly Uint8Array[],
+  deps: RunDeps,
+): Promise<CardWarning[]> {
+  if (deps.coverage === undefined) return [];
+  try {
+    const coverage = createCoverage(await deps.coverage(fonts));
+    return glyphWarnings(cards, coverage.has, settings.creature);
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    return [{code: 'GLYPH_CHECK_UNAVAILABLE', path: '', detail: reason}];
+  }
+}
+
+/**
  * US-005 AC-4, US-004: makes the cards of `notes`, in order, and compiles the
  * sheet.
  *
@@ -147,8 +180,8 @@ async function readSchemeNote(
  * still made (rule 8). A creature note asks the statblock API (fetched at the
  * first creature note); a missing or too old plugin refuses every creature
  * card once (the plugin-unavailable warning, empty path) and the other kinds are
- * made. The warnings are the notes' own in note order, then the fit warnings in
- * card order. No card gives `There are no cards to print` (the sheet's own
+ * made. The warnings are the notes' own in note order, then (US-010) the glyph
+ * warnings in card order, then the fit warnings in card order. No card gives `There are no cards to print` (the sheet's own
  * refusal, with the reason when it is a missing plugin) without a compile; a compile without a PDF gives its first
  * diagnostic and no PDF. Invalid card settings are refused before any note is
  * read. The API's fonts are asked only when a card has a statblock.
@@ -237,6 +270,14 @@ export async function runCards(
       cards.length === 0 && unavailable !== '' ? `: ${unavailable}` : '';
     return {ok: false, message: `${sheet.message}${why}`, warnings};
   }
+  // US-010 AC-3, AC-5: the fonts of the compile are read once and handed both to
+  // the coverage and to the compile; the glyph warnings stand after the notes' own
+  // warnings and before the fit warnings.
+  const fonts: Uint8Array[] =
+    api !== null && api !== undefined && sheet.files.length > 0
+      ? await api.compileFonts()
+      : [];
+  warnings.push(...(await glyphStep(cards, settings, fonts, deps)));
   if (sheet.creditOmitted !== null) {
     warnings.push({
       code: cardCode('creature', 'CREDIT_OMITTED'),
@@ -246,7 +287,7 @@ export async function runCards(
   }
   let extra: CompileExtra | undefined;
   if (api !== null && api !== undefined && sheet.files.length > 0) {
-    extra = {files: sheet.files, fonts: await api.compileFonts()};
+    extra = {files: sheet.files, fonts};
   }
   const compiled =
     extra === undefined
