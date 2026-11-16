@@ -1,7 +1,7 @@
 # US-011 — Equal title bars: one title size and one header height per card kind
 
-**Status:** Draft, G1 written 2026-11-16 (G0 done 2026-11-16; decisions D1 to D7 made by the owner
-2026-11-16: "all proposals"); waits for the owner's reading before G2.
+**Status:** Ready 2026-11-16 (G0, G1; decisions D1 to D7 made by the owner: "all proposals"; story committed
+`db10d04`); G2 tests written 2026-11-16, red by design, AC-8 and AC-10 amended at G2.
 **Introduced:** 0.5.0 (planned)
 **Backlog issue:** #35
 
@@ -128,8 +128,10 @@ in both widths.
   alone, never from the fit, so the fit cannot change them (SCAR-021); two compiles of the same run give the
   same `t`, `H` and sizes.
 - **AC-8 (one compile, the facts).** `t` and `H` are measured in Typst in the same compile as the cards (no
-  second compile), once per kind. For each kind in equal mode the compile writes one fact with the label
-  `gcc-titles`: `(kind, size: t, height: H, wrapped: <card indexes>, widest: <card index>)`; the run makes
+  second compile), once per kind. For each kind in equal mode the compile writes one fact under the label of the fit facts,
+  `gcc-fit`, in a shape of its own: `(titles: <kind>, size: t, height: H (mm), wrapped: <card indexes>,
+  widest: <card index>)` (amended at G2: the worker reads one label, US-008; a fact without `i` is
+  already ignored by the fit warnings, US-002 AC-8); the run makes
   the warning of AC-5 from it, after the notes' own warnings and the glyph warnings and before the fit
   warnings (US-010 AC-5). A run without a kind in equal mode writes no such fact.
 - **AC-9 (the settings and their checks, SCAR-019).** Title size outside 6 to 20 pt, smallest title size
@@ -147,7 +149,7 @@ in both widths.
   size`: `Skill titles` and `Spell titles`, each with the toggle `Equal title bars` and the number fields
   `Title size` and `Smallest title size` (pt). The two number fields are shown only while the toggle is
   on; switching the toggle redraws the page at once (SCAR-016); a hidden field keeps its value in the file.
-  The fields commit through the one path of US-007 AC-4 (`commitOnChange`), an invalid value is refused
+  The fields commit through the one path of US-007 AC-4 (`commitSetting`), an invalid value is refused
   under the field (US-007 AC-3, AC-8), and `Reset this page to defaults` resets them with the page's other
   keys (US-007 AC-9). Twenty-eight fields in all (twenty-two before).
 - **AC-11 (deterministic, rule 7).** As US-002 AC-11: the same notes and settings give the same PDF bytes in
@@ -157,6 +159,21 @@ in both widths.
   cards lie on one line to 0.1 mm (checked by program from the PDF's drawing positions, SCAR-015,
   SCAR-023: the number of bands and rules checked equals the number of cards drawn). The author's run on
   their own vault in Obsidian (manual check M09, SCAR-045).
+
+## Interfaces fixed by the tests (G2)
+
+So that the tickets agree: `src/core/card/titles.ts` has `TitleSettings` (`equalTitles`, `titleSize`, `minTitleSize`),
+`DEFAULT_TITLES`, `checkTitleSettings(kind, settings)` (the messages of AC-9: `The <kind> title size <v> is outside 6 to
+20 pt`, `The <kind> smallest title size <v> is outside 4 to 20 pt`, `The <kind> smallest title size <v> is above the
+title size <t>`), `titleSizes(settings, step)` (the rule of `textSizes`) and `titleWarnings(facts, cards)` (pure; skill
+before spell; the first valid fact of a kind counts; a fact whose `widest` is no card of its kind is ignored).
+`SkillSettings` and `SpellSettings` extend `TitleSettings`; `cardSheetTypst`'s options take `titles: {skill?, spell?}`;
+the title sizes are written into the source as an array like the text sizes; the title of every card of a kind in equal
+mode is written once more, as a string literal, into the kind's data (an eighth escaped place, `card-escape`). The fields
+are `skill.equalTitles`, `skill.titleSize`, `skill.minTitleSize` and the same for `spell`, in the groups `Skill titles` and
+`Spell titles`; `FieldDef.shownWhen` names the toggle, `isShown(def, settings)` and `redraws(id)` decide, and the tab draws
+a group's fields through `isShown` with the settings of now and, after a toggle's commit, draws the page again when
+`redraws(def.id)`.
 
 ## Decisions (the owner, 2026-11-16: "all proposals")
 

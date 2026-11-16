@@ -78,7 +78,18 @@ describe('US-007 AC-9: resetting changes only the keys of its page', () => {
       tagsProperty: 'labels',
       timingLabel: 'When',
     });
-    expect(file.spell).toEqual({tagsProperty: 'marks'});
+    // US-011 AC-10: the title keys of both kinds are on this page and go back too
+    expect(file.spell).toEqual({
+      tagsProperty: 'marks',
+      equalTitles: false,
+      titleSize: 9.1,
+      minTitleSize: 7,
+    });
+    expect(file.skill).toMatchObject({
+      equalTitles: false,
+      titleSize: 9.1,
+      minTitleSize: 7,
+    });
     expect(file.outputFolder).toBe('/out');
     expect(file.kindRules).toEqual([{folder: 'Skills', kind: 'skill'}]);
     expect(file.future).toEqual({x: 1});

@@ -22,8 +22,9 @@ export async function makeSheet(
   cards: (SkillCard | CreatureCard)[],
   sheet: SheetSettings = DEFAULT_SHEET,
   sizes: CardSizes = DEFAULT_SIZES,
-  // US-009 AC-10: the icon credit text the run resolves ('' prints nothing).
-  options: {iconCredit?: string} = {},
+  // US-009 AC-10: the icon credit text the run resolves ('' prints nothing);
+  // US-011: the title settings of the kinds.
+  options: NonNullable<Parameters<typeof cardSheetTypst>[4]> = {},
 ) {
   const typst = cardSheetTypst(cards, sheet, sizes, DEFAULT_CREATURE, options);
   if (!typst.ok) throw new Error(typst.message);

@@ -586,3 +586,41 @@ checked spaces, which are not in the set by design, and one expected the wrong f
 
 **Ticket #39 (2026-11-17), code part green:** `glyph-runner` (4 after one added: a creature sheet's fonts reach the coverage and the compile as one list), `glyph-check` (6 after one added: the premise of D2 measured with the real worker: a character Libertinus lacks is drawn from an extra font that has it and is the empty glyph without it), `us-008-wiring`, `creature-runner` unchanged; mutation round on the runner and `main.ts`: 7 mutants, 6 caught first time and one closed with a test. The whole suite: `npm test` 1058 passed, integration 138 passed. The manual check M08 and the release follow.
 
+
+## US-011 equal title bars (2026-11-16, G2): tests written (red by design)
+
+New files: `unit/titles-settings` (defaults, checks, the sizes tried), `unit/titles-warning` (the warning from the kind's
+fact; the fit warnings ignore it), `unit/titles-source` (off is the golden source; the fact only for a kind that is on and
+has cards; the title through `typstString`), `unit/run-titles` (the settings reach the sheet; the warning's place),
+`plugin/titles-screen` (the groups, `isShown`, `redraws`, commits, reset, text checks of the tab),
+`integration/equal-titles-pdf` (the story's examples compiled with typst.ts and read back: title sizes, the fact, the rules
+and bands, the fit sweep, the settings at the ends, the kinds separate, order and bytes, a row lined up); support
+`support/title-fixtures` (the invented notes as cards). Amended (SCAR-027: they counted or listed what the story
+changes): `us-007-fields` (28 fields, the layout page's ids), `us-007-tab-helpers` (the two groups), `scheme-settings` (28
+fields), `card-escape` (eight escaped places: the title in a kind's data), `skill-settings`, `spell-settings` (the
+defaults hold the title keys), `us-008-settings-file`, `us-007-commit`, `us-007-reset` (the spell group holds the title
+keys), `run-cards`, `run-settings` (a spell settings object written by hand gets the defaults), `support/card-sheet` (the
+options pass through).
+
+Proven against a throwaway reference implementation (a scratch worktree, deleted): every new and amended test green
+there (`npm test` 1129, integration 160), lint clean; on the reference ten mutants, nine caught (no shrinking, the height of
+the first card only, the header at `t`, the plain box not `H` high, nothing wrapped, the widest the first, a banded card's
+own height, the icons left out of the width, a fact for a kind without cards); the tenth (the banded helper written when
+no card is banded) changes no output: equivalent. On the code of 0.4.0: `npm test` 1058 passed, 29 red and two files that
+cannot load the missing module; integration 138 passed, the new file red; typecheck red only in the new test files
+(green with the settings and sheet tickets, SCAR-044).
+
+| AC | Test |
+|---|---|
+| AC-1 | `unit/titles-source` (golden sources with the option absent, off, and off with odd sizes; the other kind's source), `unit/run-titles` (no fact asked for with the defaults), `integration/equal-titles-pdf` (spells on, skills off) |
+| AC-2 | `unit/titles-settings` (the sizes tried), `integration/equal-titles-pdf` (9.1, 8.1, 7 with the icon; off: 1.3 S and the wrap of today) |
+| AC-3 | `integration/equal-titles-pdf` (`H` 7.70 mm, the rules at 4 mm + `H` + 2 pt; off: three heights) |
+| AC-4 | `integration/equal-titles-pdf` (Long Lesson: smaller text, title 8.1, rule with the others; off: 1.3 S) |
+| AC-5 | `unit/titles-warning` (code, path, detail, one per kind, malformed facts), `unit/run-titles`, `integration/equal-titles-pdf` (t 7, `H` 7.94, two lines, the warning) |
+| AC-6 | `integration/equal-titles-pdf` (bands 4 + `H` + 2 mm, `Plain`'s rule) |
+| AC-7 | `integration/equal-titles-pdf` (40 to 260 words: `t` and `H` unchanged; a text that fits lies inside) |
+| AC-8 | `unit/titles-source` (one fact per kind under `gcc-fit`), `unit/titles-warning` (fit warnings unchanged), `unit/run-titles` (the order) |
+| AC-9 | `unit/titles-settings` (checks, messages, the kinds' checks), `plugin/titles-screen` (refusals on the screen), `integration/equal-titles-pdf` (20/7, 13/7, 6/4, 9.1/9.1, step 1) |
+| AC-10 | `plugin/titles-screen`, `unit/us-007-fields`, `unit/us-007-tab-helpers`, `plugin/us-007-reset` |
+| AC-11 | `integration/equal-titles-pdf` (order of the notes; the same bytes twice) |
+| AC-12 | `integration/equal-titles-pdf` (a banded row and a plain row lined up to 0.1 mm, counted); the author's look and M09 at the manual check |

@@ -40,7 +40,11 @@ describe('US-008 AC-4: readSettingsFile', () => {
       maxSize: 8,
       kindLabel: 'Kind',
     });
-    expect(r.settings.spell).toEqual({tagsProperty: 'labels'});
+    // US-011: the spell group also has the title keys, merged key by key
+    expect(r.settings.spell).toEqual({
+      ...DEFAULT_CARDS.spell,
+      tagsProperty: 'labels',
+    });
   });
   it('a value of the wrong type is ignored and named, the others are kept', () => {
     const r = readSettingsFile({

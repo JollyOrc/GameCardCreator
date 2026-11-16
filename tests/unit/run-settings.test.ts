@@ -70,7 +70,10 @@ describe('US-005 AC-9: checkCardsSettings', () => {
       ).join(' '),
     ).toMatch(/timing/);
     expect(
-      checkCardsSettings({...ok, spell: {tagsProperty: ' '}}, VAULT).join(' '),
+      checkCardsSettings(
+        {...ok, spell: {...ok.spell, tagsProperty: ' '}},
+        VAULT,
+      ).join(' '),
     ).toMatch(/tags/i);
   });
   it('sheet and skill sizes are each reported once (no double message)', () => {

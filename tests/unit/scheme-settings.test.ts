@@ -171,7 +171,7 @@ describe('US-009 AC-11: the fields', () => {
     expect(fieldsOf('properties').at(-1)!.id).toBe('schemeNote');
     expect(fieldsOf('layout').map((f) => f.id)).toContain('sheet.bleed');
   });
-  it('the screen shows the setting as it is, and 22 fields in all', () => {
+  it('the screen shows the setting as it is, and 28 fields in all (22 before US-011)', () => {
     expect(valueOf({...DEFAULT_CARDS, schemeNote: 'x.md'}, 'schemeNote')).toBe(
       'x.md',
     );
@@ -182,7 +182,7 @@ describe('US-009 AC-11: the fields', () => {
       ),
     ).toBe(1);
     expect(valueOf(DEFAULT_CARDS, 'sheet.bleed')).toBe(0);
-    expect(FIELDS).toHaveLength(22);
+    expect(FIELDS).toHaveLength(28);
   });
 });
 

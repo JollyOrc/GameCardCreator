@@ -15,14 +15,25 @@ import {
 
 describe('US-003 settings: the spell settings', () => {
   it('default: tags property `tags`', () => {
-    expect(DEFAULT_SPELL).toEqual({tagsProperty: 'tags'});
+    // US-011 D5: and the title settings of the kind
+    expect(DEFAULT_SPELL).toEqual({
+      tagsProperty: 'tags',
+      equalTitles: false,
+      titleSize: 9.1,
+      minTitleSize: 7,
+    });
   });
   it('are valid; another name is valid', () => {
     expect(checkSpellSettings(DEFAULT_SPELL)).toEqual([]);
-    expect(checkSpellSettings({tagsProperty: 'labels'})).toEqual([]);
+    expect(
+      checkSpellSettings({...DEFAULT_SPELL, tagsProperty: 'labels'}),
+    ).toEqual([]);
   });
   it.each([[''], ['   ']])('an empty tags property %j is refused', (name) => {
-    const issues = checkSpellSettings({tagsProperty: name} as SpellSettings);
+    const issues = checkSpellSettings({
+      ...DEFAULT_SPELL,
+      tagsProperty: name,
+    } as SpellSettings);
     expect(issues).toHaveLength(1);
     expect(issues[0]).toMatch(/tags/i);
   });

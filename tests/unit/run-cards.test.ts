@@ -192,7 +192,7 @@ describe('US-005 AC-4: the run', () => {
       '---\nlabels:\n  - Wizardry\ntags:\n  - Other\n---\nText.\n';
     const r = await runCards(
       ['spells/Labelled.md'],
-      {...settings, spell: {tagsProperty: 'labels'}},
+      {...settings, spell: {...settings.spell, tagsProperty: 'labels'}},
       d,
     );
     if (!r.ok) throw new Error(r.message);

@@ -4,7 +4,7 @@
 // what the screen does not know. Expected messages are those of the checks of
 // US-001 to US-005. Red until the tickets.
 import {describe, expect, it} from 'vitest';
-import {checkCardsSettings} from '../../src/core/run/settings';
+import {DEFAULT_CARDS, checkCardsSettings} from '../../src/core/run/settings';
 import {readSettingsFile} from '../../src/plugin/settings-file';
 import {commitSetting} from '../../src/plugin/settings/commit';
 import {memoryStore} from '../support/memory-store';
@@ -394,7 +394,11 @@ describe('US-007 (SCAR-019): non-default values committed one by one are what th
       timingLabel: 'When',
       tagsProperty: 'tags',
     });
-    expect(read.settings.spell).toEqual({tagsProperty: 'labels'});
+    // US-011: the spell group also has the title keys (defaults here)
+    expect(read.settings.spell).toEqual({
+      ...DEFAULT_CARDS.spell,
+      tagsProperty: 'labels',
+    });
     // only the kind rules are missing now
     expect(checkCardsSettings(read.settings, VAULT)).toEqual([
       'Kind rules: add at least one rule (a folder and a kind)',

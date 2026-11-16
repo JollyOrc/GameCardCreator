@@ -28,6 +28,10 @@ describe('US-002 settings table: defaults', () => {
       maxSize: 7,
       minSize: 5.5,
       sizeStep: 0.25,
+      // US-011 D5: the title settings of the kind
+      equalTitles: false,
+      titleSize: 9.1,
+      minTitleSize: 7,
     });
   });
   it('are valid', () => {

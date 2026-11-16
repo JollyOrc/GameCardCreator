@@ -38,11 +38,18 @@ describe('US-007 AC-1: the fields of the pages', () => {
       'skill.maxSize',
       'skill.minSize',
       'skill.sizeStep',
+      // US-011 AC-10: the two title groups after the text size
+      'skill.equalTitles',
+      'skill.titleSize',
+      'skill.minTitleSize',
+      'spell.equalTitles',
+      'spell.titleSize',
+      'spell.minTitleSize',
     ]);
   });
-  it('22 fields in all, ids unique, every field has a label and a group', () => {
-    expect(FIELDS).toHaveLength(22);
-    expect(new Set(FIELDS.map((f) => f.id)).size).toBe(22);
+  it('28 fields in all (22 before US-011), ids unique, every field has a label and a group', () => {
+    expect(FIELDS).toHaveLength(28);
+    expect(new Set(FIELDS.map((f) => f.id)).size).toBe(28);
     for (const f of FIELDS) {
       expect(f.label, f.id).not.toBe('');
       expect(f.group, f.id).not.toBe('');
@@ -106,7 +113,7 @@ describe('US-007 AC-8: valueOf shows the setting, the defaults are the story tab
       outputFolder: '/out',
       sheet: {...DEFAULT_CARDS.sheet, margin: 15, cutMarks: false},
       skill: {...DEFAULT_CARDS.skill, maxSize: 8.5, kindLabel: 'Kind'},
-      spell: {tagsProperty: 'labels'},
+      spell: {...DEFAULT_CARDS.spell, tagsProperty: 'labels'},
       creature: {...DEFAULT_CARDS.creature, actionsHeading: 'Moves'},
     };
     expect(valueOf(s, 'creature.actionsHeading')).toBe('Moves');
