@@ -89,15 +89,15 @@ export function titleSizes(settings: TitleSettings, step: number): number[] {
   return list;
 }
 
-/** US-011 AC-8: the fact of a kind in equal mode, as the compile writes it. */
+/** US-011 AC-8, US-012 AC-7: the fact of a kind in equal mode, as the compile writes it. */
 interface TitlesFact {
   size: number;
   wrapped: number[];
   widest: number;
 }
 
-/** The kinds with title facts, in the order their warnings are given. */
-const TITLE_KINDS = ['skill', 'spell'] as const;
+/** The kinds with title facts, in the order their warnings are given (US-012 AC-7: creature last). */
+const TITLE_KINDS = ['skill', 'spell', 'creature'] as const;
 
 /**
  * US-011 AC-8: the fact of `kind` in `raw`, or null when `raw` is not one: `titles`
@@ -106,7 +106,7 @@ const TITLE_KINDS = ['skill', 'spell'] as const;
  */
 function asTitlesFact(
   raw: unknown,
-  kind: 'skill' | 'spell',
+  kind: (typeof TITLE_KINDS)[number],
   cards: readonly (SkillCard | CreatureCard)[],
 ): TitlesFact | null {
   if (typeof raw !== 'object' || raw === null) return null;
@@ -122,8 +122,9 @@ function asTitlesFact(
 }
 
 /**
- * US-011 | AC-5, AC-8: the warnings for titles that wrap even at the smallest title
- * size, one per kind, skill before spell.
+ * US-011 | AC-5, AC-8, US-012 | AC-4, AC-7: the warnings for titles that wrap even at
+ * the smallest title size, one per kind, skill before spell before creature (a
+ * creature's title is its name in the statblock band, or its own title without one).
  *
  * Reads the facts of the kinds in equal mode (`(titles: kind, size, height, wrapped,
  * widest)`, written under the label of the fit facts); the first valid fact of a kind
