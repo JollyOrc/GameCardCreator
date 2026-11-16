@@ -4,7 +4,7 @@
 `db10d04`); G2 tests written 2026-11-16 (`5b9f766`), red by design, AC-8 and AC-10 amended at G2; G3 tickets #40 to #44.
 **Introduced:** 0.5.0 (planned)
 **Backlog issue:** #35
-**Tickets:** #40 (settings), #41 (warning), #42 (sheet and run), #43 (screen), #44 (test build, M09), in this order (G3, 2026-11-16)
+**Tickets:** #40 (settings), #41 (warning), #42 (sheet and run), #43 (screen), #44 (test build, M09), in this order (G3, 2026-11-16); the D8 to D10 amendment gets its own ticket at G3
 
 **As** a game master printing a sheet of skill or spell cards **I want** every card of one kind to have
 the same title size and the same header height, **so that** a sheet looks even and the cards line up when
@@ -80,8 +80,9 @@ in both widths.
 
 ## Acceptance criteria
 
-- **AC-1 (off is today).** With the switch of a kind off, its cards are exactly as in 0.4.0: the Typst
-  source of a run is the same text as 0.4.0's for the same notes and settings (the golden sources of US-009
+- **AC-1 (off is today).** With the switch of a kind off, its cards are exactly as in 0.4.0, **except the
+  band of a card with a branch, which follows the amended US-009 AC-3 (D8)**: the Typst source of a run
+  without a scheme is the same text as 0.4.0's for the same notes and settings (the golden sources of US-009
   stay green; a test compares a run with every new key absent, and one with the keys present and the switch
   off). The switch of one kind does not change the cards of the other kind: with only skills on, the spell
   cards' source is today's.
@@ -99,7 +100,9 @@ in both widths.
   but at the text size `t / 1.3` instead of the card's `S` (tags `0.8 t / 1.3`, title `t`, details row
   `0.9 t / 1.3`, leading and gaps as today), so a card's header does not depend on its text size (reason 3
   goes). The kind's header height `H` is the largest header height among the cards of the kind (in each
-  card's own header width), whatever makes it largest: a wrapped title, tags line or details row. Every
+  card's own header width), whatever makes it largest: a wrapped title, tags line or details row, **or, on
+  a card with a branch, its lowest icon less 1 mm (D8, D9: so that the band ends at least 1 mm under every
+  icon of the kind and all bands and rules of the kind still line up)**. Every
   header of the kind is given the height `H`; its lines stay at the top, and the room under a shorter
   header stays empty. Example (no scheme, defaults; `t` = 8.1 from AC-2): headers `Parry` 5.69 mm,
   `Riverbank Ambush …` 5.69 mm, `Feint` 7.70 mm (its tags line wraps): `H` = 7.70 mm for all three. Today the
@@ -122,6 +125,11 @@ in both widths.
   stand at the same height on every card of the kind that has the same kind of header. Example (the scheme,
   defaults): `Parry`, `Riverbank Ambush …` (banded, `sword`), `Plain` (no branch): `t` = 7 (AC-2), headers
   5.11, 5.11 and 3.28 mm: `H` = 5.11 mm; both bands 11.11 mm high; `Plain`'s header box 5.11 mm, its rule
+  under it (the `sword`, 5.92 mm, less 1 mm is under 5.11 mm: no change from D8). Example with an icon
+  taller than the header (D9): `Ember Spark.md` and `Slow Ember Curse of the Ashen Marsh.md` (spells, tag
+  `Pyromancy`, `fire` 5.84 mm), `Glow.md` (spell, tag `Lightcraft`, no row), spells on, defaults: `t` = 7.35
+  (the slow curse's title fits beside the fire up to 7.50 pt), headers 3.41 mm each; `H` = 5.84 − 1 = 4.84
+  mm; both bands 4 + 4.84 + 2 = 10.84 mm (each 1 mm under its fire); `Glow`'s header box 4.84 mm, its rule
   under it. The icons, the gradient, the bleed and the credit line are as in US-009.
 - **AC-7 (the fit).** The text of each card is fitted as today (US-002 AC-5, AC-6; US-009 AC-8), in the
   room left under `H`: the sizes tried, the cut and the overflow warning are unchanged, only the header's
@@ -192,6 +200,18 @@ a group's fields through `isShown` with the settings of now and, after a toggle'
 - **D6:** cards without a branch get the same header height; their rule stands under it.
 - **D7:** skill and spell cards in this story (release 0.5.0); creature cards are a follow-up (see "Not
   covered").
+
+**Amendment 2026-11-16 (M09 finding; the owner's answers):**
+
+- **D8:** the band of a card with a branch ends 2 mm under its header as before, but never less than 1 mm
+  under its lowest icon (US-009 AC-3 amended; with the switch on or off). Measured first: on the author's
+  173 notes at their settings 2 bands change; "2 mm under the lower of header and icon" would change 154
+  (that number was first given wrongly as none, from a check of icons that stick out; corrected before the
+  decision).
+- **D9:** in equal mode the icons count towards the kind's height `H` (AC-3), so every band of the kind ends
+  at the same height and a plain card's rule stays level with them.
+- **D10:** the change ships in 0.5.0 with this story; M09's block E is run again on the test build that
+  carries it.
 
 ## Who relies on what changes (SCAR-017, SCAR-027)
 

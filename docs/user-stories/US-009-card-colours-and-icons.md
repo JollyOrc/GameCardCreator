@@ -97,7 +97,13 @@ Spark.md` (spell): tags `Pyromancy`. `Scorch Hex.md` (spell): tags `Pyromancy`, 
 - **AC-3 (the band).** The header of a card with one branch sits on a band filled with its colour. The band
   runs from the card's top edge to its left and right edges (the full card width, 62 mm at the default size)
   and is as high as 4 mm (the top padding) plus the header plus 2 mm; it ends 2 mm under the header's last
-  line. The header's text keeps its place (4 mm from the left edge, as today) and stays black on every
+  line, **but never less than 1 mm under the bottom of the card's lowest icon** (amended 2026-11-16, M09
+  finding, US-011 D8: an icon taller than the header + 2 mm stuck out under the band; the icons' height is
+  their glyph's bounds at 18 pt, 4.2 to 6.4 mm in the font). In other words the band's height is 4 mm + the
+  larger of (header + 2 mm) and (lowest icon + 1 mm). Examples (default sizes): `Parry.md` (header 6.22 mm,
+  `sword` 5.92 mm): 12.22 mm, unchanged; `Ember Spark.md` (header 4.05 mm at 7 pt, `fire` 5.84 mm): 10.84 mm
+  (before 10.05 mm); the same note with the largest text size 6 pt (header 3.57 mm): 10.84 mm (before
+  9.57 mm, where the icon stuck out 0.27 mm). The header's text keeps its place (4 mm from the left edge, as today) and stays black on every
   colour (D8); the tags line is kept (D2). The card's frame is drawn over the band, not under it. `Parry.md`:
   a band `#F4D6B0` from the top edge, its tags line, its title and its details row on it.
 - **AC-4 (several branches).** With several branches the band is a horizontal linear gradient across the
@@ -204,3 +210,11 @@ story, pointing at the format above, SCAR-040), an icon set other than RPG Aweso
 (a property) instead of per tag, writing the hexmaps' fills from the note.
 
 **Amendment 2026-11-16 (owner's decision):** the default credit text names the authors, as Game-icons.net asks ("Icons made by {author}. Available on https://game-icons.net"): `Icons made by Lorc, Delapouite, sbed and other authors. Available on https://game-icons.net (CC BY 3.0), via RPG Awesome`. The authors were read from the Game-icons.net repository for the icons of the author's scheme whose names it has (15 of 23); the others are to be checked by the author, who can set their own `credit` in the scheme note.
+
+**Amendment 2026-11-16 (M09 finding of US-011, owner's decision D8 of US-011):** AC-3: the band ends never less
+than 1 mm under the card's lowest icon (see AC-3). Found by the author on a spell card whose header was 3.41 mm
+(US-011 equal mode at 7.35 pt); the same happens with equal title bars off on a spell card whose text shrinks
+to 6 pt. Measured on the author's 173 notes at their own settings: 2 bands change (the first proposal, 2 mm
+under the lower of header and icon, would have changed 154). AC-8 follows (the text starts 2 mm under the
+band). The golden sources of AC-1 (no scheme) are not affected.
+
