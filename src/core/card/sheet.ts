@@ -132,6 +132,12 @@ const ICON_PT = 18;
 const ICON_ROOM_MM = 1.5;
 /** US-009 AC-3: the band ends this far under the header, and the text this far under the band, in mm. */
 const BAND_BELOW_MM = 2;
+/**
+ * US-009 AC-3 (amended, US-011 D8): the band ends at least this far under the lowest icon,
+ * in mm. A header is counted as at least the icon's height less this difference
+ * (`BAND_BELOW_MM` - `ICON_BELOW_MM` = 1 mm), so band = 4 mm + max(header + 2, icon + 1).
+ */
+const ICON_BELOW_MM = BAND_BELOW_MM - 1;
 
 /**
  * US-009 AC-3, AC-5, AC-8: the Typst helper of a banded card. Draws, relative to the
@@ -139,8 +145,9 @@ const BAND_BELOW_MM = 2;
  * bleed on the left, right and top), the card's frame again, the header (4 mm from
  * the left, in the width left by the icons), the icons (right-aligned in the order
  * given) and the text. The sizes are tried as in `gcc-fit`; the header's height at a
- * size (at least the icons') decides the band and the room left for the text, so
- * the band follows the chosen size and the size follows the band. The fact written
+ * size, but at least the lowest icon's height less 1 mm (US-009 AC-3 amended, D8),
+ * decides the band and the room left for the text, so the band follows the chosen size
+ * and the size follows the band. The fact written
  * under the label `gcc-fit` is the same `(i, size, fits)`.
  */
 const BAND_PRELUDE = `#let gcc-fit-b(i, sizes, cw, ch, w, h, band, icons, header, body) = context {
@@ -148,7 +155,7 @@ const BAND_PRELUDE = `#let gcc-fit-b(i, sizes, cw, ch, w, h, band, icons, header
   let iw = ic.map(b => measure(b).width).sum(default: 0pt)
   let ih = ic.map(b => measure(b).height).fold(0pt, calc.max)
   let hw = if ic.len() > 0 { w - iw - ${ICON_ROOM_MM}mm } else { w }
-  let inner(s) = measure(block(width: hw, header(s))).height
+  let inner(s) = calc.max(measure(block(width: hw, header(s))).height, ih - ${ICON_BELOW_MM}mm)
   let chosen = sizes.last()
   let fits = false
   for s in sizes {
@@ -177,7 +184,8 @@ const BAND_PRELUDE = `#let gcc-fit-b(i, sizes, cw, ch, w, h, band, icons, header
  * `idx`: the card indexes), the kind's title size `t` (the largest size at which every
  * title fits on one line in its own header width: the text width, minus the icons and
  * 1.5 mm on a card with icons; else the smallest), its header height `H`
- * (the tallest header at the text size `t / 1.3`), the wrapped cards and the widest
+ * (the tallest header at the text size `t / 1.3`; a card with icons counts as at least its
+ * lowest icon less 1 mm, US-011 D9), the wrapped cards and the widest
  * title's card. It reads the titles and headers only, never the fit (SCAR-021), and is
  * called with the same data by every card of the kind (Typst memoizes the call).
  *
@@ -207,7 +215,9 @@ const EQUAL_PRELUDE = `#let gcc-eq(d) = {
   for k in ks {
     if wide(k, t) / hws.at(k) > wide(best, t) / hws.at(best) { best = k }
   }
-  let h = ks.map(k => measure(block(width: hws.at(k), (d.items.at(k).header)(t / 1.3))).height).fold(0pt, calc.max)
+  let ihs = d.items.map(it => it.icons.map(g => measure(box(text(font: "rpg-awesome", size: ${ICON_PT}pt, fill: black, top-edge: "bounds", bottom-edge: "bounds", g))).height).fold(0pt, calc.max))
+  let own(k) = measure(block(width: hws.at(k), (d.items.at(k).header)(t / 1.3))).height
+  let h = ks.map(k => if d.items.at(k).icons.len() > 0 { calc.max(own(k), ihs.at(k) - ${ICON_BELOW_MM}mm) } else { own(k) }).fold(0pt, calc.max)
   (t: t, h: h, wrapped: wrapped, widest: d.idx.at(best))
 }
 #let gcc-fit-e(i, sizes, w, h, header, body, d) = context {

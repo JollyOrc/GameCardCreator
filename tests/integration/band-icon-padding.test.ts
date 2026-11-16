@@ -170,6 +170,20 @@ describe('US-011 AC-3, AC-6 (amended, D9): in equal mode the icons count towards
     T,
   );
   it(
+    'Scorch Hex (fire, then skull) with Glow, spells on: H is the lowest icon less 1 mm (4.95 mm, the skull), not the first (4.84 mm)',
+    async () => {
+      const m = await sheet([scorch(), glow()], DEFAULT_SIZES, {spell: ON});
+      const f = titleFacts(m.facts as unknown[]).find(
+        (x) => x.titles === 'spell',
+      )!;
+      expect(Math.abs(f.height - (SKULL_MM - 1))).toBeLessThan(0.05);
+      expect(Math.abs(height(bandOf(m, 0)) - (4 + SKULL_MM + 1))).toBeLessThan(
+        0.05,
+      );
+    },
+    T,
+  );
+  it(
     'the same spells off: Ember Spark 1 mm under its fire, the slow curse under its wrapped title; Glow has its own (shorter) header and rule',
     async () => {
       const m = await sheet([ember(), slow(), glow()]);

@@ -650,3 +650,5 @@ the code of `db5a9d6`: 5 of the 6 new tests red (Parry's is unchanged by D8), ev
 | US-009 AC-3 (amended) | `integration/band-icon-padding` (four examples), `integration/scheme-card-pdf` (amended) |
 | US-011 AC-3, AC-6 (amended) | `integration/band-icon-padding` (spells on and off) |
 | US-011 AC-1 (amended) | `unit/titles-source` (no scheme: golden, unchanged), `integration/band-icon-padding` (off: the band follows US-009 AC-3) |
+
+**Ticket #45 (2026-11-16), green:** `band-icon-padding` (7 after one added: Scorch Hex with Glow in equal mode, so the kind's height takes the lowest of two icons), `scheme-card-pdf` (amended at G2), `equal-titles-pdf`, the golden sources unchanged; mutation round: 7 mutants caught, one sharper variant (the first icon without failing on a card without icons) survived and was closed with that test. The whole suite: `npm test` 1132, integration 168, typecheck clean.

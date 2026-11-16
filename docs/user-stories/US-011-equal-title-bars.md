@@ -4,7 +4,7 @@
 `db10d04`); G2 tests written 2026-11-16 (`5b9f766`), red by design, AC-8 and AC-10 amended at G2; G3 tickets #40 to #44.
 **Introduced:** 0.5.0 (planned)
 **Backlog issue:** #35
-**Tickets:** #40 (settings), #41 (warning), #42 (sheet and run), #43 (screen), #44 (test build, M09), in this order (G3, 2026-11-16); the D8 to D10 amendment gets its own ticket at G3
+**Tickets:** #40 (settings), #41 (warning), #42 (sheet and run), #43 (screen), #44 (test build, M09), in this order (G3, 2026-11-16); the D8 to D10 amendment: tests `f1aea40`, ticket #45 (before #44's re-check)
 
 **As** a game master printing a sheet of skill or spell cards **I want** every card of one kind to have
 the same title size and the same header height, **so that** a sheet looks even and the cards line up when
