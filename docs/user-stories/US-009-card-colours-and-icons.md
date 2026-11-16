@@ -199,7 +199,7 @@ Spark.md` (spell): tags `Pyromancy`. `Scorch Hex.md` (spell): tags `Pyromancy`, 
 
 ## Not covered
 
-Pictures on cards (US-006), the creature card's look, other tools reading the scheme (each needs its own
+Pictures on cards (US-006, won't do), the creature card's look, other tools reading the scheme (each needs its own
 story, pointing at the format above, SCAR-040), an icon set other than RPG Awesome, a colour per note
 (a property) instead of per tag, writing the hexmaps' fills from the note.
 

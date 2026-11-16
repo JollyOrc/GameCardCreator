@@ -14,8 +14,8 @@ instincts and its attacks, a picture only if there is room — **so that** I can
 run an encounter from the cards.
 
 Reader of the output, engine, font: as US-002. The statblock is the one that
-Obsidian2Typst draws for the book, taken through its API (AC-3). The picture is
-a later story (US-006): this story reserves no space for it.
+Obsidian2Typst draws for the book, taken through its API (AC-3). There is
+no picture on the card (US-006, won't do, 2026-11-16: there is no room on the card): this story reserves no space for it.
 
 All examples use invented names. The property names and the section headings
 below are the **defaults** of settings; the author maps them to their own
@@ -252,7 +252,7 @@ Flattened reeds in a ring.
 Route A (the API function, released as Obsidian2Typst 0.15.0); the contract
 as AC-3; the statblock's fonts come with the API, the card's own text stays
 Libertinus Serif; the credit line in the bottom margin; what the card shows;
-the picture is US-006; the statblock scales with the text size; drop first,
+there is no picture (US-006, won't do); the statblock scales with the text size; drop first,
 then shrink (AC-5).
 
 ## Decisions of G1 (accepted by the owner 2026-11-12)
@@ -282,5 +282,5 @@ then shrink (AC-5).
 
 ## Not covered
 
-The picture (US-006), selection and the command (US-005), vault fonts for the
+The picture (US-006, won't do), selection and the command (US-005), vault fonts for the
 card text, the missing-glyph warning (issue #5).

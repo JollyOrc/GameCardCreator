@@ -189,5 +189,5 @@ Decided by the author (2026-11-12, after the first four):
 ## Not covered
 
 The settings screen (US-007), the worker, bundling and release (US-008), the
-creature card (US-004), the picture (US-006), vault fonts, the missing-glyph
+creature card (US-004), the picture (US-006, won't do), vault fonts, the missing-glyph
 warning (issue #5), a preview inside Obsidian.
