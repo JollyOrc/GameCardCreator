@@ -1,7 +1,7 @@
 # US-012 — Equal title bands on creature cards: one name size for all creature cards of a run
 
 **Status:** Done (tickets #46 to #50; M10 passed 2026-11-16)
-**Introduced:** 0.6.0 (planned)
+**Introduced:** 0.6.0
 **Implemented:** 0.6.0 (tickets #46 to #50; M10 passed 2026-11-16)
 **Follows:** US-011 (equal title bars on skill and spell cards; its D7 left creature cards for this story)
 **Tickets:** #46 (settings), #47 (warning), #48 (sheet and run), #49 (screen), #50 (test build, M10), in this order (G3, 2026-11-16)
