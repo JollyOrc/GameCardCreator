@@ -1,7 +1,7 @@
 # US-010 — A warning when a card's text has a character no font draws
 
 **Status:** Ready 2026-11-17 (G0 and G1 done; D1 to D3 decided by the author 2026-11-17, D4 and D5 proposed
-and to be confirmed with the "go"); tests written (G2, 2026-11-17: 49 red by design); tickets not yet written (G3)
+and to be confirmed with the "go"); tests written (G2, 2026-11-17: 49 red by design); tickets #36 (the pure core), #37 (the run), #38 (the worker and the client), #39 (the runner, M08, release) written (G3)
 **Introduced:** 0.4.0 (planned)
 **Implemented:** —
 **Backlog issue:** #5
