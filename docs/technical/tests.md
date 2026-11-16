@@ -549,3 +549,32 @@ Result: `npm test` 838 passed, 46 failed in 12 files (all new or amended); `npm 
 **Ticket #33 (2026-11-16), green:** `tooling/rpg-awesome` (4), `plugin/scheme-font` (2, through `fontFiles` of the build, the real consumer path), `integration/scheme-card-pdf` AC-13 (two fresh processes). `npm run build` embeds both fonts (main.js 15.8 MB). Whole suite after #33: `npm test` 995 passed / 0 failed, `npm run test:integration` 133 passed / 0 failed.
 
 **Fixture copied again from Obsidian2Typst 0.15.2 (2026-11-16):** `tests/support/creature-fixtures.ts` (the answer's prelude; the data and the files equal 0.15.1's, proved by comparison; the rest of the prelude equals the old one with the band's piece cut out, Obsidian2Typst US-041) and the golden source `mixedWithCreature` in `tests/fixtures/golden/no-scheme-sources.json` (the same prelude swapped in; every other golden source unchanged). `npm test` 995 passed, `npm run test:integration` 133 passed.
+
+## US-010 a warning when a card's text has a character no font draws (2026-11-17, G2): tests written (red by design)
+
+Titles start with `US-010 AC-n` in nine new files; the example notes are invented and the stand-in coverage is a Latin
+face and an "extra" face (`tests/support/glyph-faces.ts`, run lengths as the compiler gives them); the worker and
+end-to-end tests use the real typst.ts, the font list the build embeds (`fontFiles`) and DejaVu Sans Mono as an extra
+font (it draws ✓ and ⌘, which Libertinus does not). The new modules are loaded at run time (they do not exist yet).
+With the original code: 49 red by design (47 unit and plugin, 2 integration), every other test passes (1004 and 135).
+Proven against a throwaway reference (five existing files patched in place with a backup and a checksum list, two new
+modules; restored, `shasum -c` OK, the new modules removed): all 59 new tests pass there and the whole suite is green
+(1050 and 137, so no existing test is touched, SCAR-027); a mutation round over the reference: 35 mutants (the ignored
+characters one by one, the limit of ten at 9 and 11, the count of `more`, the hexadecimal width and case, the order, the
+name of a creature with and without a statblock, empty sections, lists, tags, details, the kind's code, the statblock's
+text read by mistake, the decoding of the run lengths, half-open ranges, the faces adding up, the fonts handed to the
+coverage, the reason and the path of the unavailable warning, the worker ignoring the extra fonts or accepting non-fonts,
+the client's `fonts` key and queue, the runner's refusal, the wiring): 34 caught first time, one survived (an empty list of
+fonts sent as a `fonts` key) and a test was added. Three tests were wrong at the first green run and were corrected: two
+checked spaces, which are not in the set by design, and one expected the wrong form of an empty path in the warnings file.
+
+| AC | Test |
+|---|---|
+| AC-1 | `unit/glyph-warning` (the detail: code point order, `U+` upper-case of at least four digits, ten and `and N more`; one warning per note with the kind's code; once per character; the order of the cards), `unit/run-glyph` (the run's warnings), `integration/glyph-check` (the real fonts) |
+| AC-2 | `unit/glyph-text` (the text of a skill, a spell and a creature card: title, tags, details, runs, list items, headings of drawn sections; the statblock's text, the credit and the icons stay out; the ignored characters one by one; sorted, once) |
+| AC-3 | `unit/glyph-coverage` (half-open ranges, faces adding up), `unit/run-glyph` (a creature run's fonts reach the coverage; ✓ with and without them), `plugin/glyph-worker` (extra font adds its faces, nothing leaks), `integration/glyph-check` (✓ with DejaVu) |
+| AC-4 | `plugin/glyph-worker` (the faces of the real fonts; non-font bytes fail; the same answer twice), `plugin/glyph-client` (the message, copies of the buffers, no key for none, failure as `ok: false`, the queue, `dispose`), `unit/run-glyph` (a rejected coverage: one unavailable warning; no dependency: no check), `plugin/glyph-runner` (the refusal becomes the warning; `main.ts` hands over) |
+| AC-5 | `unit/run-glyph` (after the notes' own warnings and before the fit warnings), `plugin/glyph-runner` (the notice's count and the warnings file's line) |
+| AC-6 | `unit/run-glyph` (every character drawn: same warnings and same source; two runs equal), `integration/glyph-check` (the PDF equals the PDF of a run without the check) |
+| AC-7 | `plugin/glyph-worker` (`Ж → ★ ◆ ß é` drawn, `漢 😀` and U+E000 not, the icon font's U+E946 drawn) |
+

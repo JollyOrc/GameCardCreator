@@ -1,7 +1,7 @@
 # US-010 — A warning when a card's text has a character no font draws
 
 **Status:** Ready 2026-11-17 (G0 and G1 done; D1 to D3 decided by the author 2026-11-17, D4 and D5 proposed
-and to be confirmed with the "go"); tests not written yet (G2)
+and to be confirmed with the "go"); tests written (G2, 2026-11-17: 49 red by design); tickets not yet written (G3)
 **Introduced:** 0.4.0 (planned)
 **Implemented:** —
 **Backlog issue:** #5
@@ -77,6 +77,20 @@ face its family and the covered code points as alternating run lengths (the way 
 - **AC-7 (the coverage of the bundled fonts, checked).** A test reads the bundled font files with
   `getFontInfo` and asserts the examples of this story (`Ж`, `→`, `★`, `◆`, `ß`, `é` drawn; `漢`, `😀`
   not; the icon font's U+E946 drawn), so that a change of the font files shows (SCAR-023).
+
+## Interfaces fixed by the tests (G2)
+
+The tests state the shape of the pieces so that the tickets agree: the worker takes `{type: 'font-info', id,
+fonts?}` and answers `{type: 'font-info-result', id, faces: {family, coverage}[]}` (its own faces first, then
+the extra fonts'; run lengths starting with a run that is not covered) or `{type: 'failed', id, message}` for
+bytes that are no font; the compile service has `coverage(fonts?)` answering `{ok: true, faces}` or `{ok: false,
+message}` (never a rejection; an empty list of fonts is none and sends no `fonts` key; one request at a time,
+in the queue of the compiles); the runner's dependency `coverage?(fonts)` is that answer and the run's own
+`coverage?(fonts)` rejects when the faces cannot be read; `main.ts` hands the service over in one statement
+(`coverage: (fonts) => this.compiler.coverage(fonts)`); the warnings file writes an empty path as it does for
+every warning (`- GLYPH_CHECK_UNAVAILABLE —  — <reason>`). Pure core: `src/core/glyph/coverage.ts`
+(`decodeCoverage`, `createCoverage`), `src/core/glyph/check.ts` (`cardCodePoints`, `glyphDetail`,
+`glyphWarnings`).
 
 ## Decisions of G1
 
