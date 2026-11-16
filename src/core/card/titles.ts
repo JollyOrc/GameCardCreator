@@ -1,5 +1,5 @@
-// US-011 AC-2, AC-5, AC-8, AC-9 (D5): the title settings of a card kind (skill,
-// spell), their check, the title sizes tried in equal mode, and the warning made from
+// US-011 AC-2, AC-5, AC-8, AC-9 (D5), US-012 AC-8 (D14): the title settings of a card
+// kind (skill, spell, creature), their check, the title sizes tried in equal mode, and the warning made from
 // a kind's fact. Pure; messages and warnings are returned, never reported (SCAR-038).
 import type {CreatureCard} from '../creature/read';
 import type {CardWarning, SkillCard} from '../skill/read';
@@ -24,15 +24,25 @@ export const DEFAULT_TITLES: Readonly<TitleSettings> = Object.freeze({
 });
 
 /**
- * US-011 | AC-9: checks the title settings of `kind`; one message per problem, empty
- * when they are valid.
+ * US-012 D14: the creature kind's defaults: off, 11.5 pt (Obsidian2Typst's built-in band
+ * size, the band of an unshrunk card at the default text size 7 pt), 7 pt.
+ */
+export const DEFAULT_CREATURE_TITLES: Readonly<TitleSettings> = Object.freeze({
+  equalTitles: false,
+  titleSize: 11.5,
+  minTitleSize: 7,
+});
+
+/**
+ * US-011 | AC-9, US-012 | AC-8: checks the title settings of `kind`; one message per
+ * problem, empty when they are valid.
  *
  * Checked whether the switch is on or off (as the bleed). Sizes must be finite and in
  * range; "smallest above the title size" is checked only when both are in range, so
  * one mistake gives one message. Messages name the kind.
  */
 export function checkTitleSettings(
-  kind: 'skill' | 'spell',
+  kind: 'skill' | 'spell' | 'creature',
   settings: TitleSettings,
 ): string[] {
   const issues: string[] = [];

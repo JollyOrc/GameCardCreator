@@ -3,7 +3,7 @@
 **Status:** Ready (G1 2026-11-16; G2 tests written 2026-11-16, red by design; decisions D11 to D16 answered by the owner, "all proposals")
 **Introduced:** 0.6.0 (planned)
 **Follows:** US-011 (equal title bars on skill and spell cards; its D7 left creature cards for this story)
-**Tickets:** — (G3)
+**Tickets:** #46 (settings), #47 (warning), #48 (sheet and run), #49 (screen), #50 (test build, M10), in this order (G3, 2026-11-16)
 
 **As** a game master printing a sheet of creature cards **I want** every creature's name in the statblock
 band to have the same size on every card, and the bands the same height, **so that** a sheet of creatures
