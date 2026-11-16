@@ -259,6 +259,31 @@ describe('US-011 AC-5: too long even at the smallest size: wrap, grow, one warni
   );
 });
 
+describe('US-011 AC-5, AC-8: the fact names cards by their index in the run', () => {
+  it(
+    'a spell card first: the wrapped title and the widest are card 4, not the fourth skill',
+    async () => {
+      const cards = [
+        spell('Ember Spark'),
+        parry(),
+        riverbank(),
+        feint(),
+        longRiverbank(),
+      ];
+      const m = await sheetOf(cards, {skill: ON, spell: OFF});
+      expect(factOf(m)).toMatchObject({size: 7, wrapped: [4], widest: 4});
+      expect(titleWarnings(m.facts as unknown[], cards)).toEqual([
+        {
+          code: 'SKILL_TITLE_WRAPPED',
+          path: 'skills/The Long Riverbank Ambush of the Hidden Reed Wardens.md',
+          detail: '1 of 4 titles wrap at 7 pt',
+        },
+      ]);
+    },
+    T,
+  );
+});
+
 describe('US-011 AC-7: the fit under H; t and H do not follow the fit (SCAR-021)', () => {
   it.each([40, 120, 200, 260])(
     'Parry with %i words beside Riverbank and Feint: t 8.1 and H 7.70 every time; a text that fits lies inside the card',
@@ -317,10 +342,12 @@ describe('US-011 AC-9: the settings at the ends and in the middle (SCAR-019)', (
       [1],
     ],
     [
-      'size step 1',
+      // US-011 AC-9 (amended at G4): step 0.3 tells the shared step from a fixed 0.25
+      // (9.1, 8.8, 8.5, 8.2: 8.2 fits under 8.27; with 0.25 it would be 8.1)
+      'size step 0.3',
       {titleSize: 9.1, minTitleSize: 7},
-      {...DEFAULT_SIZES, sizeStep: 1},
-      8.1,
+      {...DEFAULT_SIZES, sizeStep: 0.3},
+      8.2,
       [],
     ],
   ] as const)(

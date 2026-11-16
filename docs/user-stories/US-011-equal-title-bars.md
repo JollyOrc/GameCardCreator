@@ -145,7 +145,9 @@ in both widths.
   - `T` 6, `Tmin` 4 (lower ends): `t` 6, no shrinking needed.
   - `T` 9.1, `Tmin` 9.1 (no room to shrink): `t` 9.1, `Riverbank Ambush …` wraps, warning `1 of 2 titles
     wrap at 9.1 pt`.
-  - With `Size step` 1 (not the default): `T` 9.1, `Tmin` 7: tried 9.1, 8.1, 7.1, 7: `t` 8.1.
+  - With `Size step` 0.3 (not the default): `T` 9.1, `Tmin` 7: tried 9.1, 8.8, 8.5, 8.2, …, 7: `t` 8.2
+    (amended at G4: the example of step 1 gave 8.1, as the default step does, so it could not tell the
+    shared step from a fixed one).
 - **AC-10 (the settings screen, US-007).** The page `Page and text size` gets two groups after `Text
   size`: `Skill titles` and `Spell titles`, each with the toggle `Equal title bars` and the number fields
   `Title size` and `Smallest title size` (pt). The two number fields are shown only while the toggle is

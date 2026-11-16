@@ -21,6 +21,7 @@ import {DEFAULT_ICON_CREDIT, readScheme, type SchemeRow} from '../scheme/read';
 import {glyphWarnings} from '../glyph/check';
 import {createCoverage, type FaceInfo} from '../glyph/coverage';
 import {placeCards} from '../sheet/layout';
+import {titleWarnings} from '../card/titles';
 import {fitWarnings} from '../skill/fit';
 import {readSkill, type CardWarning, type SkillCard} from '../skill/read';
 import {readSpell} from '../spell/read';
@@ -262,7 +263,11 @@ export async function runCards(
     settings.sheet,
     settings.skill,
     settings.creature,
-    {iconCredit: scheme?.credit ?? ''},
+    {
+      iconCredit: scheme?.credit ?? '',
+      // US-011 AC-1: the title settings of the kinds.
+      titles: {skill: settings.skill, spell: settings.spell},
+    },
   );
   if (!sheet.ok) {
     // Nothing but creature notes and no plugin: the notice says why there is no card.
@@ -300,6 +305,8 @@ export async function runCards(
       warnings,
     };
   }
+  // US-011 AC-8: the title warnings after the glyph warnings, before the fit warnings.
+  warnings.push(...titleWarnings(compiled.facts, cards));
   warnings.push(...fitWarnings(compiled.facts, cards));
 
   const placed = placeCards(cards.length, settings.sheet);

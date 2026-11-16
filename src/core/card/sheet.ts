@@ -15,6 +15,7 @@ import {iconCodePoint} from '../scheme/icons';
 import type {SchemeRow} from '../scheme/read';
 import {sheetGrid, type SheetSettings} from '../sheet/layout';
 import {mm, sheetTypst, STROKE_PT} from '../sheet/typst';
+import {titleSizes, type TitleSettings} from './titles';
 
 /** US-002 "The card": padding inside the frame, in mm. */
 const PADDING_MM = 4;
@@ -167,6 +168,121 @@ const BAND_PRELUDE = `#let gcc-fit-b(i, sizes, cw, ch, w, h, band, icons, header
     place(top + left, dx: 4mm, dy: 4mm + hh + 2 * ${BAND_BELOW_MM}mm, block(width: w, height: h - hh - 2 * ${BAND_BELOW_MM}mm, clip: true, body(chosen)))
   })
 }`;
+
+/**
+ * US-011 AC-2, AC-3, AC-5, AC-8: the Typst helpers of equal title bars.
+ *
+ * `gcc-eq(d)` measures, for the data `d` of one kind (`sizes`: the title sizes tried,
+ * `w`: the text width, `items`: per card its title, its icons and its header builder,
+ * `idx`: the card indexes), the kind's title size `t` (the largest size at which every
+ * title fits on one line in its own header width: the text width, minus the icons and
+ * 1.5 mm on a card with icons; else the smallest), its header height `H`
+ * (the tallest header at the text size `t / 1.3`), the wrapped cards and the widest
+ * title's card. It reads the titles and headers only, never the fit (SCAR-021), and is
+ * called with the same data by every card of the kind (Typst memoizes the call).
+ *
+ * `gcc-fit-e` is `gcc-fit` with the kind's header: a box `H` high, the rule
+ * 2 pt under it, then the text fitted as in `gcc-fit`. `gcc-fit-be` is `gcc-fit-b`
+ * (US-009) with the kind's header: the band from `H`, the header set at `t / 1.3`;
+ * everything else as `gcc-fit-b` (kept as its own copy because `gcc-fit-b`'s text is
+ * part of the golden sources of US-009 AC-1).
+ */
+const EQUAL_PRELUDE = `#let gcc-eq(d) = {
+  let hws = d.items.map(it => {
+    let ic = it.icons.map(g => box(text(font: "rpg-awesome", size: ${ICON_PT}pt, fill: black, top-edge: "bounds", bottom-edge: "bounds", g)))
+    let iw = ic.map(b => measure(b).width).sum(default: 0pt)
+    if ic.len() > 0 { d.w - iw - ${ICON_ROOM_MM}mm } else { d.w }
+  })
+  let ks = range(d.items.len())
+  let wide(k, s) = measure(text(size: s * 1pt, weight: "bold", d.items.at(k).title)).width
+  let t = d.sizes.last()
+  for s in d.sizes {
+    if ks.all(k => wide(k, s) <= hws.at(k)) {
+      t = s
+      break
+    }
+  }
+  let wrapped = ks.filter(k => wide(k, t) > hws.at(k)).map(k => d.idx.at(k))
+  let best = 0
+  for k in ks {
+    if wide(k, t) / hws.at(k) > wide(best, t) / hws.at(best) { best = k }
+  }
+  let h = ks.map(k => measure(block(width: hws.at(k), (d.items.at(k).header)(t / 1.3))).height).fold(0pt, calc.max)
+  (t: t, h: h, wrapped: wrapped, widest: d.idx.at(best))
+}
+#let gcc-fit-e(i, sizes, w, h, header, body, d) = context {
+  let e = gcc-eq(d)
+  let build(s) = {
+    set text(size: s * 1pt)
+    set par(leading: 0.5em, spacing: 0.6em)
+    block(width: w, height: e.h, below: ${GAP_PT}pt, header(e.t / 1.3))
+    line(length: 100%, stroke: ${RULE_PT}pt)
+    v(${GAP_PT}pt)
+    body(s)
+  }
+  let chosen = sizes.last()
+  let fits = false
+  for s in sizes {
+    if measure(block(width: w, build(s))).height <= h {
+      chosen = s
+      fits = true
+      break
+    }
+  }
+  [#metadata((i: i, size: chosen, fits: fits)) <${FIT_LABEL}>]
+  block(width: w, height: h, clip: true, build(chosen))
+}`;
+
+/** US-011 AC-6: `gcc-fit-b` with the kind's header (see `EQUAL_PRELUDE`). */
+const EQUAL_BAND_PRELUDE = `#let gcc-fit-be(i, sizes, cw, ch, w, h, band, icons, header, body, d) = context {
+  let e = gcc-eq(d)
+  let ic = icons.map(g => box(text(font: "rpg-awesome", size: ${ICON_PT}pt, fill: black, top-edge: "bounds", bottom-edge: "bounds", g)))
+  let iw = ic.map(b => measure(b).width).sum(default: 0pt)
+  let hw = if ic.len() > 0 { w - iw - ${ICON_ROOM_MM}mm } else { w }
+  let hh = e.h
+  let chosen = sizes.last()
+  let fits = false
+  for s in sizes {
+    if measure(block(width: w, body(s))).height <= h - hh - 2 * ${BAND_BELOW_MM}mm {
+      chosen = s
+      fits = true
+      break
+    }
+  }
+  [#metadata((i: i, size: chosen, fits: fits)) <${FIT_LABEL}>]
+  box(width: cw, height: ch, {
+    place(top + left, dx: -band.l, dy: -band.t, rect(width: cw + band.l + band.r, height: band.t + 4mm + hh + ${BAND_BELOW_MM}mm, fill: band.fill, stroke: none))
+    place(top + left, rect(width: cw, height: ch, stroke: ${STROKE_PT}pt))
+    place(top + left, dx: 4mm, dy: 4mm, block(width: hw, header(e.t / 1.3)))
+    place(top + left, dx: 4mm + w - iw, dy: 4mm, stack(dir: ltr, ..ic))
+    place(top + left, dx: 4mm, dy: 4mm + hh + 2 * ${BAND_BELOW_MM}mm, block(width: w, height: h - hh - 2 * ${BAND_BELOW_MM}mm, clip: true, body(chosen)))
+  })
+}`;
+
+/** US-011 AC-8: the Typst name of the data of a kind in equal mode. */
+const equalName = (kind: 'skill' | 'spell'): string => `gcc-eqd-${kind}`;
+
+/**
+ * US-011 AC-2, AC-8: the data of `kind` for `gcc-eq` and the statement that writes the
+ * kind's fact (one line, under the label of the fit facts). Every title goes through
+ * `typstString` (rule 6); the icons are those the card draws (`drawable`).
+ */
+function equalDataCode(
+  kind: 'skill' | 'spell',
+  members: readonly {card: SkillCard; i: number}[],
+  sizes: readonly number[],
+  width: string,
+): string[] {
+  const items = members.map(({card}) => {
+    const rows = drawable(card);
+    const icons = rows.length > 0 ? iconsCode(rows) : '()';
+    return `(title: ${typstString(card.name)}, icons: ${icons}, header: ${bandHeaderCode(card)})`;
+  });
+  return [
+    `#let ${equalName(kind)} = (sizes: (${sizes.join(', ')},), w: ${width}, items: (${items.join(',\n')},), idx: (${members.map((m) => m.i).join(', ')},))`,
+    `#context { let e = gcc-eq(${equalName(kind)}); [#metadata((titles: "${kind}", size: e.t, height: e.h.mm(), wrapped: e.wrapped, widest: e.widest)) <${FIT_LABEL}>] }`,
+  ];
+}
 
 /** US-009 AC-5, AC-7: the branches that can be written: a valid colour and a known icon. */
 const drawable = (card: SkillCard): SchemeRow[] =>
@@ -370,15 +486,22 @@ function joinCredits(texts: readonly string[]): string {
  * cards. On each page that has a creature card with a credit, the credit is set
  * once at 5 pt, centred, at most two lines, in the band between the last card
  * row and the bottom edge; a band under 3 mm has no room: the line is left
- * out and `creditOmitted` says how high the band was (the run warns). Refuses invalid sizes, 0 cards and what the sheet refuses, with a
- * message and no source.
+ * out and `creditOmitted` says how high the band was (the run warns). US-011: a kind
+ * (skill, spell) whose `titles` setting is on and that has cards gets one title size
+ * and one header height (`EQUAL_PRELUDE`), with its data and its fact written once;
+ * with every kind off the source is the text of 0.4.0. Refuses invalid sizes, 0 cards
+ * and what the sheet refuses, with a message and no source.
  */
 export function cardSheetTypst(
   cards: readonly (SkillCard | CreatureCard)[],
   sheet: SheetSettings,
   sizes: CardSizes,
   headings: CreatureSettings = DEFAULT_CREATURE,
-  options: {iconCredit?: string} = {},
+  options: {
+    iconCredit?: string;
+    /** US-011: the title settings of the kinds; absent or off: the cards of 0.4.0. */
+    titles?: {skill?: TitleSettings; spell?: TitleSettings};
+  } = {},
 ):
   | {
       ok: true;
@@ -410,6 +533,35 @@ export function cardSheetTypst(
   )
     preludes.push(CREDIT_PRELUDE);
   if (banded) preludes.push(BAND_PRELUDE);
+  // US-011 AC-1, AC-8: the kinds in equal mode that have cards; none: nothing is added.
+  const kindOf = (card: SkillCard): 'skill' | 'spell' =>
+    card.kind === 'spell' ? 'spell' : 'skill';
+  const equalKinds = (['skill', 'spell'] as const).filter(
+    (kind) =>
+      options.titles?.[kind]?.equalTitles === true &&
+      cards.some((c) => !isCreature(c) && kindOf(c) === kind),
+  );
+  if (equalKinds.length > 0) {
+    preludes.push(EQUAL_PRELUDE);
+    if (banded) preludes.push(EQUAL_BAND_PRELUDE);
+    for (const kind of equalKinds) {
+      const members = cards.flatMap((card, i) =>
+        !isCreature(card) && kindOf(card) === kind ? [{card, i}] : [],
+      );
+      preludes.push(
+        ...equalDataCode(
+          kind,
+          members,
+          titleSizes(options.titles![kind]!, sizes.sizeStep),
+          width,
+        ),
+      );
+    }
+  }
+  const equalOf = (card: SkillCard): string | null =>
+    (equalKinds as readonly string[]).includes(kindOf(card))
+      ? equalName(kindOf(card))
+      : null;
   let answerPrelude = false;
   for (const {card} of creatures) {
     const answer = card.statblock;
@@ -470,12 +622,19 @@ export function cardSheetTypst(
         );
         const above = side(placed.row > 0);
         const band = `(fill: ${bandFillCode(rows)}, l: ${left}, r: ${right}, t: ${above})`;
+        // US-011 AC-6: a card of a kind in equal mode gets the kind's header.
+        const equal = equalOf(card);
         return (
           `#place(top + left, dx: ${mm(placed.x)}, dy: ${mm(placed.y)}, ` +
-          `gcc-fit-b(${placed.index}, ${sizeList}, ${mm(sheet.cardWidth)}, ${mm(sheet.cardHeight)}, ` +
+          `gcc-fit-b${equal === null ? '' : 'e'}(${placed.index}, ${sizeList}, ${mm(sheet.cardWidth)}, ${mm(sheet.cardHeight)}, ` +
           `${width}, ${height}, ${band}, ${iconsCode(rows)}, ` +
-          `${bandHeaderCode(card)}, ${bandBodyCode(card)}))`
+          `${bandHeaderCode(card)}, ${bandBodyCode(card)}${equal === null ? '' : `, ${equal}`}))`
         );
+      }
+      const equal = equalOf(card);
+      if (equal !== null) {
+        // US-011 AC-3, AC-6: a plain card of a kind in equal mode.
+        return `${at}gcc-fit-e(${placed.index}, ${sizeList}, ${width}, ${height}, ${bandHeaderCode(card)}, ${bandBodyCode(card)}, ${equal}))`;
       }
       return `${at}gcc-fit(${placed.index}, ${sizeList}, ${width}, ${height}, ${buildCode(card)}))`;
     },
