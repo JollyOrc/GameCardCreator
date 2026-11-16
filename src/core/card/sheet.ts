@@ -11,8 +11,10 @@ import {DEFAULT_CREATURE, type CreatureSettings} from '../creature/settings';
 import {checkSizes, textSizes, type CardSizes} from '../skill/settings';
 import {FIT_LABEL} from '../skill/fit';
 import type {Block, Run, SkillCard} from '../skill/read';
+import {iconCodePoint} from '../scheme/icons';
+import type {SchemeRow} from '../scheme/read';
 import {sheetGrid, type SheetSettings} from '../sheet/layout';
-import {mm, sheetTypst} from '../sheet/typst';
+import {mm, sheetTypst, STROKE_PT} from '../sheet/typst';
 
 /** US-002 "The card": padding inside the frame, in mm. */
 const PADDING_MM = 4;
@@ -62,15 +64,19 @@ function blocksCode(blocks: readonly Block[]): string {
   return blocks.map(blockCode).join('\n\n');
 }
 
-/** US-002 "The card": the content builder `s => ...` of one card, `s` in pt. */
-function buildCode(card: SkillCard): string {
-  const parts = [
-    's => {',
-    '  set text(size: s * 1pt)',
-    '  set par(leading: 0.5em, spacing: 0.6em)',
-    '  set list(tight: true, indent: 0pt, body-indent: 3pt, marker: [•])',
-    '  set enum(tight: true, indent: 0pt, body-indent: 3pt)',
-  ];
+/** US-002 "The card": the set rules every builder starts with, `s` in pt. */
+const BUILDER_SETS = [
+  '  set text(size: s * 1pt)',
+  '  set par(leading: 0.5em, spacing: 0.6em)',
+];
+const LIST_SETS = [
+  '  set list(tight: true, indent: 0pt, body-indent: 3pt, marker: [•])',
+  '  set enum(tight: true, indent: 0pt, body-indent: 3pt)',
+];
+
+/** US-002 "The card": the header's lines: tags, title, details row (each when present). */
+function headerLines(card: SkillCard): string[] {
+  const parts: string[] = [];
   if (card.tags.length > 0) {
     const tags = card.tags.map((t) => `#${typstString(t)}`).join(' · ');
     parts.push(
@@ -86,13 +92,102 @@ function buildCode(card: SkillCard): string {
       .join(' · ');
     parts.push(`  block(below: ${GAP_PT}pt, text(size: 0.9em)[${row}])`);
   }
-  parts.push(
+  return parts;
+}
+
+/** US-002, US-009 AC-8: the note's text as one line of a builder (the one place its blocks are written). */
+const bodyLine = (card: SkillCard): string => `  [${blocksCode(card.blocks)}]`;
+
+/** US-002 "The card": the content builder `s => ...` of one card, `s` in pt. */
+function buildCode(card: SkillCard): string {
+  return [
+    's => {',
+    ...BUILDER_SETS,
+    ...LIST_SETS,
+    ...headerLines(card),
     `  line(length: 100%, stroke: ${RULE_PT}pt)`,
     `  v(${GAP_PT}pt)`,
-    `  [${blocksCode(card.blocks)}]`,
+    bodyLine(card),
     '}',
+  ].join('\n');
+}
+
+/** US-009 AC-3: the header builder of a banded card: the header's lines alone. */
+function bandHeaderCode(card: SkillCard): string {
+  return ['s => {', ...BUILDER_SETS, ...headerLines(card), '}'].join('\n');
+}
+
+/** US-009 AC-8: the body builder of a banded card: the text under the band. */
+function bandBodyCode(card: SkillCard): string {
+  return ['s => {', ...BUILDER_SETS, ...LIST_SETS, bodyLine(card), '}'].join(
+    '\n',
   );
-  return parts.join('\n');
+}
+
+/** US-009 AC-7: a colour is written into Typst only in this one checked form. */
+const HEX_COLOUR = /^#[0-9a-f]{6}$/;
+/** US-009 AC-5: the icon's size in pt, and the room kept free beside it, in mm. */
+const ICON_PT = 18;
+const ICON_ROOM_MM = 1.5;
+/** US-009 AC-3: the band ends this far under the header, and the text this far under the band, in mm. */
+const BAND_BELOW_MM = 2;
+
+/**
+ * US-009 AC-3, AC-5, AC-8: the Typst helper of a banded card. Draws, relative to the
+ * card's top-left corner and in this order: the band (`band.fill`, `l`, `r`, `t` the
+ * bleed on the left, right and top), the card's frame again, the header (4 mm from
+ * the left, in the width left by the icons), the icons (right-aligned in the order
+ * given) and the text. The sizes are tried as in `gcc-fit`; the header's height at a
+ * size (at least the icons') decides the band and the room left for the text, so
+ * the band follows the chosen size and the size follows the band. The fact written
+ * under the label `gcc-fit` is the same `(i, size, fits)`.
+ */
+const BAND_PRELUDE = `#let gcc-fit-b(i, sizes, cw, ch, w, h, band, icons, header, body) = context {
+  let ic = icons.map(g => box(text(font: "rpg-awesome", size: ${ICON_PT}pt, fill: black, top-edge: "bounds", bottom-edge: "bounds", g)))
+  let iw = ic.map(b => measure(b).width).sum(default: 0pt)
+  let ih = ic.map(b => measure(b).height).fold(0pt, calc.max)
+  let hw = if ic.len() > 0 { w - iw - ${ICON_ROOM_MM}mm } else { w }
+  let inner(s) = measure(block(width: hw, header(s))).height
+  let chosen = sizes.last()
+  let fits = false
+  for s in sizes {
+    if measure(block(width: w, body(s))).height <= h - inner(s) - 2 * ${BAND_BELOW_MM}mm {
+      chosen = s
+      fits = true
+      break
+    }
+  }
+  let hh = inner(chosen)
+  [#metadata((i: i, size: chosen, fits: fits)) <${FIT_LABEL}>]
+  box(width: cw, height: ch, {
+    place(top + left, dx: -band.l, dy: -band.t, rect(width: cw + band.l + band.r, height: band.t + 4mm + hh + ${BAND_BELOW_MM}mm, fill: band.fill, stroke: none))
+    place(top + left, rect(width: cw, height: ch, stroke: ${STROKE_PT}pt))
+    place(top + left, dx: 4mm, dy: 4mm, block(width: hw, header(chosen)))
+    place(top + left, dx: 4mm + w - iw, dy: 4mm, stack(dir: ltr, ..ic))
+    place(top + left, dx: 4mm, dy: 4mm + hh + 2 * ${BAND_BELOW_MM}mm, block(width: w, height: h - hh - 2 * ${BAND_BELOW_MM}mm, clip: true, body(chosen)))
+  })
+}`;
+
+/** US-009 AC-5, AC-7: the branches that can be written: a valid colour and a known icon. */
+const drawable = (card: SkillCard): SchemeRow[] =>
+  (card.branches ?? []).filter(
+    (b) => HEX_COLOUR.test(b.colour) && iconCodePoint(b.icon) !== undefined,
+  );
+
+/** US-009 AC-4: one colour, or the gradient across the band (equal steps, Typst's default space). */
+function bandFillCode(rows: readonly SchemeRow[]): string {
+  const colours = rows.map((r) => `rgb("${r.colour}")`);
+  return colours.length === 1
+    ? colours[0]!
+    : `gradient.linear(${colours.join(', ')})`;
+}
+
+/** US-009 AC-5: the Typst array of the icons' glyphs, by code point from the table only. */
+function iconsCode(rows: readonly SchemeRow[]): string {
+  const glyphs = rows.map(
+    (r) => `"\\u{${iconCodePoint(r.icon)!.toString(16)}}"`,
+  );
+  return `(${glyphs.join(', ')}${glyphs.length === 1 ? ',' : ''})`;
 }
 
 /** US-004 AC-9: the credit is set at this size, centred, at most two lines. */
@@ -135,8 +230,13 @@ const CREATURE_PRELUDE = `#let gcc-fit-c(i, sizes, w, h, build, parts) = context
   }
   [#metadata((i: i, size: chosen.at(0), fits: chosen.at(2), dropped: chosen.at(1))) <${FIT_LABEL}>]
   block(width: w, height: h, clip: true, build(chosen.at(0), chosen.at(1)))
-}
-#let gcc-credit(txt, w) = context {
+}`;
+
+/**
+ * US-004 AC-9, US-009 AC-10: `gcc-credit` sets a text in at most two centred lines,
+ * cut with an ellipsis at a word; used for the creature credit and the icon credit.
+ */
+const CREDIT_PRELUDE = `#let gcc-credit(txt, w) = context {
   let one(t) = block(width: w, align(center, text(size: ${CREDIT_PT}pt, par(leading: 0.3em, t))))
   let two = measure(one[x \\ x]).height
   let words = txt.split(" ")
@@ -241,6 +341,20 @@ function creaturePartsCode(card: CreatureCard, i: number): string {
 }
 
 /**
+ * US-004 AC-9, US-009 AC-10: the one line of a sheet's credits. The non-blank texts
+ * (trimmed) in the order given, each but the last followed by a full stop when it
+ * has none of `.!?`, joined by a space; none gives ''.
+ */
+function joinCredits(texts: readonly string[]): string {
+  const used = texts.map((text) => text.trim()).filter((text) => text !== '');
+  return used
+    .map((text, i) =>
+      i < used.length - 1 && !/[.!?]$/.test(text) ? `${text}.` : text,
+    )
+    .join(' ');
+}
+
+/**
  * US-002 AC-2, AC-5 to AC-7, AC-9, AC-10, AC-12, US-003 AC-6, AC-7, US-004 AC-4
  * to AC-9, AC-11, AC-12: the Typst source of a sheet of cards, of any kind and
  * mixed, and the icon files its creature statblocks name.
@@ -264,6 +378,7 @@ export function cardSheetTypst(
   sheet: SheetSettings,
   sizes: CardSizes,
   headings: CreatureSettings = DEFAULT_CREATURE,
+  options: {iconCredit?: string} = {},
 ):
   | {
       ok: true;
@@ -288,6 +403,13 @@ export function cardSheetTypst(
   const files = new Map<string, Uint8Array>();
   const preludes: string[] = [PRELUDE];
   if (creatures.length > 0) preludes.push(CREATURE_PRELUDE);
+  const banded = cards.some((c) => !isCreature(c) && drawable(c).length > 0);
+  if (
+    creatures.length > 0 ||
+    (banded && (options.iconCredit ?? '').trim() !== '')
+  )
+    preludes.push(CREDIT_PRELUDE);
+  if (banded) preludes.push(BAND_PRELUDE);
   let answerPrelude = false;
   for (const {card} of creatures) {
     const answer = card.statblock;
@@ -306,9 +428,14 @@ export function cardSheetTypst(
   const bandHeight = 297 - bandTop;
   const creditTop = bandTop + Math.max(0.5, (bandHeight - CREDIT_ROOM_MM) / 2);
 
-  const creditWanted = creatures.some(
-    ({card}) => (card.statblock?.credit ?? '').trim() !== '',
-  );
+  const iconCredit = (options.iconCredit ?? '').trim();
+  const iconPage = (index: number): boolean => {
+    const card = cards[index];
+    return card !== undefined && !isCreature(card) && drawable(card).length > 0;
+  };
+  const creditWanted =
+    creatures.some(({card}) => (card.statblock?.credit ?? '').trim() !== '') ||
+    (iconCredit !== '' && cards.some((_, i) => iconPage(i)));
   const result = sheetTypst(cards.length, sheet, {
     prelude: preludes.join('\n'),
     card: (placed) => {
@@ -331,11 +458,30 @@ export function cardSheetTypst(
           `${creatureBuildCode(card, placed.index, headings)}, gcc-parts${placed.index}))`
         );
       }
+      const rows = drawable(card);
+      if (rows.length > 0) {
+        // US-009 AC-15: the bleed on a side is the whole bleed when no card is
+        // there, half the gap at most when one is (two bands never overlap).
+        const side = (neighbour: boolean): string =>
+          mm(neighbour ? Math.min(sheet.bleed, sheet.gap / 2) : sheet.bleed);
+        const left = side(placed.col > 0);
+        const right = side(
+          placed.col < grid.columns - 1 && placed.index + 1 < cards.length,
+        );
+        const above = side(placed.row > 0);
+        const band = `(fill: ${bandFillCode(rows)}, l: ${left}, r: ${right}, t: ${above})`;
+        return (
+          `#place(top + left, dx: ${mm(placed.x)}, dy: ${mm(placed.y)}, ` +
+          `gcc-fit-b(${placed.index}, ${sizeList}, ${mm(sheet.cardWidth)}, ${mm(sheet.cardHeight)}, ` +
+          `${width}, ${height}, ${band}, ${iconsCode(rows)}, ` +
+          `${bandHeaderCode(card)}, ${bandBodyCode(card)}))`
+        );
+      }
       return `${at}gcc-fit(${placed.index}, ${sizeList}, ${width}, ${height}, ${buildCode(card)}))`;
     },
     page: (_page, onPage) => {
       if (bandHeight < MIN_BAND_MM) return '';
-      const credit = onPage
+      const creature = onPage
         .map((p) => cards[p.index])
         .flatMap((c) =>
           c !== undefined && isCreature(c) && c.statblock !== null
@@ -343,10 +489,12 @@ export function cardSheetTypst(
             : [],
         )
         .find((text) => text.trim() !== '');
-      if (credit === undefined) return '';
+      const icons = onPage.some((p) => iconPage(p.index)) ? iconCredit : '';
+      const credit = joinCredits([creature ?? '', icons]);
+      if (credit === '') return '';
       return (
         `#place(top + left, dx: ${mm(sheet.margin)}, dy: ${mm(creditTop)}, ` +
-        `gcc-credit(${typstString(credit.trim())}, ${mm(210 - 2 * sheet.margin)}))`
+        `gcc-credit(${typstString(credit)}, ${mm(210 - 2 * sheet.margin)}))`
       );
     },
   });

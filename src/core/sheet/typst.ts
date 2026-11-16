@@ -9,7 +9,7 @@ import {
 } from './layout';
 
 /** US-001 AC-9: stroke of a card frame and of a cut mark, in pt. */
-const STROKE_PT = 0.2;
+export const STROKE_PT = 0.2;
 
 /** A millimetre value as Typst length text, rounded to 1e-4 mm, no `-0`. */
 export function mm(value: number): string {

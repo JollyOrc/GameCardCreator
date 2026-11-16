@@ -5,6 +5,7 @@
 import MarkdownIt from 'markdown-it';
 import {parseDocument} from 'yaml';
 import {cardCode, type CardKind} from '../card/warning';
+import type {SchemeRow} from '../scheme/read';
 import type {SkillSettings} from './settings';
 
 /** US-002 AC-4: a stretch of text with its formatting; flags only when set. */
@@ -35,6 +36,13 @@ export interface SkillCard {
   name: string;
   /** Tag labels as shown (AC-2). */
   tags: string[];
+  /**
+   * US-009 AC-2: the tags as written in the note (trimmed, not shown-form), the
+   * input of the scheme's branches; set by `readText`.
+   */
+  rawTags?: string[];
+  /** US-009 AC-2: the scheme rows of the note's tags, in the note's order; set by the run. */
+  branches?: SchemeRow[];
   /** The details row: present properties only, in order (AC-3). */
   details: {label: string; value: string}[];
   blocks: Block[];
@@ -460,13 +468,13 @@ export function readText(
     : tagsValue === undefined
       ? []
       : [tagsValue];
-  const tags = rawTags
+  const rawTagList = rawTags
     .filter((t): t is string | number | boolean =>
       ['string', 'number', 'boolean'].includes(typeof t),
     )
     .map((t) => String(t).trim())
-    .filter((t) => t !== '' && t !== '#')
-    .map(tagLabel);
+    .filter((t) => t !== '' && t !== '#');
+  const tags = rawTagList.map(tagLabel);
 
   const rows = config.rows;
   const shown = new Map<string, string>();
@@ -492,7 +500,7 @@ export function readText(
     reading.warn('EMPTY', '');
   }
   return {
-    card: {kind, path, name, tags, details, blocks},
+    card: {kind, path, name, tags, rawTags: rawTagList, details, blocks},
     warnings: reading.warnings,
   };
 }
