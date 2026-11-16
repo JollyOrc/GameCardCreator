@@ -61,6 +61,31 @@ describe('US-011 AC-5: one warning per kind when a title wraps', () => {
       titleWarnings([fact({wrapped: [1, 3], widest: 3})], CARDS)[0]?.detail,
     ).toBe('2 of 4 titles wrap at 7 pt');
   });
+  it('the path is the widest title, not the first wrapped one', () => {
+    expect(
+      titleWarnings([fact({wrapped: [1, 3], widest: 3})], CARDS)[0]?.path,
+    ).toBe('skills/The Long Riverbank Ambush of the Hidden Reed Wardens.md');
+    expect(
+      titleWarnings([fact({wrapped: [1, 3], widest: 1})], CARDS)[0]?.path,
+    ).toBe('skills/Riverbank Ambush of the Reed Wardens.md');
+  });
+  it('a card without a kind is a skill card: counted in n, and it can be the widest', () => {
+    const bare: SkillCard = {
+      path: 'skills/Riverbank Ambush of the Reed Wardens.md',
+      name: 'Riverbank Ambush of the Reed Wardens',
+      tags: [],
+      details: [],
+      blocks: [],
+    };
+    const cards = [card('Parry'), bare, card('Glow', 'spell')];
+    expect(titleWarnings([fact({wrapped: [1], widest: 1})], cards)).toEqual([
+      {
+        code: 'SKILL_TITLE_WRAPPED',
+        path: 'skills/Riverbank Ambush of the Reed Wardens.md',
+        detail: '1 of 2 titles wrap at 7 pt',
+      },
+    ]);
+  });
   it('no wrapped title: no warning (shrinking is no problem, D3)', () => {
     expect(
       titleWarnings([fact({size: 8.1, wrapped: [], widest: 1})], CARDS),

@@ -1,6 +1,9 @@
-// US-011 AC-2, AC-9 (D5): the title settings of a card kind (skill, spell), their
-// check and the title sizes tried in equal mode. Pure; messages are returned, never
-// reported (SCAR-038).
+// US-011 AC-2, AC-5, AC-8, AC-9 (D5): the title settings of a card kind (skill,
+// spell), their check, the title sizes tried in equal mode, and the warning made from
+// a kind's fact. Pure; messages and warnings are returned, never reported (SCAR-038).
+import type {CreatureCard} from '../creature/read';
+import type {CardWarning, SkillCard} from '../skill/read';
+import {cardCode} from './warning';
 
 /**
  * US-011 D5: the title settings of one kind. `equalTitles` switches equal title bars
@@ -74,4 +77,69 @@ export function titleSizes(settings: TitleSettings, step: number): number[] {
     list.push(round(minTitleSize));
   }
   return list;
+}
+
+/** US-011 AC-8: the fact of a kind in equal mode, as the compile writes it. */
+interface TitlesFact {
+  size: number;
+  wrapped: number[];
+  widest: number;
+}
+
+/** The kinds with title facts, in the order their warnings are given. */
+const TITLE_KINDS = ['skill', 'spell'] as const;
+
+/**
+ * US-011 AC-8: the fact of `kind` in `raw`, or null when `raw` is not one: `titles`
+ * is the kind, `size` a finite number, `wrapped` a list of whole numbers, `widest`
+ * the index of a card of that kind.
+ */
+function asTitlesFact(
+  raw: unknown,
+  kind: 'skill' | 'spell',
+  cards: readonly (SkillCard | CreatureCard)[],
+): TitlesFact | null {
+  if (typeof raw !== 'object' || raw === null) return null;
+  const {titles, size, wrapped, widest} = raw as Record<string, unknown>;
+  if (titles !== kind) return null;
+  if (typeof size !== 'number' || !Number.isFinite(size)) return null;
+  if (!Array.isArray(wrapped) || !wrapped.every((w) => Number.isInteger(w)))
+    return null;
+  if (typeof widest !== 'number') return null;
+  const card = cards[widest];
+  if (card === undefined || (card.kind ?? 'skill') !== kind) return null;
+  return {size, wrapped: wrapped as number[], widest};
+}
+
+/**
+ * US-011 | AC-5, AC-8: the warnings for titles that wrap even at the smallest title
+ * size, one per kind, skill before spell.
+ *
+ * Reads the facts of the kinds in equal mode (`(titles: kind, size, height, wrapped,
+ * widest)`, written under the label of the fit facts); the first valid fact of a kind
+ * counts, a malformed one is ignored. A kind with wrapped titles gets
+ * `<KIND>_TITLE_WRAPPED` (by `cardCode`), path the note of its widest title, detail
+ * `<k> of <n> titles wrap at <size> pt`, `n` counting the cards of that kind (a card
+ * without a kind is a skill card). Fit facts and other values are not title facts.
+ */
+export function titleWarnings(
+  facts: readonly unknown[],
+  cards: readonly (SkillCard | CreatureCard)[],
+): CardWarning[] {
+  const warnings: CardWarning[] = [];
+  for (const kind of TITLE_KINDS) {
+    let fact: TitlesFact | null = null;
+    for (const raw of facts) {
+      fact = asTitlesFact(raw, kind, cards);
+      if (fact !== null) break;
+    }
+    if (fact === null || fact.wrapped.length === 0) continue;
+    const n = cards.filter((card) => (card.kind ?? 'skill') === kind).length;
+    warnings.push({
+      code: cardCode(kind, 'TITLE_WRAPPED'),
+      path: cards[fact.widest]!.path,
+      detail: `${fact.wrapped.length} of ${n} titles wrap at ${fact.size} pt`,
+    });
+  }
+  return warnings;
 }

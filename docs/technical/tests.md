@@ -626,3 +626,5 @@ cannot load the missing module; integration 138 passed, the new file red; typech
 | AC-12 | `integration/equal-titles-pdf` (a banded row and a plain row lined up to 0.1 mm, counted); the author's look and M09 at the manual check |
 
 **Ticket #40 (2026-11-16), green:** `titles-settings` (26 after one added: a step of 0.1, whose sums leave floating-point dust), `skill-settings`, `spell-settings`, `us-008-settings-file`, `us-007-commit`, `run-cards`, `run-settings`; mutation round: 21 mutants, 19 caught first time, one closed with the new test, one equivalent (`Number.isFinite` before a range comparison). The whole suite: `npm test` 1088 passed and 42 red (#41 to #43), integration 141 passed and 19 red (#42).
+
+**Ticket #41 (2026-11-16), green:** `titles-warning` (19 after two added: the path of the widest title when it is not the first wrapped one; a card without a kind counted as a skill), `card-codes` unchanged; mutation round: 14 mutants, 11 caught first time, two closed with the new tests, one equivalent (a primitive fact has no `titles` field). The whole suite: `npm test` 1105 passed and 27 red (#42, #43), integration 141 passed and 19 red (#42).
