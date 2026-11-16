@@ -131,6 +131,13 @@ describe('US-011 AC-2: the title sizes tried (the rule of textSizes)', () => {
   it('title 13: 8.25 after 19 steps', () => {
     expect(titleSizes(s(13, 7), 0.25)[19]).toBe(8.25);
   });
+  it('step 0.1 (a step whose sums leave floating-point dust): every size is rounded, the smallest once', () => {
+    const list = titleSizes(s(9.1, 7), 0.1);
+    expect(list.slice(0, 5)).toEqual([9.1, 9, 8.9, 8.8, 8.7]);
+    expect(list).toHaveLength(22);
+    expect(list[list.length - 1]).toBe(7);
+    expect(new Set(list).size).toBe(22);
+  });
   it('the smallest equal to the title size: one size', () => {
     expect(titleSizes(s(9.1, 9.1), 0.25)).toEqual([9.1]);
   });

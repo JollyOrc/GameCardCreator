@@ -1,5 +1,10 @@
 // US-002 AC-5, AC-10: the settings of the skill card, their check and the
 // text sizes that are tried. Pure; messages are returned, never reported.
+import {
+  DEFAULT_TITLES,
+  checkTitleSettings,
+  type TitleSettings,
+} from '../card/titles';
 
 /**
  * US-003 AC-6 (D2): the size settings that every kind of text card shares.
@@ -19,8 +24,8 @@ export const DEFAULT_SIZES: Readonly<CardSizes> = Object.freeze({
   sizeStep: 0.25,
 });
 
-/** US-002 settings table: property names, labels and the size range. */
-export interface SkillSettings extends CardSizes {
+/** US-002 settings table: property names, labels and the size range; US-011 D5: the title settings. */
+export interface SkillSettings extends CardSizes, TitleSettings {
   tagsProperty: string;
   timingProperty: string;
   timingLabel: string;
@@ -40,6 +45,7 @@ export const DEFAULT_SKILL: Readonly<SkillSettings> = Object.freeze({
   requiresProperty: 'requires',
   requiresLabel: 'Requires',
   ...DEFAULT_SIZES,
+  ...DEFAULT_TITLES,
 });
 
 /** Rounds to 1e-4 pt, which removes floating-point dust from sizes. */
@@ -74,8 +80,8 @@ export function checkSizes(sizes: CardSizes): string[] {
 }
 
 /**
- * US-002 AC-10: checks the settings; one message per problem, empty when the
- * settings are valid.
+ * US-002 AC-10, US-011 AC-9: checks the settings; one message per problem, empty
+ * when the settings are valid (the title settings by `checkTitleSettings`).
  *
  * Property names compare without case and surrounding spaces: an empty name
  * and two settings naming the same property are refused. Sizes must be finite
@@ -108,6 +114,7 @@ export function checkSkillSettings(settings: SkillSettings): string[] {
   }
 
   issues.push(...checkSizes(settings));
+  issues.push(...checkTitleSettings('skill', settings));
   return issues;
 }
 

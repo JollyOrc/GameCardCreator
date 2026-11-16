@@ -624,3 +624,5 @@ cannot load the missing module; integration 138 passed, the new file red; typech
 | AC-10 | `plugin/titles-screen`, `unit/us-007-fields`, `unit/us-007-tab-helpers`, `plugin/us-007-reset` |
 | AC-11 | `integration/equal-titles-pdf` (order of the notes; the same bytes twice) |
 | AC-12 | `integration/equal-titles-pdf` (a banded row and a plain row lined up to 0.1 mm, counted); the author's look and M09 at the manual check |
+
+**Ticket #40 (2026-11-16), green:** `titles-settings` (26 after one added: a step of 0.1, whose sums leave floating-point dust), `skill-settings`, `spell-settings`, `us-008-settings-file`, `us-007-commit`, `run-cards`, `run-settings`; mutation round: 21 mutants, 19 caught first time, one closed with the new test, one equivalent (`Number.isFinite` before a range comparison). The whole suite: `npm test` 1088 passed and 42 red (#41 to #43), integration 141 passed and 19 red (#42).
