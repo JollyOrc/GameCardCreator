@@ -9,7 +9,11 @@ import {join} from 'node:path';
 import {describe, expect, it} from 'vitest';
 import {DEFAULT_CARDS, type CardsSettings} from '../../src/core/run/settings';
 import {createCardsRunner} from '../../src/plugin/runner';
-import {LATIN} from '../support/glyph-faces';
+import {
+  EXAMPLE_CREATURE_NOTE,
+  FEN_HARE_ANSWER,
+} from '../support/creature-fixtures';
+import {EXTRA, LATIN} from '../support/glyph-faces';
 
 const SETTINGS: CardsSettings = {
   ...DEFAULT_CARDS,
@@ -93,6 +97,63 @@ describe('US-010 AC-5: the runner, the notice and the warnings file', () => {
     const {runner, calls} = setup();
     await runner.runSelection(SELECTION);
     expect(calls.notices.at(-1)).toMatch(/^2 cards on 1 page, 0 warnings\./);
+  });
+});
+
+describe("US-010 AC-3, AC-4: a creature sheet: the answer's fonts reach the coverage", () => {
+  it('the coverage gets the fonts the compile gets (one list), and a character they draw gives no warning', async () => {
+    const FONTS = [new Uint8Array([7, 7, 7])];
+    const seen = {
+      coverage: [] as (readonly Uint8Array[])[],
+      compile: [] as unknown[],
+    };
+    const deps = {
+      settings: async () => ({
+        ...DEFAULT_CARDS,
+        kindRules: [{folder: 'creatures', kind: 'creature' as const}],
+        outputFolder: '/out',
+      }),
+      vaultRoot: () => '/v',
+      readNote: async () => EXAMPLE_CREATURE_NOTE.replace('Flat', 'Flat ✓'),
+      resolve: () => null,
+      notesNamed: () => [],
+      notesBelow: () => ['creatures/Fen Hare.md'],
+      statblockApi: () => ({
+        version: 1,
+        statblockTypst: async () => FEN_HARE_ANSWER,
+        compileFonts: async () => FONTS,
+      }),
+      compile: async (_s: string, extra?: unknown) => {
+        seen.compile.push(extra);
+        return {
+          pdf: new Uint8Array([1]),
+          facts: [{i: 0, size: 7, fits: true, dropped: []}],
+        };
+      },
+      coverage: async (fonts: readonly Uint8Array[]) => {
+        seen.coverage.push(fonts);
+        return {
+          ok: true as const,
+          faces: [LATIN, ...(fonts.length > 0 ? [EXTRA] : [])],
+        };
+      },
+      isFile: async () => false,
+      writerFor: (folder: string) => ({
+        exists: async () => false,
+        writeBytes: async () => undefined,
+        writeText: async () => undefined,
+        ensureFolder: async () => undefined,
+        isFile: async () => false,
+        root: folder,
+      }),
+      confirmReplace: async () => true,
+      notice: () => undefined,
+    };
+    await createCardsRunner(deps as never).runSelection([
+      {path: 'creatures/Fen Hare.md', isFolder: false},
+    ]);
+    expect(seen.coverage).toEqual([FONTS]);
+    expect((seen.compile[0] as {fonts: unknown}).fonts).toBe(seen.coverage[0]);
   });
 });
 

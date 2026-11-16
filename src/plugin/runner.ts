@@ -47,6 +47,17 @@ export interface RunnerDeps {
     facts: unknown[];
     message?: string;
   }>;
+  /**
+   * US-010 AC-4: the faces of the compile's fonts (the compile service's
+   * answer: the faces, or why there are none). Optional: without it there is no
+   * glyph check.
+   */
+  coverage?(
+    fonts: readonly Uint8Array[],
+  ): Promise<
+    | {ok: true; faces: {family: string; coverage: number[]}[]}
+    | {ok: false; message: string}
+  >;
   /** True when the path (the output folder) is a file. */
   isFile(path: string): Promise<boolean>;
   /** The one writer for an output folder. */
@@ -143,6 +154,16 @@ export function createCardsRunner(deps: RunnerDeps): CardsRunner {
           ? {}
           : {statblockApi: () => deps.statblockApi?.()}),
         compile: (source, extra) => deps.compile(source, extra),
+        // US-010 AC-4: a refusal of the service is the run's "coverage cannot be read".
+        ...(deps.coverage === undefined
+          ? {}
+          : {
+              coverage: async (fonts: readonly Uint8Array[]) => {
+                const answer = await deps.coverage!(fonts);
+                if (!answer.ok) throw new Error(answer.message);
+                return answer.faces;
+              },
+            }),
       });
       if (!result.ok) {
         deps.notice(result.message);

@@ -58,6 +58,7 @@ export default class GameCardCreatorPlugin extends Plugin {
       // US-004 AC-3: the plugin's API object as it is now (SCAR-016); the run decides.
       statblockApi: () => pluginApi(this.app, 'obsidian2typst'),
       compile: (source, extra) => this.compiler.compile(source, extra),
+      coverage: (fonts) => this.compiler.coverage(fonts),
       isFile: (path) => createDiskWriter(path).isFile(path),
       writerFor: createDiskWriter,
       confirmReplace: (files) => confirmReplaceWith(Modal)(this.app, files),

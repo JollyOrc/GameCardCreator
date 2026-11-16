@@ -126,3 +126,54 @@ describe('US-010: the real coverage, the real compile', () => {
       expect(Buffer.from(a.pdf).equals(Buffer.from(b.pdf))).toBe(true);
   }, 120_000);
 });
+
+describe('US-010 AC-3 (D2): the premise, measured with the real worker (SCAR-024)', () => {
+  it("a character Libertinus lacks is drawn from an extra font that has it, and is the font's empty glyph without it", async () => {
+    const {fontFiles} = await load<{fontFiles(dir: string): string[]}>(BUILD);
+    const {createWorkerCore} = await load<{
+      createWorkerCore(post: Post): {handle(m: unknown): Promise<void>};
+    }>(CORE);
+    const {openPdf} = await load<{openPdf(b: Uint8Array): unknown}>(
+      '../support/pdf/reader',
+    );
+    const {pageRuns} = await load<{
+      pageRuns(f: unknown): {items: ({ch: string} | {kern: number})[]}[][];
+    }>('../support/pdf/text');
+    const out: {id?: string; type: string; pdf?: ArrayBuffer}[] = [];
+    const core = createWorkerCore((m) => void out.push(m as never));
+    await core.handle({
+      type: 'init',
+      id: 'i',
+      compilerText: gz(new Uint8Array(WASM)),
+      fontTexts: fontFiles(join(root, 'assets/fonts')).map((f) =>
+        gz(new Uint8Array(readFileSync(join(root, 'assets/fonts', f)))),
+      ),
+    });
+    const source =
+      '#set document(date: none)\n#set page(width: 100mm, height: 30mm, margin: 5mm)\n' +
+      '#set text(font: "Libertinus Serif", size: 14pt)\nA ✓ B ⌘ C 漢 D\n';
+    const textOf = async (
+      id: string,
+      fonts?: Uint8Array[],
+    ): Promise<string> => {
+      await core.handle({
+        type: 'compile',
+        id,
+        source,
+        ...(fonts ? {fonts: fonts.map(buf)} : {}),
+      });
+      const answer = out.find((o) => o.id === id)!;
+      const runs = pageRuns(openPdf(new Uint8Array(answer.pdf!)))[0] ?? [];
+      return runs
+        .flatMap((r) => r.items.map((i) => ('ch' in i ? i.ch : '')))
+        .join('');
+    };
+    const without = await textOf('a');
+    expect(without).not.toContain('✓');
+    expect(without).not.toContain('⌘');
+    const withFont = await textOf('b', [DEJAVU]);
+    expect(withFont).toContain('✓');
+    expect(withFont).toContain('⌘');
+    expect(withFont).not.toContain('漢'); // DejaVu Sans Mono has no ideographs either
+  }, 120_000);
+});

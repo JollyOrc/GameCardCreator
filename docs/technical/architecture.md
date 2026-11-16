@@ -40,3 +40,12 @@
   and `joinCredits` makes the one credit line of a sheet for the icons and the creature statblock. The icon font
   (RPG Awesome, `assets/fonts`) is embedded in `main.js` with Libertinus Serif (`fontFiles` in the build).
 
+- `src/core/glyph/` (US-010): the glyph check. `coverage.ts` (`decodeCoverage`, `createCoverage`: what the faces of a
+  compile cover, from the compiler's own font information), `check.ts` (`cardCodePoints`: the text the plugin sets on a
+  card, read from the places the sheet writes user text through `typstString`, guarded by `card-escape`; `glyphDetail`,
+  `glyphWarnings`: one warning per note, the kind's code). `run/run.ts` asks `RunDeps.coverage` once per run with the
+  fonts the compile will have (the sheet's extra fonts from the other plugin's answer) and puts the glyph warnings
+  after the notes' own and before the fit warnings; an unreadable coverage is one `GLYPH_CHECK_UNAVAILABLE`. The compile
+  worker answers the coverage (`font-info`, `getFontInfo` of typst.ts, never on the main thread); the compile service
+  has `coverage(fonts?)`; the runner hands it to the run; `main.ts` hands the service over in one statement.
+
