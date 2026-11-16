@@ -30,3 +30,13 @@
   `runner.ts` (every decision of a run, with injected dependencies) and
   `commands.ts` (the deck command and the menu entry as plain objects over the
   runner). `main.ts` (US-008) only builds the dependencies and registers them.
+
+- `src/core/scheme/` (US-009): the scheme note of the vault. `read.ts` (`readScheme`: front matter and the first
+  top-level table with `Tag`, `Colour`, `Icon`, as warnings, never a throw), `branches.ts` (`branchesOf`, `tagKey`:
+  the one place a tag is compared with a row), `icons.ts` (generated from the font's CSS by `build/gen-icons.mjs`:
+  icon name to code point, the only way a glyph reaches the Typst source), `settings.ts` (the path check). The run
+  (`run/run.ts`) reads the note once per run through the vault and gives each skill and spell card its `branches`;
+  `card/sheet.ts` draws the band (`gcc-fit-b`: header and body as two builders, the band follows the chosen size),
+  and `joinCredits` makes the one credit line of a sheet for the icons and the creature statblock. The icon font
+  (RPG Awesome, `assets/fonts`) is embedded in `main.js` with Libertinus Serif (`fontFiles` in the build).
+

@@ -5,7 +5,7 @@ cards and writes them as an A4 PDF: cards of 62 mm x 88 mm, as many per page as 
 marks. The PDF is made by [Typst](https://typst.app), which is inside the plugin: nothing to
 install and nothing is downloaded.
 
-**Status:** version 0.2.0 makes **skill**, **spell** and **creature** cards. The creature card needs
+**Status:** version 0.3.0 makes **skill**, **spell** and **creature** cards; skill and spell cards can have a colour-coded header with icons from a scheme note of your vault. The creature card needs
 the plugin [Obsidian2Typst](https://github.com/JollyOrc/Obsidian2Typst) 0.15.1 or newer.
 Tested on Obsidian 1.15.0 on macOS only (see the release notes).
 
@@ -14,6 +14,13 @@ Tested on Obsidian 1.15.0 on macOS only (see the release notes).
 - A **skill card** shows the tags of the note, its title (the note's file name), a details row
   (`Time`, `Type`, `Requires`, from the note's properties) and the text of the note. A **spell
   card** shows the tags, the title and the text.
+- **Colours and icons (optional).** When the setting **Scheme note** names a note of your vault, the
+  header of a skill or spell card sits on a band in the colour of its branch (the tag of the note that
+  has a row in the scheme), with the branch's icon at the right; several branches make a gradient and
+  several icons, in the order of the note's tags. The scheme note is an ordinary note with a table of
+  `Tag`, `Colour` (`#rrggbb`) and `Icon` (a name from [RPG Awesome](https://nagoshiashumari.github.io/Rpg-Awesome/));
+  other tools can read it too. The band can reach beyond the card's frame (setting **Bleed**, up to 3 mm,
+  1 mm with cut marks). The icons' credit is printed once at the foot of each sheet that shows an icon.
 - A **creature card** shows the statblock exactly as Obsidian2Typst draws it for a book (drawn by
   that plugin's own code, with its preset's icons and fonts), then the creature's **Behaviour**,
   **Actions** and **Signs** sections (the headings are settings). If it does not fit, the Signs
@@ -42,15 +49,16 @@ Tested on Obsidian 1.15.0 on macOS only (see the release notes).
    - **Which note is which card**: add a rule for each folder (for example your skills folder is
      `skill`, your spells folder `spell`, your creatures folder `creature`); a note takes the kind of the longest matching folder;
    - **Note properties**: the names of the properties the plugin reads (tags, timing, kind,
-     requires), the labels shown on the card and the three section headings of creature notes; **Page and text size**: the card size, margin,
-     gap, cut marks and the text sizes.
+     requires), the labels shown on the card, the three section headings of creature notes and the
+     **Scheme note** (optional, a vault path); **Page and text size**: the card size, margin,
+     gap, cut marks, the bleed and the text sizes.
 3. The status line at the top says `Ready: ...` or what is still missing. Settings are saved as you
    change them; a value that is not valid is refused with the reason under the field.
 
 ## Limits
 
 Creature cards need Obsidian2Typst 0.15.1 or newer, installed and enabled; no pictures on cards; no warning yet when a text has a character the font
-lacks; desktop only; Windows, Linux and mobile are not tested. See `releases/v0.2.0.md`.
+lacks; desktop only; Windows, Linux and mobile are not tested. See `releases/v0.3.0.md`.
 
 ## Development
 
