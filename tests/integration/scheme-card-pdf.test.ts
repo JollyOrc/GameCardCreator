@@ -168,7 +168,9 @@ describe('US-009 AC-3: the band of one branch', () => {
       const titleGap = spell.y1 - baseline(m, 1, 'Ember Spark').y;
       expect(titleGap).toBeGreaterThanOrEqual(2.0);
       expect(titleGap).toBeLessThanOrEqual(3.6);
-      expect(spell.y1 - spell.y0).toBeLessThan(skill.y1 - skill.y0 - 2);
+      // US-009 AC-3 amended (D8): the spell's band ends 1 mm under its fire (10.84 mm), the
+      // skill's 2 mm under its details row (12.22 mm): lower, by 1.38 mm, no longer by 2
+      expect(spell.y1 - spell.y0).toBeLessThan(skill.y1 - skill.y0 - 1);
     },
     LIMIT,
   );

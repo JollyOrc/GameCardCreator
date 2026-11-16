@@ -632,3 +632,21 @@ cannot load the missing module; integration 138 passed, the new file red; typech
 **Ticket #42 (2026-11-16), green:** `titles-source`, `run-titles`, `equal-titles-pdf` (23 after two added or changed: a spell card first, so card indexes differ from positions in the kind; the AC-9 step example 0.3 instead of 1), `card-escape`, the golden sources and every run test unchanged; mutation round: 20 mutants, 18 caught first time, two closed with those tests. Compile time of 200 cards in Node: off about 1 s, equal mode about 2.5 to 3 s. The whole suite: `npm test` 1113 passed and 19 red (#43), integration 161 passed.
 
 **Ticket #43 (2026-11-16), green:** `titles-screen`, `us-007-fields`, `us-007-tab-helpers`, `scheme-settings`, `us-007-reset`, and `us-007-wiring`, `us-007-commit` unchanged; mutation round: 11 mutants, 10 caught, one equivalent (a toggle's value is always a boolean). The whole suite: `npm test` 1132 passed, integration 161 passed, typecheck clean, build ok.
+
+## US-009 AC-3 and US-011 AC-1, AC-3, AC-6 amended (M09 finding, D8 to D10; 2026-11-16, G2): tests written (red by design)
+
+New file `integration/band-icon-padding` (US-009 AC-3: Parry 12.22 mm unchanged, Ember Spark 10.84 mm at 7 pt and with
+the largest text size 6 pt, Scorch Hex 1 mm under its lowest icon, the skull; US-011 AC-3, AC-6: spells on, `t` 7.35, `H`
+4.84 mm, both bands 10.84 mm, Glow's rule under its box; the same spells off). Amended: `integration/scheme-card-pdf`
+(a spell's band is lower than a skill's by more than 1 mm, no longer by 2: 10.84 against 12.22). Proven against a
+throwaway reference (scratch worktree, removed): `npm test` 1132 and integration 167 green there; one test of mine was
+wrong at the first run there (with the switches off the slow curse's 9.1 pt title wraps, so its band follows its
+header, not its icon) and was corrected; six mutants of the reference (no padding, 3 mm padding, the icon ignored,
+the first icon instead of the lowest, the icons ignored in equal mode, no padding in equal mode): all caught. On
+the code of `db5a9d6`: 5 of the 6 new tests red (Parry's is unchanged by D8), every other test green.
+
+| AC | Test |
+|---|---|
+| US-009 AC-3 (amended) | `integration/band-icon-padding` (four examples), `integration/scheme-card-pdf` (amended) |
+| US-011 AC-3, AC-6 (amended) | `integration/band-icon-padding` (spells on and off) |
+| US-011 AC-1 (amended) | `unit/titles-source` (no scheme: golden, unchanged), `integration/band-icon-padding` (off: the band follows US-009 AC-3) |
