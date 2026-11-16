@@ -5,7 +5,7 @@
 // US-002, US-003 and US-004, the statblock contract, the sheet and the fit
 // warnings.
 import {cardSheetTypst} from '../card/sheet';
-import {cardCode} from '../card/warning';
+import {cardCode, schemeCode} from '../card/warning';
 import {readCreature, type CreatureCard} from '../creature/read';
 import {
   checkStatblockApi,
@@ -16,6 +16,8 @@ import {
   unavailableWarning,
   type StatblockApi,
 } from '../creature/statblock';
+import {branchesOf} from '../scheme/branches';
+import {DEFAULT_ICON_CREDIT, readScheme, type SchemeRow} from '../scheme/read';
 import {placeCards} from '../sheet/layout';
 import {fitWarnings} from '../skill/fit';
 import {readSkill, type CardWarning, type SkillCard} from '../skill/read';
@@ -102,6 +104,40 @@ async function withStatblock(
   card.statblock = answer;
 }
 
+/** US-009 AC-1, AC-7, AC-10: what a run takes from the scheme note. */
+interface SchemeState {
+  rows: SchemeRow[];
+  /** The credit text for the sheet: the note's, the default when it has none, '' for no line. */
+  credit: string;
+}
+
+/**
+ * US-009 AC-1, AC-7, AC-10: reads the scheme note through `deps.read` (at each run,
+ * never kept, SCAR-016). A note that cannot be read gives the note-unreadable warning of the scheme
+ * (detail: the reason) and no rows; the reader's own warnings are returned with the
+ * path. Never throws and never writes.
+ */
+async function readSchemeNote(
+  path: string,
+  deps: RunDeps,
+  warnings: CardWarning[],
+): Promise<SchemeState> {
+  let text: string;
+  try {
+    text = await deps.read(path);
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    warnings.push({code: schemeCode('NOTE_UNREADABLE'), path, detail: reason});
+    return {rows: [], credit: DEFAULT_ICON_CREDIT};
+  }
+  const read = readScheme(path, text);
+  warnings.push(...read.warnings);
+  return {
+    rows: read.scheme.rows,
+    credit: read.scheme.credit ?? DEFAULT_ICON_CREDIT,
+  };
+}
+
 /**
  * US-005 AC-4, US-004: makes the cards of `notes`, in order, and compiles the
  * sheet.
@@ -129,6 +165,8 @@ export async function runCards(
   const warnings: CardWarning[] = [];
   const cards: (SkillCard | CreatureCard)[] = [];
   const files = new Map<string, Uint8Array>();
+  const schemePath = settings.schemeNote.trim();
+  let scheme: SchemeState | undefined;
   let api: StatblockApi | null | undefined;
   let unavailable = '';
   for (const path of notes) {
@@ -161,18 +199,37 @@ export async function runCards(
       cards.push(read.card);
       continue;
     }
+    // US-009 AC-1: the scheme is read once, just before the first skill or spell
+    // note's own warnings, and only when the setting names a note.
+    if (scheme === undefined && schemePath !== '') {
+      scheme = await readSchemeNote(schemePath, deps, warnings);
+    }
     const read =
       kind === 'skill'
         ? readSkill(path, text, settings.skill)
         : readSpell(path, text, settings.spell);
-    cards.push(read.card);
     warnings.push(...read.warnings);
+    if (scheme !== undefined) {
+      // US-009 AC-2, AC-6: the branches in the order of the note's tags; none, with a
+      // valid row in the scheme, is one warning with the tags as written.
+      const tags = read.card.rawTags ?? [];
+      read.card.branches = branchesOf(tags, scheme.rows);
+      if (read.card.branches.length === 0 && scheme.rows.length > 0) {
+        warnings.push({
+          code: cardCode(kind, 'BRANCH_UNKNOWN'),
+          path,
+          detail: tags.map((tag) => tag.replace(/^#/, '')).join(', '),
+        });
+      }
+    }
+    cards.push(read.card);
   }
   const sheet = cardSheetTypst(
     cards,
     settings.sheet,
     settings.skill,
     settings.creature,
+    {iconCredit: scheme?.credit ?? ''},
   );
   if (!sheet.ok) {
     // Nothing but creature notes and no plugin: the notice says why there is no card.

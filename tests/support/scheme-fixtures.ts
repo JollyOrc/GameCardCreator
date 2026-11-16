@@ -7,7 +7,7 @@ export const EXAMPLE_SCHEME = [
   '---',
   'schemeVersion: 1',
   'iconSet: rpg-awesome',
-  'credit: "Icons: Game-icons.net (CC BY 3.0), via RPG Awesome"',
+  'credit: "Icons made by Lorc, Delapouite, sbed and other authors. Available on https://game-icons.net (CC BY 3.0), via RPG Awesome"',
   '---',
   '| Tag | Label | Colour | Icon |',
   '|---|---|---|---|',

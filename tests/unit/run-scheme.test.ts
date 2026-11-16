@@ -60,7 +60,12 @@ function setup(
       },
     compile: async (source) => {
       log.compile.push(source);
-      return {pdf: new Uint8Array([37, 80, 68, 70]), facts: []};
+      // One fit fact per card, as the compiled document writes them (a banded card
+      // calls `gcc-fit-b`, a creature card `gcc-fit-c`).
+      const facts = [...source.matchAll(/gcc-fit(?:-b|-c)?\((\d+), /g)].map(
+        (m) => ({i: Number(m[1]), size: 7, fits: true}),
+      );
+      return {pdf: new Uint8Array([37, 80, 68, 70]), facts};
     },
   };
   return {d, log};
@@ -249,7 +254,8 @@ describe('US-009 AC-7: a bad scheme note never stops the run', () => {
 });
 
 describe('US-009 AC-10: the credit text reaches the sheet', () => {
-  const CREDIT = 'Icons: Game-icons.net (CC BY 3.0), via RPG Awesome';
+  const CREDIT =
+    'Icons made by Lorc, Delapouite, sbed and other authors. Available on https://game-icons.net (CC BY 3.0), via RPG Awesome';
   const count = (src: string, s: string) => src.split(s).length - 1;
   it("the note's credit, once, even with several icon cards", async () => {
     const {log} = await run([

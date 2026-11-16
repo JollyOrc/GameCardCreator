@@ -39,7 +39,8 @@ const FIRE = br('Pyromancy', '#ffb4a2', 'fire');
 const SKULL = br('Hexes', '#e4f0a8', 'skull');
 const ANVIL = br('Stonework', '#cbd5e8', 'anvil');
 const CP = {sword: 0xe946, fire: 0xe9c3, skull: 0xeaa1, anvil: 0xe909};
-const CREDIT = 'Icons: Game-icons.net (CC BY 3.0), via RPG Awesome';
+const CREDIT =
+  'Icons made by Lorc, Delapouite, sbed and other authors. Available on https://game-icons.net (CC BY 3.0), via RPG Awesome';
 
 type B = ReturnType<typeof br>;
 const card = (

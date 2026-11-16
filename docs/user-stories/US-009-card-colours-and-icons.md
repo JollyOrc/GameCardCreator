@@ -58,7 +58,7 @@ Invented example `Layouting/Branch Scheme.md`:
 ---
 schemeVersion: 1
 iconSet: rpg-awesome
-credit: "Icons: Game-icons.net (CC BY 3.0), via RPG Awesome"
+credit: "Icons made by Lorc, Delapouite, sbed and other authors. Available on https://game-icons.net (CC BY 3.0), via RPG Awesome"
 ---
 | Tag | Label | Colour | Icon |
 |---|---|---|---|
@@ -134,8 +134,8 @@ Spark.md` (spell): tags `Pyromancy`. `Scorch Hex.md` (spell): tags `Pyromancy`, 
   only skill and spell cards get a band; the creature card is unchanged (D11). Every run of every card lies
   inside its text area to 0.1 mm (the header's text inside its 4 mm padding); the band lies inside its card's
   frame plus the bleed (AC-15) to 0.1 mm.
-- **AC-10 (credit).** When a card on a sheet shows an icon, the scheme note's `credit` text (absent: `Icons:
-  Game-icons.net (CC BY 3.0), via RPG Awesome`; empty: no line) is printed once at the foot of that sheet as
+- **AC-10 (credit).** When a card on a sheet shows an icon, the scheme note's `credit` text (absent: `Icons made by Lorc,
+  Delapouite, sbed and other authors. Available on https://game-icons.net (CC BY 3.0), via RPG Awesome`; empty: no line) is printed once at the foot of that sheet as
   the creature credit of US-004 AC-9 is (5 pt, centred, at most two lines, in the bottom band, covering no
   card); when the same sheet also has a creature credit, both texts are printed together, the creature
   credit first and a full stop added after it when it has none, then a space (D10). With a bottom band too low for it, the warning of US-004 AC-9
@@ -201,3 +201,5 @@ Spark.md` (spell): tags `Pyromancy`. `Scorch Hex.md` (spell): tags `Pyromancy`, 
 Pictures on cards (US-006), the creature card's look, other tools reading the scheme (each needs its own
 story, pointing at the format above, SCAR-040), an icon set other than RPG Awesome, a colour per note
 (a property) instead of per tag, writing the hexmaps' fills from the note.
+
+**Amendment 2026-11-16 (owner's decision):** the default credit text names the authors, as Game-icons.net asks ("Icons made by {author}. Available on https://game-icons.net"): `Icons made by Lorc, Delapouite, sbed and other authors. Available on https://game-icons.net (CC BY 3.0), via RPG Awesome`. The authors were read from the Game-icons.net repository for the icons of the author's scheme whose names it has (15 of 23); the others are to be checked by the author, who can set their own `credit` in the scheme note.

@@ -30,7 +30,7 @@ describe('US-009 AC-1: the example note', () => {
   });
   it('gives the credit text of the front matter', () => {
     expect(r.scheme.credit).toBe(
-      'Icons: Game-icons.net (CC BY 3.0), via RPG Awesome',
+      'Icons made by Lorc, Delapouite, sbed and other authors. Available on https://game-icons.net (CC BY 3.0), via RPG Awesome',
     );
   });
 });
@@ -129,7 +129,7 @@ describe('US-009 AC-1: the table, one syntax rule at a time', () => {
     const r = read(text);
     expect(r.scheme.rows).toEqual(EXAMPLE_ROWS);
     expect(r.scheme.credit).toBe(
-      'Icons: Game-icons.net (CC BY 3.0), via RPG Awesome',
+      'Icons made by Lorc, Delapouite, sbed and other authors. Available on https://game-icons.net (CC BY 3.0), via RPG Awesome',
     );
   });
   it('the front matter is removed once: a table-like line inside it is no table (SCAR-034)', () => {

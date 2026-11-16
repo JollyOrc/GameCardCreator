@@ -39,7 +39,7 @@ export interface Scheme {
 
 /** US-009 AC-10: the credit text when the note has no `credit` property. */
 export const DEFAULT_ICON_CREDIT =
-  'Icons: Game-icons.net (CC BY 3.0), via RPG Awesome';
+  'Icons made by Lorc, Delapouite, sbed and other authors. Available on https://game-icons.net (CC BY 3.0), via RPG Awesome';
 
 /** A cell's text: without backticks and surrounding spaces. */
 const cellText = (text: string): string => text.replace(/`/g, '').trim();

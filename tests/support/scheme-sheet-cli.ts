@@ -59,7 +59,10 @@ const typst = cardSheetTypst(
   {...DEFAULT_SHEET, bleed: 1},
   DEFAULT_SIZES,
   DEFAULT_CREATURE,
-  {iconCredit: 'Icons: Game-icons.net (CC BY 3.0), via RPG Awesome'},
+  {
+    iconCredit:
+      'Icons made by Lorc, Delapouite, sbed and other authors. Available on https://game-icons.net (CC BY 3.0), via RPG Awesome',
+  },
 );
 if (!typst.ok) throw new Error(typst.message);
 const {pdf} = await compileWithFacts(typst.source, FIT_LABEL, typst.files);
