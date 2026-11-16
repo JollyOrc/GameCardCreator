@@ -5,7 +5,7 @@ cards and writes them as an A4 PDF: cards of 62 mm x 88 mm, as many per page as 
 marks. The PDF is made by [Typst](https://typst.app), which is inside the plugin: nothing to
 install and nothing is downloaded.
 
-**Status:** version 0.3.0 makes **skill**, **spell** and **creature** cards; skill and spell cards can have a colour-coded header with icons from a scheme note of your vault. The creature card needs
+**Status:** version 0.4.0 makes **skill**, **spell** and **creature** cards; skill and spell cards can have a colour-coded header with icons from a scheme note of your vault. The creature card needs
 the plugin [Obsidian2Typst](https://github.com/JollyOrc/Obsidian2Typst) 0.15.1 or newer.
 Tested on Obsidian 1.15.0 on macOS only (see the release notes).
 
@@ -14,6 +14,13 @@ Tested on Obsidian 1.15.0 on macOS only (see the release notes).
 - A **skill card** shows the tags of the note, its title (the note's file name), a details row
   (`Time`, `Type`, `Requires`, from the note's properties) and the text of the note. A **spell
   card** shows the tags, the title and the text.
+- **A warning for a character no font draws.** Typst draws a character that no font has as an empty
+  box and says nothing. The plugin checks the text of every card (the title, tags, details row, the note's
+  text, a creature's section headings and texts) against the fonts of the compile and gives **one warning
+  per note** listing the characters, for example `SKILL_GLYPH_MISSING` with `漢 U+6F22, 😀 U+1F600` (ten at
+  most, then `and N more`). A character that some font of the compile draws is not reported: on a creature
+  sheet the fonts of Obsidian2Typst's preset count. The statblock's own text and the credit lines are not
+  checked.
 - **Colours and icons (optional).** When the setting **Scheme note** names a note of your vault, the
   header of a skill or spell card sits on a band in the colour of its branch (the tag of the note that
   has a row in the scheme), with the branch's icon at the right; several branches make a gradient and
@@ -57,8 +64,7 @@ Tested on Obsidian 1.15.0 on macOS only (see the release notes).
 
 ## Limits
 
-Creature cards need Obsidian2Typst 0.15.1 or newer, installed and enabled; no pictures on cards; no warning yet when a text has a character the font
-lacks; desktop only; Windows, Linux and mobile are not tested. See `releases/v0.3.0.md`.
+Creature cards need Obsidian2Typst 0.15.1 or newer, installed and enabled; no pictures on cards; desktop only; Windows, Linux and mobile are not tested. See `releases/v0.4.0.md`.
 
 ## Development
 
