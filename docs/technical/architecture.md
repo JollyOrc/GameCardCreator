@@ -40,6 +40,16 @@
   and `joinCredits` makes the one credit line of a sheet for the icons and the creature statblock. The icon font
   (RPG Awesome, `assets/fonts`) is embedded in `main.js` with Libertinus Serif (`fontFiles` in the build).
 
+- Equal title bars (US-011): `card/titles.ts` (`TitleSettings` of a kind, `checkTitleSettings`, `titleSizes`,
+  `titleWarnings`: the warning made from a kind's fact). `card/sheet.ts` writes, for each kind (skill, spell) whose
+  switch is on and that has cards, the kind's data (title sizes, per card its title, icons and header builder) and
+  `gcc-eq`, which measures once per kind the one title size `t` and the one header height `H` from the titles and
+  headers alone, never from the fit; plain cards use `gcc-fit-e` (a header box `H` high), banded cards `gcc-fit-be`
+  (a copy of `gcc-fit-b` with the kind's header: `gcc-fit-b`'s text is part of the golden sources). The kind's fact
+  goes under the fit label (`gcc-fit`) in its own shape, so the worker's one query reads it and `fitWarnings`
+  ignores it. With every switch off the source is that of 0.4.0. The screen shows a kind's two sizes only while its
+  toggle is on (`isShown`, `redraws` in `settings/fields.ts`).
+
 - `src/core/glyph/` (US-010): the glyph check. `coverage.ts` (`decodeCoverage`, `createCoverage`: what the faces of a
   compile cover, from the compiler's own font information), `check.ts` (`cardCodePoints`: the text the plugin sets on a
   card, read from the places the sheet writes user text through `typstString`, guarded by `card-escape`; `glyphDetail`,
