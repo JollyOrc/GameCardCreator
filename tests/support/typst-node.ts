@@ -27,20 +27,33 @@ const fontBytes = () =>
     readFileSync(join(process.cwd(), 'assets', 'fonts', f)),
   );
 
-let snippet: TypstSnippet | undefined;
+const snippets = new Map<string, TypstSnippet>();
 let counter = 0;
 
-/** One initialised snippet per process; default fonts are never fetched. */
-function typst(): TypstSnippet {
+/**
+ * One initialised snippet per process and font set; default fonts are never fetched.
+ * `extra` names test fonts in tests/fixtures/fonts loaded after the bundled ones (US-012
+ * #48: a band font); without them every compile uses the one snippet of the bundled
+ * fonts, as before.
+ */
+function typst(extra: readonly string[] = []): TypstSnippet {
+  const key = extra.join('|');
+  let snippet = snippets.get(key);
   if (snippet === undefined) {
     snippet = new TypstSnippet();
+    const extraBytes = extra.map((f) =>
+      readFileSync(join(process.cwd(), 'tests', 'fixtures', 'fonts', f)),
+    );
     snippet.setCompilerInitOptions({
       getModule: wasm('typst-ts-web-compiler', 'typst_ts_web_compiler_bg.wasm'),
-      beforeBuild: [loadFonts(fontBytes(), {assets: false})],
+      beforeBuild: [
+        loadFonts([...fontBytes(), ...extraBytes], {assets: false}),
+      ],
     });
     snippet.setRendererInitOptions({
       getModule: wasm('typst-ts-renderer', 'typst_ts_renderer_bg.wasm'),
     });
+    snippets.set(key, snippet);
   }
   return snippet;
 }
@@ -49,8 +62,11 @@ function typst(): TypstSnippet {
  * Compiles `source` to PDF bytes. Throws with the compiler's diagnostics
  * when there is no PDF (never returns an empty result, SCAR-008).
  */
-export async function compilePdf(source: string): Promise<Uint8Array> {
-  const t = typst();
+export async function compilePdf(
+  source: string,
+  extraFonts: readonly string[] = [],
+): Promise<Uint8Array> {
+  const t = typst(extraFonts);
   const path = `/sheet-${counter++}.typ`;
   await t.addSource(path, source);
   const compiler = await t.getCompiler();
@@ -79,13 +95,15 @@ export async function compileWithFacts(
   source: string,
   label: string,
   files: readonly {path: string; bytes: Uint8Array}[] = [],
+  /** US-012 #48: test fonts (tests/fixtures/fonts) loaded for this compile; none: the bundled ones. */
+  extraFonts: readonly string[] = [],
 ): Promise<{pdf: Uint8Array; facts: unknown[]; diagnostics: unknown[]}> {
-  const t = typst();
+  const t = typst(extraFonts);
   // US-004 AC-12: the files of the answer sit at their paths next to the source
   // for this compile only (unmapped in `finally`, nothing leaks into the next).
   for (const f of files) await t.mapShadow(`/${f.path}`, f.bytes);
   try {
-    return await compileMapped(source, label);
+    return await compileMapped(source, label, extraFonts);
   } finally {
     for (const f of files) await t.unmapShadow(`/${f.path}`);
   }
@@ -94,9 +112,10 @@ export async function compileWithFacts(
 async function compileMapped(
   source: string,
   label: string,
+  extraFonts: readonly string[] = [],
 ): Promise<{pdf: Uint8Array; facts: unknown[]; diagnostics: unknown[]}> {
-  const pdf = await compilePdf(source);
-  const t = typst();
+  const pdf = await compilePdf(source, extraFonts);
+  const t = typst(extraFonts);
   const path = `/sheet-${counter - 1}.typ`; // the file compilePdf just added
   const compiler = await t.getCompiler();
   const read = await compiler.runWithWorld(

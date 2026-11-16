@@ -197,5 +197,6 @@ smaller, 10 got larger (by up to 1 pt), one card drops one part fewer, the same 
 
 An equal band height for a name that wraps at the smallest size (D13: needs an Obsidian2Typst input); the
 text under the statblock at a common height (D16); equality across kinds; per-sheet equality (US-011 D1);
-band fonts other than the fixture's Libertinus and the author's preset font. **Not measured yet (G2):** the
-compile time of the one-line check on a run of 200 creature cards.
+band fonts other than the fixture's Libertinus, the test font DejaVu Sans Mono and the author's preset font.
+**Measured at #48:** 200 creature cards in equal mode compile in about 1.3 s in Node (off about 1.5 s); a first version
+that measured the names once per card failed at 200 and was changed (`docs/technical/tests.md`, #48).

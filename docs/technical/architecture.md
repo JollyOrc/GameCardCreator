@@ -49,6 +49,15 @@
   goes under the fit label (`gcc-fit`) in its own shape, so the worker's one query reads it and `fitWarnings`
   ignores it. With every switch off the source is that of 0.4.0. The screen shows a kind's two sizes only while its
   toggle is on (`isShown`, `redraws` in `settings/fields.ts`).
+- Equal title bands on creature cards (US-012): the creature kind has the same three settings (default title size
+  11.5 pt, `DEFAULT_CREATURE_TITLES`) and its warning comes after skill and spell. `card/sheet.ts` writes, when the
+  creature switch is on and the run has creature cards, the kind's data (sizes, per card its statblock data or, without
+  one, its name) and `gcc-eqc`, which decides "one line" by drawing each name the way the card does: `o2t-sb-box` of
+  Obsidian2Typst with a band-only statblock, or the card's own bold title, compared with a two-letter name; it never
+  copies the band rule. It runs once before the cards and sets the state `gcc-eqc-t`; each card's builder reads it
+  (`gcc-eqc-size()`) and sets `look.sizes.band` to `t` (every other size still s / 7). A call of `gcc-eqc` per card,
+  with the whole data, grew with the square of the cards and failed at 200 in typst.ts (#48); 200 creature cards now
+  compile in about 1.3 s, off about 1.5 s. With the creature switch off the source is that of 0.5.0.
 
 - `src/core/glyph/` (US-010): the glyph check. `coverage.ts` (`decodeCoverage`, `createCoverage`: what the faces of a
   compile cover, from the compiler's own font information), `check.ts` (`cardCodePoints`: the text the plugin sets on a

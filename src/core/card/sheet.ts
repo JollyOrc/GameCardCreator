@@ -386,6 +386,90 @@ const isCreature = (card: SkillCard | CreatureCard): card is CreatureCard =>
 /** The Typst name of the statblock data of card `i`. */
 const sbName = (i: number): string => `gcc-sb${i}`;
 
+/** US-012 AC-2, AC-7: the Typst name of the creature kind's data in equal mode. */
+const EQUAL_CREATURE_DATA = 'gcc-eqd-creature';
+/**
+ * US-012 AC-3, AC-5: the kind's name size `t`, read inside a card's builder from the state
+ * the prelude sets once (see `EQUAL_CREATURE_PRELUDE`).
+ */
+const EQUAL_CREATURE_T = 'gcc-eqc-size()';
+
+/**
+ * US-012 AC-2 to AC-7: the Typst helpers of equal title bands on creature cards.
+ *
+ * `gcc-eqc(d)` measures, for the creature kind's data `d` (`sizes`: the sizes tried,
+ * `w`: the text width, `items`: per card its statblock data `sb` or, without one, its
+ * `name`; `idx`: the card indexes), the kind's name size `t`: the largest size at which
+ * every item is one line, else the smallest. One line is decided by measuring the item
+ * as the card draws it, never by a copy of Obsidian2Typst's band rule (SCAR-017): a
+ * statblock is drawn by `o2t-sb-box` with only its band (every other part in the
+ * contract's empty form, US-004 AC-3; `look.sizes.band` set to the size) and compared
+ * with the same band holding a two-letter name; a card without a statblock is its bold
+ * title compared with a two-letter title. It also gives the tallest item at `t` (`h`),
+ * the wrapped cards and the card of the widest name at `t` (in its band font). It reads
+ * the names only, never the fit (SCAR-021). It is called once, before the cards: the
+ * result goes into the state `gcc-eqc-t`, which each card reads with `gcc-eqc-size()`
+ * (a call per card with the whole data made the compile grow with the square of the
+ * cards and fail at 200 in typst.ts, #48). On the first layout pass the state is still
+ * empty and the cards use `sizes.first()`; the next pass has `t`.
+ */
+const EQUAL_CREATURE_PRELUDE = `#let gcc-eqc-band(sb, band, s) = (band: band, look: (..sb.look, sizes: (..sb.look.sizes, band: s * 1pt)), boxes: none, track: none, attributes: none, traits: none, attacks: (), skills: none, tags: none)
+#let gcc-eqc-draw(it, s, name) = if it.sb == none { text(size: s * 1pt, weight: "bold", name) } else { o2t-sb-box(gcc-eqc-band(it.sb, name, s)) }
+#let gcc-eqc-name(it) = if it.sb == none { it.name } else { it.sb.band }
+#let gcc-eqc-wide(it, s) = {
+  let f = if it.sb == none { none } else { it.sb.look.fonts.at("band", default: none) }
+  let b = if it.sb == none { text(size: s * 1pt, weight: "bold", it.name) } else { text(size: s * 1pt, it.sb.band) }
+  measure(if f == none { b } else { text(font: f, b) }).width
+}
+#let gcc-eqc(d) = {
+  let ks = range(d.items.len())
+  let high(k, s) = measure(block(width: d.w, gcc-eqc-draw(d.items.at(k), s, gcc-eqc-name(d.items.at(k))))).height
+  let one(k, s) = high(k, s) <= measure(block(width: d.w, gcc-eqc-draw(d.items.at(k), s, "Xy"))).height + 0.01pt
+  let t = d.sizes.last()
+  for s in d.sizes {
+    if ks.all(k => one(k, s)) {
+      t = s
+      break
+    }
+  }
+  let wrapped = ks.filter(k => not one(k, t)).map(k => d.idx.at(k))
+  let best = 0
+  for k in ks {
+    if gcc-eqc-wide(d.items.at(k), t) > gcc-eqc-wide(d.items.at(best), t) { best = k }
+  }
+  let h = ks.map(k => high(k, t)).fold(0pt, calc.max)
+  (t: t, h: h, wrapped: wrapped, widest: d.idx.at(best))
+}
+#let gcc-eqc-t = state("gcc-eqc-t", none)
+#let gcc-eqc-size() = {
+  let t = gcc-eqc-t.get()
+  (if t == none { gcc-eqc-first } else { t }) * 1pt
+}`;
+
+/**
+ * US-012 AC-2, AC-7: the creature kind's data for `gcc-eqc`, the first size (the cards'
+ * size before the state is set) and the statement that measures once, sets the state
+ * and writes the fact (one line, under the label of the fit facts). A card's statblock data
+ * is the answer's text, written as it is (never edited); the name of a card without a
+ * statblock goes through `typstString` (rule 6).
+ */
+function creatureEqualCode(
+  members: readonly {card: CreatureCard; i: number}[],
+  sizes: readonly number[],
+  width: string,
+): string[] {
+  const items = members.map(({card}) =>
+    card.statblock === null
+      ? `(sb: none, name: ${typstString(card.name)})`
+      : `(sb: ${card.statblock.data}, name: none)`,
+  );
+  return [
+    `#let ${EQUAL_CREATURE_DATA} = (sizes: (${sizes.join(', ')},), w: ${width}, items: (${items.join(',\n')},), idx: (${members.map((m) => m.i).join(', ')},))`,
+    `#let gcc-eqc-first = ${sizes[0]}`,
+    `#context { let e = gcc-eqc(${EQUAL_CREATURE_DATA}); gcc-eqc-t.update(e.t); [#metadata((titles: "creature", size: e.t, height: e.h.mm(), wrapped: e.wrapped, widest: e.widest)) <${FIT_LABEL}>] }`,
+  ];
+}
+
 /**
  * US-004 AC-4 to AC-6, AC-11: the content builder `(s, drop) => ...` of one
  * creature card, `s` in pt, `drop` the parts given up.
@@ -394,12 +478,15 @@ const sbName = (i: number): string => `gcc-sb${i}`;
  * each size of `look.sizes` multiplied by s / 7 and, when Skills is given up,
  * `skills: none`, drawn by `o2t-sb-box`; without one the card's title (a refused
  * answer, D2). Then the Instincts, Actions and Signs sections, each with its
- * heading as a small bold line; a section with no blocks is not drawn.
+ * heading as a small bold line; a section with no blocks is not drawn. US-012 AC-3,
+ * AC-5: with `equal` the band's size is the kind's name size `t` (every other size
+ * still s / 7) and the title of a card without a statblock is set at `t`, not 1.3 em.
  */
 function creatureBuildCode(
   card: CreatureCard,
   i: number,
   headings: CreatureSettings,
+  equal = false,
 ): string {
   const hasStatblock = card.statblock !== null;
   const parts = [
@@ -413,14 +500,16 @@ function creatureBuildCode(
     parts.push(
       `  let d0 = ${sbName(i)}`,
       `  let f = s / ${STATBLOCK_BASE_PT}`,
-      '  let sizes = d0.look.sizes.pairs().map(p => (p.at(0), p.at(1) * f)).to-dict()',
+      equal
+        ? `  let sizes = d0.look.sizes.pairs().map(p => (p.at(0), if p.at(0) == "band" { ${EQUAL_CREATURE_T} } else { p.at(1) * f })).to-dict()`
+        : '  let sizes = d0.look.sizes.pairs().map(p => (p.at(0), p.at(1) * f)).to-dict()',
       '  let d = (..d0, look: (..d0.look, sizes: sizes), skills: if drop.contains("Skills") { none } else { d0.skills })',
       '  o2t-sb-box(d)',
       `  v(${GAP_PT}pt)`,
     );
   } else {
     parts.push(
-      `  block(below: ${GAP_PT}pt, text(size: 1.3em, weight: "bold")[#${typstString(card.name)}])`,
+      `  block(below: ${GAP_PT}pt, text(size: ${equal ? EQUAL_CREATURE_T : '1.3em'}, weight: "bold")[#${typstString(card.name)}])`,
       `  line(length: 100%, stroke: ${RULE_PT}pt)`,
       `  v(${GAP_PT}pt)`,
     );
@@ -499,7 +588,10 @@ function joinCredits(texts: readonly string[]): string {
  * out and `creditOmitted` says how high the band was (the run warns). US-011: a kind
  * (skill, spell) whose `titles` setting is on and that has cards gets one title size
  * and one header height (`EQUAL_PRELUDE`), with its data and its fact written once;
- * with every kind off the source is the text of 0.4.0. Refuses invalid sizes, 0 cards
+ * with every kind off the source is the text of 0.4.0. US-012: with `titles.creature` on
+ * and creature cards in the run, the creature kind gets one name size
+ * (`EQUAL_CREATURE_PRELUDE`), its data and its fact written once; off, the source is the
+ * text of 0.5.0. Refuses invalid sizes, 0 cards
  * and what the sheet refuses, with a message and no source.
  */
 export function cardSheetTypst(
@@ -509,8 +601,15 @@ export function cardSheetTypst(
   headings: CreatureSettings = DEFAULT_CREATURE,
   options: {
     iconCredit?: string;
-    /** US-011: the title settings of the kinds; absent or off: the cards of 0.4.0. */
-    titles?: {skill?: TitleSettings; spell?: TitleSettings};
+    /**
+     * US-011, US-012: the title settings of the kinds; absent or off: the cards of 0.4.0
+     * (skill, spell) and 0.5.0 (creature).
+     */
+    titles?: {
+      skill?: TitleSettings;
+      spell?: TitleSettings;
+      creature?: TitleSettings;
+    };
   } = {},
 ):
   | {
@@ -584,6 +683,20 @@ export function cardSheetTypst(
       if (!files.has(file.path)) files.set(file.path, file.bytes);
     }
   }
+  // US-012 AC-1, AC-7: the creature kind in equal mode, after the answer's prelude
+  // (`o2t-sb-box`) it measures with; off or without creature cards nothing is added.
+  const creatureEqual =
+    options.titles?.creature?.equalTitles === true && creatures.length > 0;
+  if (creatureEqual) {
+    preludes.push(
+      EQUAL_CREATURE_PRELUDE,
+      ...creatureEqualCode(
+        creatures,
+        titleSizes(options.titles!.creature!, sizes.sizeStep),
+        width,
+      ),
+    );
+  }
 
   const bandTop =
     grid.originY + grid.rows * sheet.cardHeight + (grid.rows - 1) * sheet.gap;
@@ -617,7 +730,7 @@ export function cardSheetTypst(
         ].join('');
         return (
           `${binds}${at}gcc-fit-c(${placed.index}, ${sizeList}, ${width}, ${height}, ` +
-          `${creatureBuildCode(card, placed.index, headings)}, gcc-parts${placed.index}))`
+          `${creatureBuildCode(card, placed.index, headings, creatureEqual)}, gcc-parts${placed.index}))`
         );
       }
       const rows = drawable(card);

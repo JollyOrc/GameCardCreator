@@ -22,14 +22,29 @@ export const MARSH = 'Marsh Lantern Wisp';
 export const FERRY = 'Old Grey Ferryman of the Sunken Weir';
 export const THORN = 'Thornwhisperingbramblequeen';
 
-/** The real answer for `name` (the Fen Hare answer with the band's text replaced). */
-export function answerNamed(name: string): StatblockOk {
+/** Two names whose order of width flips between the card's font and the band font (#48). */
+export const MAMMOTH = 'Mammoth Wombat';
+export const LILITH = 'Lilith of Little Hill';
+/** The band font of the recorded `bandFont` answers (a test font, tests/fixtures/fonts). */
+export const BAND_FONT = 'DejaVu Sans Mono';
+
+/**
+ * The real answer for `name` (the Fen Hare answer with the band's text replaced); with
+ * `bandFont`, also the look's fonts `(band: <font>)`, as a preset that names a band font
+ * writes it (measured, recorded in `bandFont`).
+ */
+export function answerNamed(name: string, bandFont?: string): StatblockOk {
   const from = '(band: "Fen Hare",';
   if (!FEN_HARE_ANSWER.data.startsWith(from)) throw new Error('fixture moved');
-  return {
-    ...FEN_HARE_ANSWER,
-    data: `(band: ${JSON.stringify(name)},${FEN_HARE_ANSWER.data.slice(from.length)}`,
-  };
+  let data = `(band: ${JSON.stringify(name)},${FEN_HARE_ANSWER.data.slice(from.length)}`;
+  if (bandFont !== undefined) {
+    if (!data.includes('fonts: (:)')) throw new Error('fixture moved');
+    data = data.replace(
+      'fonts: (:)',
+      `fonts: (band: ${JSON.stringify(bandFont)})`,
+    );
+  }
+  return {...FEN_HARE_ANSWER, data};
 }
 
 const para = (text: string): Block => ({kind: 'paragraph', runs: [{text}]});
@@ -44,6 +59,7 @@ export function creatureNamed(
   name: string,
   words = 40,
   statblock = true,
+  bandFont?: string,
 ): CreatureCard {
   const {card} = readCreature(
     `creatures/${name}.md`,
@@ -58,7 +74,7 @@ export function creatureNamed(
     instincts: section(a),
     actions: section(a),
     signs: section(words - 2 * a),
-    statblock: statblock ? answerNamed(name) : null,
+    statblock: statblock ? answerNamed(name, bandFont) : null,
   };
 }
 

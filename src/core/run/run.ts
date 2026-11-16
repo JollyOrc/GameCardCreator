@@ -266,7 +266,11 @@ export async function runCards(
     {
       iconCredit: scheme?.credit ?? '',
       // US-011 AC-1: the title settings of the kinds.
-      titles: {skill: settings.skill, spell: settings.spell},
+      titles: {
+        skill: settings.skill,
+        spell: settings.spell,
+        creature: settings.creature,
+      },
     },
   );
   if (!sheet.ok) {

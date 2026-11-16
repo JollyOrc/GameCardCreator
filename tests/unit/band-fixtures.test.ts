@@ -13,6 +13,9 @@ import {
   REED,
   THORN,
   answerNamed,
+  BAND_FONT,
+  LILITH,
+  MAMMOTH,
 } from '../support/band-fixtures';
 
 const recorded = JSON.parse(
@@ -20,7 +23,11 @@ const recorded = JSON.parse(
     join(process.cwd(), 'tests/fixtures/us-012-answers.json'),
     'utf8',
   ),
-) as {data: Record<string, string>; prelude: string};
+) as {
+  data: Record<string, string>;
+  prelude: string;
+  bandFont: {data: Record<string, string>};
+};
 
 describe('US-012 fixtures: the model of the answers equals the recording', () => {
   it('the recording holds the five names of the story', () => {
@@ -48,4 +55,16 @@ describe('US-012 fixtures: the model of the answers equals the recording', () =>
     expect(d.startsWith('(band: "Marsh Lantern Wisp",')).toBe(true);
     expect(d).not.toContain('Fen Hare');
   });
+});
+
+describe('US-012 fixtures (#48): a preset with a band font', () => {
+  it.each([MAMMOTH, LILITH])(
+    '%s: the model with the band font is the real data',
+    (name) => {
+      expect(Object.keys(recorded.bandFont.data)).toEqual([MAMMOTH, LILITH]);
+      expect(answerNamed(name, BAND_FONT).data).toBe(
+        recorded.bandFont.data[name],
+      );
+    },
+  );
 });

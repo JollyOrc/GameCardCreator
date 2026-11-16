@@ -12,7 +12,10 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {build} from 'esbuild';
 import {describe, expect, it} from 'vitest';
+import {cardSheetTypst} from '../../src/core/card/sheet';
 import {titleWarnings, type TitleSettings} from '../../src/core/card/titles';
+import {DEFAULT_CREATURE} from '../../src/core/creature/settings';
+import {FIT_LABEL} from '../../src/core/skill/fit';
 import type {CreatureCard} from '../../src/core/creature/read';
 import {DEFAULT_SHEET} from '../../src/core/sheet/layout';
 import type {SkillCard} from '../../src/core/skill/read';
@@ -22,8 +25,11 @@ import {makeSheet} from '../support/card-sheet';
 import {pagePaints} from '../support/pdf/graphics';
 import {openPdf} from '../support/pdf/reader';
 import {
+  BAND_FONT,
   FEN,
   FERRY,
+  LILITH,
+  MAMMOTH,
   MARSH,
   OFF_C,
   ON_C,
@@ -34,6 +40,7 @@ import {
   runB,
 } from '../support/band-fixtures';
 import {ON, parry, riverbank, titleFacts} from '../support/title-fixtures';
+import {compileWithFacts} from '../support/typst-node';
 
 const T = 120_000; // SCAR-030: one compile of a sheet takes 1 to 3 s in a full run
 const HEIGHT_MM = 0.05; // the story's heights are given to 0.01 mm, measured by the CLI
@@ -380,6 +387,87 @@ describe('US-012 AC-12: the bands of a run lie level', () => {
       const m = await sheetOf(runB(), {creature: OFF_C});
       expect(bandLines(m, 3, FERRY)).toBe(2);
       expect(Math.abs(bandRuleY(m, 3) - bandRuleY(m, 0))).toBeGreaterThan(1);
+    },
+    T,
+  );
+});
+
+describe('US-012 AC-4 (#48): the widest name is measured in its band font', () => {
+  // Mammoth Wombat is the wider name in Libertinus (21.64 against 20.29 mm at 7.75 pt),
+  // Lilith of Little Hill in DejaVu Sans Mono (34.57 against 23.04 mm): the two runs tell
+  // the band font from the card's font (SCAR-023: the mutant "widest in the card's font"
+  // survived the G2 tests, whose answers name no band font).
+  const widestOf = async (bandFont?: string) => {
+    const cards = [
+      creatureNamed(MAMMOTH, 40, true, bandFont),
+      creatureNamed(LILITH, 40, true, bandFont),
+    ];
+    const typst = cardSheetTypst(
+      cards,
+      DEFAULT_SHEET,
+      DEFAULT_SIZES,
+      DEFAULT_CREATURE,
+      {titles: {creature: ON_C}},
+    );
+    if (!typst.ok) throw new Error(typst.message);
+    const {facts} = await compileWithFacts(
+      typst.source,
+      FIT_LABEL,
+      typst.files,
+      bandFont === undefined ? [] : ['DejaVuSansMono.ttf'],
+    );
+    const f = titleFacts(facts).filter(
+      (x) => (x.titles as string) === 'creature',
+    );
+    expect(f).toHaveLength(1);
+    return f[0]!.widest;
+  };
+  it(
+    'no band font: Mammoth Wombat (card 0) is the widest',
+    async () => {
+      expect(await widestOf()).toBe(0);
+    },
+    T,
+  );
+  it(
+    'the band font DejaVu Sans Mono: Lilith of Little Hill (card 1) is the widest',
+    async () => {
+      expect(await widestOf(BAND_FONT)).toBe(1);
+    },
+    T,
+  );
+});
+
+describe('US-012 AC-6, rule 8 (#48): a large run in equal mode', () => {
+  it(
+    '200 creature cards compile, with one creature fact and no compiler warning (each card once measured the whole data: typst.ts failed at 200)',
+    async () => {
+      const names = [FEN, REED, MARSH, FERRY, THORN];
+      const cards = Array.from({length: 200}, (_, i) =>
+        creatureNamed(`${names[i % 5]} ${i}`, 40 + (i % 7) * 20),
+      );
+      const typst = cardSheetTypst(
+        cards,
+        DEFAULT_SHEET,
+        DEFAULT_SIZES,
+        DEFAULT_CREATURE,
+        {titles: {creature: ON_C}},
+      );
+      if (!typst.ok) throw new Error(typst.message);
+      const {facts, diagnostics} = await compileWithFacts(
+        typst.source,
+        FIT_LABEL,
+        typst.files,
+      );
+      const f = titleFacts(facts).filter(
+        (x) => (x.titles as string) === 'creature',
+      );
+      expect(f).toHaveLength(1);
+      expect(f[0]!.size).toBe(7);
+      expect(
+        (facts as {i?: number}[]).filter((x) => x.i !== undefined),
+      ).toHaveLength(200);
+      expect(diagnostics).toEqual([]);
     },
     T,
   );
