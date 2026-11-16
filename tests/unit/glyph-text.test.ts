@@ -65,6 +65,14 @@ describe('US-010 terms: the text of a skill card', () => {
     // (spaces are never in the set, so the words are tested without them)
     expect(has(set, 'Afterrule')).toBe(true);
   });
+  it('the result is sorted by code point even when the text is not (later characters have lower code points)', async () => {
+    const {cardCodePoints} = await load();
+    const card = readSkill('skills/B.md', 'zz ♞ é a\n', DEFAULT_SKILL).card;
+    const set = cardCodePoints(card as Card, DEFAULT_CREATURE);
+    expect(set).toEqual([...set].sort((a, b) => a - b));
+    expect(set.indexOf(0x61)).toBeLessThan(set.indexOf(0xe9));
+    expect(set.indexOf(0xe9)).toBeLessThan(set.indexOf(0x265e));
+  });
   it('the result is sorted and has each code point once', async () => {
     const {cardCodePoints} = await load();
     const card = readSkill(

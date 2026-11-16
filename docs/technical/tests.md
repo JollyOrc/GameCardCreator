@@ -578,3 +578,5 @@ checked spaces, which are not in the set by design, and one expected the wrong f
 | AC-6 | `unit/run-glyph` (every character drawn: same warnings and same source; two runs equal), `integration/glyph-check` (the PDF equals the PDF of a run without the check) |
 | AC-7 | `plugin/glyph-worker` (`Ж → ★ ◆ ß é` drawn, `漢 😀` and U+E000 not, the icon font's U+E946 drawn) |
 
+**Ticket #36 (2026-11-17), green:** `glyph-coverage` (7), `glyph-text` (10), `glyph-warning` (10) and `card-escape`, `card-codes` unchanged; two tests added after the mutation round (a result sorted by code point when the text is not; a range inside another face's range); mutation round on the real code: 29 mutants, 27 caught first time and two closed. The whole suite: `npm test` 1031 passed and 22 red (#37, #38, #39), integration 135 passed and 2 red (#39).
+

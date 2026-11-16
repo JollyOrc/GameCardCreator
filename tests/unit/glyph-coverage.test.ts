@@ -66,6 +66,21 @@ describe('US-010 AC-3: a character is drawn when some face of the compile has it
     expect(createCoverage([LATIN, EXTRA]).has(0x2318)).toBe(true);
     expect(createCoverage([LATIN, EXTRA]).has(0x2714)).toBe(false);
   });
+  it('a range that lies inside the range of another face does not shorten it (the merge keeps the larger end)', async () => {
+    const {createCoverage} = await load();
+    const outer = facesOf('A', [[0x20, 0x250]]);
+    const inner = facesOf('B', [[0x41, 0x42]]);
+    for (const faces of [
+      [outer, inner],
+      [inner, outer],
+    ]) {
+      const c = createCoverage(faces);
+      expect(c.has(0x41)).toBe(true);
+      expect(c.has(0x100)).toBe(true);
+      expect(c.has(0x24f)).toBe(true);
+      expect(c.has(0x250)).toBe(false);
+    }
+  });
   it('faces of one family (regular and bold) add up, in any order; no faces cover nothing', async () => {
     const {createCoverage} = await load();
     const a = facesOf('Serif', [[0x41, 0x42]]);
