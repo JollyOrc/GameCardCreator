@@ -23,14 +23,20 @@ const compilerWasmPath = join(
 );
 const fontsDir = join(root, 'assets/fonts');
 
-/** The bundled fonts: every .otf of assets/fonts, sorted, one text each. */
+/**
+ * US-009 AC-12: the font files of `dir` (the `.otf` and `.ttf` files, sorted by
+ * name; the `.txt` notices are not fonts).
+ */
+export const fontFiles = (dir) =>
+  readdirSync(dir)
+    .filter((name) => /\.(otf|ttf)$/.test(name))
+    .sort();
+
+/** The bundled fonts: every font file of assets/fonts, sorted, one text each. */
 const fonts = () =>
-  readdirSync(fontsDir)
-    .filter((name) => /\.otf$/.test(name))
-    .sort()
-    .map((name) =>
-      gzipBase64(new Uint8Array(readFileSync(join(fontsDir, name)))),
-    );
+  fontFiles(fontsDir).map((name) =>
+    gzipBase64(new Uint8Array(readFileSync(join(fontsDir, name)))),
+  );
 
 /** Computed once per process: gzip of 28 MB takes a few seconds. */
 let cached;
