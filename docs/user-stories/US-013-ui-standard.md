@@ -3,6 +3,7 @@
 **Status:** Ready; tests written (G2 2026-11-17, red by design). (G0 and G1 2026-11-17; O1 to O5 decided by the owner's "go" for the proposals;
 measurements M1 to M3 made in M11, 2026-11-17)
 **Introduced:** 0.7.0 (planned)
+**Tickets:** #51 (T1 selection), #52 (T2 dialog rules), #53 (T3 sections and debug info), #54 (T4 notices), #55 (T5 settings tab), #56 (T6 run dialog, entry points, string table), #57 (T7 test build, M12), in this order (G3, 2026-11-17)
 **Follows:** the preferred UI standard of Obsidian Knowledge (`ui-standard.md`, commit `d6660e2`), the
 owner's decisions of 2026-11-17 (D1 to D10 of the control project's alignment note): a run dialog beside
 today's direct actions (D2), collapsible sections instead of sub pages (D4), the selection tree in the run

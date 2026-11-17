@@ -136,6 +136,11 @@ describe('US-013 AC-4: the saved form', () => {
     ).toEqual(['Skills/B.md', 'Spells/Stone Skin.md']);
     expect(saveForm(new Set(), t)).toEqual([]);
   });
+  it('a vault without any note with a kind saves nothing checked as the empty list, not all (T1 mutant)', () => {
+    const t = buildTree(['Notes/Loose.md'], RULES);
+    expect(checkable(t)).toEqual([]);
+    expect(saveForm(new Set(), t)).toEqual([]);
+  });
   it('all opens with every checkable note checked, a new note included', () => {
     const t = buildTree([...PATHS, 'Skills/Reed Sweep.md'], RULES);
     expect(initialChecked(t, 'all').has('Skills/Reed Sweep.md')).toBe(true);

@@ -6,7 +6,19 @@ export interface SelectedItem {
   isFolder: boolean;
 }
 
-const isNote = (path: string): boolean => /\.md$/i.test(path);
+/** US-005 AC-2, US-013 AC-4: true for a Markdown note (`.md` in any case). */
+export const isNote = (path: string): boolean => /\.md$/i.test(path);
+
+/**
+ * US-005 AC-2, US-013 AC-4: the order of the cards' notes: by path without case, then by
+ * the exact path, so the order is total (`Skills/a.md`, `Skills/B.md`, `Skills/Sub/C.md`).
+ * The one comparator for this order (SCAR-017); a sort callback, it changes nothing.
+ */
+export function byPathWithoutCase(a: string, b: string): number {
+  const x = a.toLowerCase();
+  const y = b.toLowerCase();
+  return x < y ? -1 : x > y ? 1 : a < b ? -1 : a > b ? 1 : 0;
+}
 
 /**
  * US-005 AC-2: the cards' notes of the choices, in the order of the choices: a
@@ -31,11 +43,7 @@ export function expandSelection(
       add(item.path);
       continue;
     }
-    const sorted = notesBelow(item.path).sort((a, b) => {
-      const x = a.toLowerCase();
-      const y = b.toLowerCase();
-      return x < y ? -1 : x > y ? 1 : a < b ? -1 : a > b ? 1 : 0;
-    });
+    const sorted = notesBelow(item.path).sort(byPathWithoutCase);
     for (const path of sorted) add(path);
   }
   return out;
