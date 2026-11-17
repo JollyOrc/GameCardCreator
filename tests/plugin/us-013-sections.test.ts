@@ -91,6 +91,23 @@ describe('US-013 AC-7, AC-11: the first section with a problem', () => {
     };
     expect(firstProblemSection(s, '/v')).toBe('output');
   });
+  it('problems in two of the last three sections: the earlier one wins (T3 mutant)', () => {
+    const props = {...READY.skill, tagsProperty: ''};
+    const titles = {titleSize: 9, minTitleSize: 15};
+    expect(
+      firstProblemSection({...READY, skill: {...props, ...titles}}, '/v'),
+    ).toBe('properties');
+    expect(
+      firstProblemSection(
+        {
+          ...READY,
+          sheet: {...READY.sheet, cardWidth: 10},
+          skill: {...READY.skill, ...titles},
+        },
+        '/v',
+      ),
+    ).toBe('layout');
+  });
   it('the section that opens: the first with a problem, else Output', () => {
     expect(initiallyOpen({...READY, kindRules: []}, '/v')).toBe('kinds');
     expect(initiallyOpen(READY, '/v')).toBe('output');

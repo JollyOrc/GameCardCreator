@@ -29,23 +29,36 @@ export function resetDialog(page: ResetPage): ReplaceDialog {
 }
 
 /**
- * US-007 AC-9, AC-11: puts the keys of `page` back to the defaults of US-001 to US-003.
+ * US-007 AC-9, AC-11, US-013 AC-10: puts the settings `ids` back to their defaults
+ * (`DEFAULT_CARDS`). The one reset of the screen (SCAR-017): pages and sections use it.
  *
- * The file is loaded now; only the keys of that page change, every other key (the output
- * folder, the kind rules, the other page, unknown keys) stays. Throws the message of a
- * failed read or write; asking first is the caller's job.
+ * The file is loaded now; only those keys change, every other key (the output folder, the
+ * kind rules, other fields, unknown keys) stays; one write, in the store's queue. Throws the
+ * message of a failed read or write; asking first is the caller's job.
+ */
+export function resetFields(
+  deps: {store: SettingsStore},
+  ids: readonly string[],
+): Promise<void> {
+  return serial(deps.store, async () => {
+    const file = await loadFile(deps.store);
+    if (typeof file === 'string') throw new Error(file);
+    for (const id of ids) setRaw(file, id, valueOf(DEFAULT_CARDS, id));
+    const saved = await save(deps.store, file);
+    if (!saved.ok) throw new Error(saved.message);
+  });
+}
+
+/**
+ * US-007 AC-9, AC-11: puts the keys of `page` back to the defaults of US-001 to US-003,
+ * through `resetFields`.
  */
 export function resetPage(
   deps: {store: SettingsStore},
   page: ResetPage,
 ): Promise<void> {
-  return serial(deps.store, async () => {
-    const file = await loadFile(deps.store);
-    if (typeof file === 'string') throw new Error(file);
-    for (const field of fieldsOf(page)) {
-      setRaw(file, field.id, valueOf(DEFAULT_CARDS, field.id));
-    }
-    const saved = await save(deps.store, file);
-    if (!saved.ok) throw new Error(saved.message);
-  });
+  return resetFields(
+    deps,
+    fieldsOf(page).map((f) => f.id),
+  );
 }
