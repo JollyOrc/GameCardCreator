@@ -14,7 +14,7 @@ import {
   redraws,
   valueOf,
 } from '../../src/plugin/settings/fields';
-import {resetPage} from '../../src/plugin/settings/reset';
+import {resetSection} from '../../src/plugin/settings/sections';
 import {memoryStore} from '../support/memory-store';
 
 const deps = (store: ReturnType<typeof memoryStore>) => ({
@@ -109,7 +109,7 @@ describe('US-012 AC-9, AC-8: committed through the one path', () => {
     });
     expect(store.file()).toEqual({creature: {titleSize: 14}});
   });
-  it('the layout reset puts the creature title keys back and keeps the headings', async () => {
+  it('the Titles reset (US-013 AC-10) puts the creature title keys back and keeps the headings', async () => {
     const store = memoryStore({
       creature: {
         actionsHeading: 'Moves',
@@ -118,7 +118,7 @@ describe('US-012 AC-9, AC-8: committed through the one path', () => {
         minTitleSize: 8,
       },
     });
-    await resetPage({store}, 'layout');
+    await resetSection({store}, 'titles');
     const s = readSettingsFile(store.file()).settings.creature;
     expect([
       s.equalTitles,
@@ -131,7 +131,7 @@ describe('US-012 AC-9, AC-8: committed through the one path', () => {
     const store = memoryStore({
       creature: {actionsHeading: 'Moves', equalTitles: true, titleSize: 14},
     });
-    await resetPage({store}, 'properties');
+    await resetSection({store}, 'properties');
     const s = readSettingsFile(store.file()).settings.creature;
     expect([s.actionsHeading, s.equalTitles, s.titleSize]).toEqual([
       DEFAULT_CARDS.creature.actionsHeading,

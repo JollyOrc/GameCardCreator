@@ -1,4 +1,5 @@
-// US-007 AC-9 (SCAR-013, SCAR-014): resetting a page. The question names the page,
+// US-007 AC-9 (SCAR-013, SCAR-014), amended by US-013 AC-10 (#55): resetting a section
+// (the sub pages became the sections Note properties and Page and text size). The question names the page,
 // `Reset` and `Cancel`, the focus on `Cancel`; Enter acts on the focused button,
 // Escape and a close are `Cancel`. Only the keys of that page go back to their
 // defaults; the output folder, the kind rules, the other pages and unknown keys
@@ -6,10 +7,10 @@
 import {describe, expect, it} from 'vitest';
 import {DEFAULT_CARDS} from '../../src/core/run/settings';
 import {
-  PAGE_TITLES,
-  resetDialog,
-  resetPage,
-} from '../../src/plugin/settings/reset';
+  resetSection,
+  resetSectionDialog,
+  sectionTitle,
+} from '../../src/plugin/settings/sections';
 import {confirmDialogWith} from '../../src/plugin/ui';
 import {FakeEl} from '../support/fake-dom';
 import {memoryStore} from '../support/memory-store';
@@ -17,20 +18,20 @@ import {memoryStore} from '../support/memory-store';
 describe('US-007 AC-9: the question', () => {
   it('names the page; Reset and Cancel by their own names; the focus on Cancel', () => {
     for (const page of ['properties', 'layout'] as const) {
-      const d = resetDialog(page);
-      expect(d.message).toContain(PAGE_TITLES[page]);
+      const d = resetSectionDialog(page);
+      expect(d.message).toContain(sectionTitle(page));
       expect(d.replaceLabel).toBe('Reset');
       expect(d.cancelLabel).toBe('Cancel');
       expect(d.focus).toBe('cancel');
     }
-    expect(PAGE_TITLES).toEqual({
-      properties: 'Note properties',
-      layout: 'Page and text size',
-    });
+    expect([sectionTitle('properties'), sectionTitle('layout')]).toEqual([
+      'Note properties',
+      'Page and text size',
+    ]);
   });
   it('the two questions differ (they name different pages)', () => {
-    expect(resetDialog('properties').message).not.toBe(
-      resetDialog('layout').message,
+    expect(resetSectionDialog('properties').message).not.toBe(
+      resetSectionDialog('layout').message,
     );
   });
 });
@@ -61,7 +62,7 @@ describe('US-007 AC-9: resetting changes only the keys of its page', () => {
   };
   it('layout: the sheet and the three sizes go back to the defaults; the names, the labels, the rules, the folder and unknown keys stay', async () => {
     const store = memoryStore(edited);
-    await resetPage({store}, 'layout');
+    await resetSection({store}, 'layout');
     const file = store.file() as FileShape;
     expect(file.sheet).toMatchObject({
       cardWidth: DEFAULT_CARDS.sheet.cardWidth,
@@ -78,25 +79,17 @@ describe('US-007 AC-9: resetting changes only the keys of its page', () => {
       tagsProperty: 'labels',
       timingLabel: 'When',
     });
-    // US-011 AC-10: the title keys of both kinds are on this page and go back too
-    expect(file.spell).toEqual({
-      tagsProperty: 'marks',
-      equalTitles: false,
-      titleSize: 9.1,
-      minTitleSize: 7,
-    });
-    expect(file.skill).toMatchObject({
-      equalTitles: false,
-      titleSize: 9.1,
-      minTitleSize: 7,
-    });
+    // US-013 AC-10 (amended #55): the title keys are the Titles section now and stay
+    expect(file.spell).toEqual({tagsProperty: 'marks'});
+    expect(file.skill).not.toHaveProperty('equalTitles');
+    expect(file.skill).not.toHaveProperty('titleSize');
     expect(file.outputFolder).toBe('/out');
     expect(file.kindRules).toEqual([{folder: 'Skills', kind: 'skill'}]);
     expect(file.future).toEqual({x: 1});
   });
   it('properties: the skill names and labels and the spell tags go back; the sizes, the sheet, the rules and the folder stay', async () => {
     const store = memoryStore(edited);
-    await resetPage({store}, 'properties');
+    await resetSection({store}, 'properties');
     const file = store.file() as FileShape;
     expect(file.skill).toMatchObject({
       tagsProperty: 'tags',
@@ -118,7 +111,7 @@ describe('US-007 AC-9: resetting changes only the keys of its page', () => {
   it('the reset is loaded from the file now (a hand edit before it is kept outside the page)', async () => {
     const store = memoryStore({outputFolder: '/old'});
     store.set({outputFolder: '/by-hand', sheet: {margin: 20}});
-    await resetPage({store}, 'layout');
+    await resetSection({store}, 'layout');
     expect((store.file() as Record<string, unknown>).outputFolder).toBe(
       '/by-hand',
     );
@@ -126,7 +119,7 @@ describe('US-007 AC-9: resetting changes only the keys of its page', () => {
   });
   it("a file with nothing in it or none at all gets the page's defaults, nothing else", async () => {
     const store = memoryStore(null);
-    await resetPage({store}, 'properties');
+    await resetSection({store}, 'properties');
     const file = store.file() as Record<string, unknown>;
     expect(Object.keys(file).sort()).toEqual([
       'creature',
@@ -140,8 +133,8 @@ describe('US-007 AC-9: resetting changes only the keys of its page', () => {
       skill: {tagsProperty: 'x', maxSize: 9},
       sheet: {margin: 20},
     });
-    await resetPage({store}, 'properties');
-    await resetPage({store}, 'layout');
+    await resetSection({store}, 'properties');
+    await resetSection({store}, 'layout');
     const {readSettingsFile} = await import('../../src/plugin/settings-file');
     const {settings} = readSettingsFile(store.file());
     expect(settings.sheet).toEqual(DEFAULT_CARDS.sheet);
@@ -170,7 +163,7 @@ describe('US-007 AC-9: the modal logic, with the dialog data of the reset (SCAR-
   function open(page: 'properties' | 'layout' = 'layout') {
     const answer = confirmDialogWith<unknown>(FakeModal as never)(
       {},
-      resetDialog(page),
+      resetSectionDialog(page),
     );
     const modal = FakeModal.made[FakeModal.made.length - 1]!;
     const buttons = () =>

@@ -1,6 +1,7 @@
 // US-013 AC-8 (D7): the text of "Copy debug info". Red until the code ticket (G2, 2026-11-17).
 import {describe, expect, it} from 'vitest';
 import {debugInfo} from '../../src/plugin/debug-info';
+import {enabledPlugins} from '../../src/plugin/obsidian-deps';
 
 describe('US-013 AC-8: debugInfo', () => {
   it('versions, the enabled plugins sorted by id, then the settings file', () => {
@@ -35,5 +36,27 @@ describe('US-013 AC-8: debugInfo', () => {
     ).toBe(
       'Game Card Creator 0.7.0\nObsidian 1.15.0\nEnabled plugins:\nSettings file:\n(no settings file)\n',
     );
+  });
+});
+
+describe('US-013 AC-8: enabledPlugins (the structural read of app.plugins.plugins)', () => {
+  it('lists each plugin with a manifest id and version; skips the rest', () => {
+    const app = {
+      plugins: {
+        plugins: {
+          a: {manifest: {id: 'obsidian2typst', version: '0.15.2'}},
+          b: {manifest: {id: 'no-version'}},
+          c: {},
+          d: undefined,
+        },
+      },
+    };
+    expect(enabledPlugins(app)).toEqual([
+      {id: 'obsidian2typst', version: '0.15.2'},
+    ]);
+  });
+  it('an app without plugins gives an empty list', () => {
+    expect(enabledPlugins({})).toEqual([]);
+    expect(enabledPlugins({plugins: {}})).toEqual([]);
   });
 });

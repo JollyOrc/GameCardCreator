@@ -1,12 +1,12 @@
 // US-008 AC-4, AC-5, AC-6, AC-11 (SCAR-031): the entry point. It only builds
 // the dependencies of US-005's runner from Obsidian and registers the command
 // and the menus and the settings tab; every decision lives in a tested function.
-import {Modal, Notice, Plugin} from 'obsidian';
+import {apiVersion, Modal, Notice, Plugin} from 'obsidian';
 import {createCardCommands} from './commands';
 import {embeddedCompilerDeps} from './compiler/embedded-assets';
 import {createCompiler} from './compiler/index';
 import {createDiskWriter} from './disk-writer';
-import {pluginApi, vaultAccess} from './obsidian-deps';
+import {enabledPlugins, pluginApi, vaultAccess} from './obsidian-deps';
 import {createCardsRunner} from './runner';
 import {readSettingsFile} from './settings-file';
 import {createSettingsStore} from './settings/store';
@@ -43,6 +43,17 @@ export default class GameCardCreatorPlugin extends Plugin {
         noteExists: (path) => this.app.vault.getFileByPath(path) !== null,
         confirm: (dialog) => confirmDialogWith(Modal)(this.app, dialog),
         exists: (path) => createDiskWriter(path).exists(path),
+        // US-013 AC-8: gathered at the click; nothing is sent.
+        debugFacts: async () => {
+          const raw = await store.read();
+          return {
+            pluginVersion: this.manifest.version,
+            obsidianVersion: apiVersion,
+            settingsText: raw === null ? null : JSON.stringify(raw, null, 2),
+            plugins: enabledPlugins(this.app),
+          };
+        },
+        toClipboard: (text) => navigator.clipboard.writeText(text),
       }),
     );
     const runner = createCardsRunner({

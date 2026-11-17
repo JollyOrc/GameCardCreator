@@ -8,7 +8,7 @@ import {join} from 'node:path';
 import {describe, expect, it} from 'vitest';
 import {readSettingsFile} from '../../src/plugin/settings-file';
 import {commitSetting} from '../../src/plugin/settings/commit';
-import {resetPage} from '../../src/plugin/settings/reset';
+import {resetSection} from '../../src/plugin/settings/sections';
 import {memoryStore} from '../support/memory-store';
 
 const deps = (store: ReturnType<typeof memoryStore>) => ({
@@ -110,14 +110,14 @@ describe('US-009 AC-11, AC-15: the bleed field', () => {
 describe('US-009 AC-11: resetting a page', () => {
   it('the properties page reset also resets the scheme note to empty', async () => {
     const store = memoryStore({schemeNote: 'a.md', outputFolder: '/out'});
-    await resetPage({store}, 'properties');
+    await resetSection({store}, 'properties');
     const file = store.file() as Record<string, unknown>;
     expect(file.schemeNote).toBe('');
     expect(file.outputFolder).toBe('/out');
   });
-  it('the layout page reset sets the bleed to 0', async () => {
+  it('the layout section reset (US-013 AC-10) sets the bleed to 0', async () => {
     const store = memoryStore({sheet: {bleed: 1}});
-    await resetPage({store}, 'layout');
+    await resetSection({store}, 'layout');
     expect((store.file() as {sheet: {bleed: number}}).sheet.bleed).toBe(0);
   });
 });

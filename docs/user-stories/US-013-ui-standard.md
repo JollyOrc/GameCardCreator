@@ -88,7 +88,8 @@ Reader of the output: the author at a keyboard, desktop only, English. All examp
   Nothing is sent anywhere.
 - **AC-9 (feature rows for the equal title bars).** *Titles* has one row per kind (`Skill titles`,
   `Spell titles`, `Creature titles`): the toggle `Equal title bars` and a gear that opens a modal with
-  that kind's `Title size` and `Smallest title size` (US-011, US-012). The modal's fields commit like the
+  that kind's `Title size` and `Smallest title size` (US-011, US-012). **Amended 2026-11-17 (#55, SCAR-027):** the gear
+  appears only while the row's switch is on, as US-011 AC-10 shows the sizes only then. The modal's fields commit like the
   tab's (US-007 AC-3, AC-4). The toggle and the modal show the current values while the tab stays open
   (SCAR-016).
 - **AC-10 (reset per section).** Each section with defaults has `Reset this section to defaults` behind

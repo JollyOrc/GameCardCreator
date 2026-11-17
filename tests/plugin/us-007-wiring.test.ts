@@ -51,11 +51,11 @@ describe('US-007: the modules exist and the check looked at the sources', () => 
 });
 
 describe('US-007 AC-4 (SCAR-017): one path for every field', () => {
-  it('the tab commits a field in exactly one place (commitSetting), a rule in one (commitRule), a reset in one (resetPage)', () => {
+  it('the tab commits a field in exactly one place (commitSetting), a rule in one (commitRule), a reset in one (resetSection, US-013 AC-10)', () => {
     const tab = code(at('tab.ts'));
     expect(count(tab, /\bcommitSetting\s*\(/g)).toBe(1);
     expect(count(tab, /\bcommitRule\s*\(/g)).toBe(2); // set and delete
-    expect(count(tab, /\bresetPage\s*\(/g)).toBe(1);
+    expect(count(tab, /\bresetSection\s*\(/g)).toBe(1);
   });
   it('the tab builds its field rows from the table (fieldsOf) and decides the Enter key by fieldKey', () => {
     const tab = code(at('tab.ts'));
@@ -159,17 +159,16 @@ describe('US-007 (SCAR-031, SCAR-017): the entry point and the layering', () => 
     expect(count(main, /\baddSettingTab\s*\(/g)).toBe(1);
     expect(count(main, /\bcreateSettingsStore\s*\(/g)).toBe(1);
   });
-  it('the tab is a PluginSettingTab with the name Game Card Creator', () => {
+  it('the tab is a PluginSettingTab and draws no heading with the plugin name (US-013 AC-8)', () => {
     const tab = code(at('tab.ts'));
     expect(tab).toMatch(/extends PluginSettingTab\b/);
-    expect(tab).toMatch(/'Game Card Creator'/);
+    expect(tab).not.toMatch(/'Game Card Creator'/);
   });
-  // Narrowed at #19 (SCAR-023): the names of the two sub pages are one table, `PAGE_TITLES`
-  // (pinned to the story's wording in us-007-reset); the tab must use it, not copy the names.
-  it('the main page is named Game Card Creator; the sub pages take their names from PAGE_TITLES', () => {
+  // Narrowed at #19 (SCAR-023), amended by US-013 AC-7 (#55): the section names are one
+  // table, `SECTIONS` (pinned in us-013-sections); the tab must use it, not copy the names.
+  it('the sections take their names from SECTIONS; the tab copies none', () => {
     const tab = readFileSync(at('tab.ts'), 'utf8');
-    expect(tab).toContain("'Game Card Creator'");
-    expect(tab).toMatch(/PAGE_TITLES\[/);
+    expect(tab).toMatch(/\bSECTIONS\b/);
     expect(tab).not.toContain('Note properties');
     expect(tab).not.toContain('Page and text size');
   });

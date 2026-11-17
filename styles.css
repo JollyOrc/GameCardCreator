@@ -1,4 +1,4 @@
-/* Game Card Creator: no styles yet (the settings screen is US-007). */
+/* Game Card Creator: the styles of the settings tab and the run dialog (US-007, US-013). */
 
 /* US-007: the settings tab */
 .gcc-status {
@@ -17,4 +17,36 @@
 }
 .gcc-error:empty {
   display: none;
+}
+
+/* US-013 AC-7: the sections of the settings tab */
+.gcc-divider {
+  border: none;
+  border-top: 1px solid var(--interactive-accent);
+  opacity: 0.5;
+  margin: 1.25em 0;
+}
+.gcc-section > summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.25em;
+  cursor: pointer;
+}
+.gcc-section > summary::-webkit-details-marker {
+  display: none;
+}
+.gcc-section > summary .setting-item {
+  flex: 1;
+  border-top: none;
+}
+.gcc-chevron {
+  display: inline-flex;
+  transition: transform 100ms ease-in-out;
+}
+.gcc-section[open] > summary .gcc-chevron {
+  transform: rotate(90deg);
+}
+.gcc-section-body {
+  padding-left: 1.5em;
 }

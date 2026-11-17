@@ -26,3 +26,24 @@ export const RUN = {
   seeSettings: (text: string, section: string, file: string): string =>
     `${text}\nSee Settings → ${section} (file: ${file})`,
 } as const;
+
+/** US-007, US-013 AC-7 to AC-10: the settings tab's texts. */
+export const TAB = {
+  helpLink: 'Help: the README',
+  helpUrl: 'https://github.com/JollyOrc/GameCardCreator#readme',
+  debugName: 'Copy debug info',
+  debugDesc:
+    'Copies the versions, the settings file and the enabled plugins, for a bug report. Nothing is sent.',
+  debugCopied: 'Debug info copied.',
+  addRule: 'Add rule',
+  deleteRule: 'Delete rule',
+  rule: (n: number): string => `Rule ${n}`,
+  folderPlaceholder: 'Folder',
+  folderNotInVault: (folder: string): string =>
+    `The folder "${folder}" is not in the vault`,
+  chooseFolder: 'Choose folder…',
+  resetSection: 'Reset this section to defaults',
+  resetButton: 'Reset…',
+  titleSizes: 'Title sizes',
+  equalTitleBars: 'Equal title bars',
+} as const;

@@ -17,7 +17,7 @@ import {
   redraws,
   valueOf,
 } from '../../src/plugin/settings/fields';
-import {resetPage} from '../../src/plugin/settings/reset';
+import {resetSection} from '../../src/plugin/settings/sections';
 import {memoryStore} from '../support/memory-store';
 
 const deps = (store: ReturnType<typeof memoryStore>) => ({
@@ -140,12 +140,12 @@ describe('US-011 AC-10, AC-9: committed through the one path', () => {
     await commitSetting(deps(store), 'skill.equalTitles', false);
     expect(store.file()).toEqual({skill: {equalTitles: false, titleSize: 13}});
   });
-  it('the page reset puts both kinds back to the defaults (with the confirmation of US-007 AC-9)', async () => {
+  it('the Titles section reset (US-013 AC-10) puts both kinds back to the defaults', async () => {
     const store = memoryStore({
       skill: {equalTitles: true, titleSize: 13, minTitleSize: 8},
       spell: {equalTitles: true, titleSize: 12},
     });
-    await resetPage({store}, 'layout');
+    await resetSection({store}, 'titles');
     const s = readSettingsFile(store.file()).settings;
     expect([
       s.skill.equalTitles,
@@ -165,10 +165,11 @@ describe('US-011 AC-10: the tab calls the decisions (text check, SCAR-031)', () 
     join(process.cwd(), 'src/plugin/settings/tab.ts'),
     'utf8',
   );
+  // Amended by US-013 AC-9 (#55): the sizes sit behind the feature row's gear, offered
+  // only while the switch is on; every other group's fields still go through isShown.
   it('the fields of a group are drawn through isShown with the settings of now', () => {
-    expect(tab).toMatch(
-      /this\.drawFields\(\s*el,\s*settings,\s*page,\s*fields\.filter\(\(f\) => isShown\(f, settings\)\),?\s*\)/,
-    );
+    expect(tab).toMatch(/\.filter\(\(f\) => isShown\(f, settings\)\)/);
+    expect(tab).toMatch(/every\(\(f\) => isShown\(f, settings\)\)/);
   });
   it('a toggle redraws the page after its commit when redraws(id) says so', () => {
     expect(tab).toMatch(

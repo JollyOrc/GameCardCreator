@@ -107,3 +107,30 @@ export function pluginApi(app: object, id: string): unknown {
   ).plugins?.plugins;
   return plugins?.[id]?.api;
 }
+
+/**
+ * US-013 | AC-8: The enabled plugins with their versions, read from Obsidian's private
+ * `app.plugins.plugins` (not in the typings; a structural read, never kept). A plugin
+ * without a manifest is left out; none at all is an empty list.
+ */
+export function enabledPlugins(app: object): {id: string; version: string}[] {
+  const plugins = (
+    app as {
+      plugins?: {
+        plugins?: Record<
+          string,
+          {manifest?: {id?: unknown; version?: unknown}} | undefined
+        >;
+      };
+    }
+  ).plugins?.plugins;
+  const out: {id: string; version: string}[] = [];
+  for (const plugin of Object.values(plugins ?? {})) {
+    const id = plugin?.manifest?.id;
+    const version = plugin?.manifest?.version;
+    if (typeof id === 'string' && typeof version === 'string') {
+      out.push({id, version});
+    }
+  }
+  return out;
+}
