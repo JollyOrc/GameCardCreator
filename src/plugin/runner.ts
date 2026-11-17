@@ -11,6 +11,12 @@ import {expandSelection, type SelectedItem} from '../core/run/select';
 import {checkCardsSettings, type CardsSettings} from '../core/run/settings';
 import type {CardWarning} from '../core/skill/read';
 import type {DiskWriter} from './disk-writer';
+import {
+  firstProblemSection,
+  sectionTitle,
+  type SectionId,
+} from './settings/sections';
+import {RUN} from './strings';
 
 /** US-005 AC-9: what the runner needs from the outside. Nothing here writes the vault (AC-10). */
 export interface RunnerDeps {
@@ -79,9 +85,6 @@ export interface CardsRunner {
   isRunning(): boolean;
 }
 
-const plural = (n: number, one: string, many: string): string =>
-  `${n} ${n === 1 ? one : many}`;
-
 /** A path in `folder`, with the separator the folder uses. */
 const inFolder = (folder: string, name: string): string =>
   `${folder}${folder.includes('\\') && !folder.includes('/') ? '\\' : '/'}${name}`;
@@ -94,11 +97,14 @@ const inFolder = (folder: string, name: string): string =>
 export function createCardsRunner(deps: RunnerDeps): CardsRunner {
   let running = false;
 
-  /** US-008 AC-4: a refusal for a setting, naming the settings file when known. */
-  const refuse = (text: string): void =>
+  /**
+   * US-008 AC-4, US-013 AC-11: a refusal for a setting, naming the section that holds the
+   * problem and the settings file when the file is known.
+   */
+  const refuse = (text: string, section: SectionId): void =>
     deps.notice(
       deps.settingsFile
-        ? `${text}\nSee Settings → Game Card Creator (file: ${deps.settingsFile()})`
+        ? RUN.seeSettings(text, sectionTitle(section), deps.settingsFile())
         : text,
     );
 
@@ -107,7 +113,7 @@ export function createCardsRunner(deps: RunnerDeps): CardsRunner {
 
   async function go(name: string, plan: () => Promise<Plan>): Promise<void> {
     if (running) {
-      deps.notice('A run of cards is already in progress');
+      deps.notice(RUN.busy);
       return;
     }
     running = true;
@@ -115,7 +121,10 @@ export function createCardsRunner(deps: RunnerDeps): CardsRunner {
       const settings = await deps.settings();
       const issues = checkCardsSettings(settings, deps.vaultRoot());
       if (issues.length > 0) {
-        refuse(`Cannot make cards: ${issues.join('; ')}`);
+        refuse(
+          RUN.cannot(issues.join('; ')),
+          firstProblemSection(settings, deps.vaultRoot()) ?? 'output',
+        );
         return;
       }
       const checked = checkOutputFolder(
@@ -123,12 +132,12 @@ export function createCardsRunner(deps: RunnerDeps): CardsRunner {
         deps.vaultRoot(),
       );
       if (!checked.ok) {
-        refuse(`Cannot make cards: ${checked.message}`);
+        refuse(RUN.cannot(checked.message), 'output');
         return;
       }
       const folder = checked.folder;
       if (await deps.isFile(folder)) {
-        refuse(`Cannot make cards: output folder "${folder}" is a file`);
+        refuse(RUN.cannot(RUN.outputIsFile(folder)), 'output');
         return;
       }
 
@@ -144,6 +153,7 @@ export function createCardsRunner(deps: RunnerDeps): CardsRunner {
         exists.some(Boolean) &&
         !(await deps.confirmReplace([pdfPath, reportPath]))
       ) {
+        deps.notice(RUN.cancelled);
         return;
       }
 
@@ -166,7 +176,7 @@ export function createCardsRunner(deps: RunnerDeps): CardsRunner {
             }),
       });
       if (!result.ok) {
-        deps.notice(result.message);
+        deps.notice(RUN.failed(result.message));
         return;
       }
       const warnings = [...planned.warnings, ...result.warnings];
@@ -174,12 +184,11 @@ export function createCardsRunner(deps: RunnerDeps): CardsRunner {
       await writer.writeBytes(pdfPath, result.pdf);
       await writer.writeText(reportPath, warningsFile(name, warnings));
       deps.notice(
-        `${plural(result.cards, 'card', 'cards')} on ${plural(result.pages, 'page', 'pages')}, ` +
-          `${plural(warnings.length, 'warning', 'warnings')}. Written to ${folder}`,
+        RUN.done(result.cards, result.pages, warnings.length, folder),
       );
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error);
-      deps.notice(`Making cards failed: ${reason}`);
+      deps.notice(RUN.failed(reason));
     } finally {
       running = false;
     }
