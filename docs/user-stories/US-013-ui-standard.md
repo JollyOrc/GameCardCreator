@@ -1,6 +1,6 @@
 # US-013 — The UI standard: a run dialog, a ribbon icon and the settings in sections
 
-**Status:** Ready; tests written (G2 2026-11-17, red by design). (G0 and G1 2026-11-17; O1 to O5 decided by the owner's "go" for the proposals;
+**Status:** Done (tickets #51 to #58; M12 passed 2026-11-17, F1 fixed in #58 and re-checked). (G0 and G1 2026-11-17; O1 to O5 decided by the owner's "go" for the proposals;
 measurements M1 to M3 made in M11, 2026-11-17)
 **Introduced:** 0.7.0 (planned)
 **Tickets:** #51 (T1 selection), #52 (T2 dialog rules), #53 (T3 sections and debug info), #54 (T4 notices), #55 (T5 settings tab), #56 (T6 run dialog, entry points, string table), #57 (T7 test build, M12), in this order (G3, 2026-11-17)
