@@ -326,7 +326,9 @@ describe('US-008 AC-4: a refusal names the settings file', () => {
       notice: (t: string) => void notices.push(t),
     } as never);
     await r.runDeck({path: 'Deck.md', name: 'Deck'});
-    expect(notices).toEqual(['There are no cards to print']);
+    expect(notices).toEqual([
+      '❌ Card run failed: There are no cards to print',
+    ]);
   });
 });
 

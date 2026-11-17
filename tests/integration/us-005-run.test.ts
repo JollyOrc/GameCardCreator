@@ -42,7 +42,7 @@ describe('US-005 AC-12: the composed deck', () => {
           '- SKILL_TEXT_OVERFLOW — skills/Long Drill.md — 5.5 pt\n',
       );
       expect(rec.notices).toEqual([
-        '3 cards on 1 page, 4 warnings. Written to /out',
+        '✅ Created 3 cards on 1 page, 4 warnings. Written to /out',
       ]);
     },
     LIMIT,

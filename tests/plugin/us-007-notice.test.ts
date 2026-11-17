@@ -26,7 +26,7 @@ const NOTE_DEPS = {
 const FILE = '/v/.obsidian/plugins/game-card-creator/data.json';
 
 describe('US-007 AC-12: the refusal notice', () => {
-  it('names the setting, "Settings → Game Card Creator" and the file', async () => {
+  it('names the setting, the first section with a problem (US-013 AC-11) and the file', async () => {
     const notices: string[] = [];
     const runner = createCardsRunner({
       ...NOTE_DEPS,
@@ -36,7 +36,7 @@ describe('US-007 AC-12: the refusal notice', () => {
     } as never);
     await runner.runDeck({path: 'Deck.md', name: 'Deck'});
     expect(notices).toEqual([
-      `Cannot make cards: Output folder is empty; Kind rules: add at least one rule (a folder and a kind)\nSee Settings → Game Card Creator (file: ${FILE})`,
+      `Cannot make cards: Output folder is empty; Kind rules: add at least one rule (a folder and a kind)\nSee Settings → Output (file: ${FILE})`,
     ]);
   });
   it('the refusal of an output folder that is a file names them too', async () => {
@@ -54,7 +54,7 @@ describe('US-007 AC-12: the refusal notice', () => {
     } as never);
     await runner.runDeck({path: 'Deck.md', name: 'Deck'});
     expect(notices).toEqual([
-      `Cannot make cards: output folder "/out" is a file\nSee Settings → Game Card Creator (file: ${FILE})`,
+      `Cannot make cards: output folder "/out" is a file\nSee Settings → Output (file: ${FILE})`,
     ]);
   });
   it('without the file path the notice is as before; a run with no PDF has no suffix', async () => {
@@ -79,6 +79,6 @@ describe('US-007 AC-12: the refusal notice', () => {
       notice: (t: string) => void other.push(t),
     } as never);
     await runner.runDeck({path: 'Deck.md', name: 'Deck'});
-    expect(other).toEqual(['There are no cards to print']);
+    expect(other).toEqual(['❌ Card run failed: There are no cards to print']);
   });
 });

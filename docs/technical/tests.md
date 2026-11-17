@@ -698,3 +698,45 @@ test files (green with the settings and sheet tickets, SCAR-044).
 **Ticket #48 (2026-11-16), green:** `creature-titles-source`, `run-creature-titles`, `creature-titles-pdf` (21 after three added: the widest name in its band font, with and without one, closing the surviving mutant "widest in the card's font", the G2 answers name no band font; 200 creature cards in equal mode compile with no compiler warning, the regression test of the defect below), `band-fixtures` (10: the band-font answers recorded from Obsidian2Typst 0.15.2 and replayed), `card-escape` (nine places), `card-codes` (the new constants renamed `EQUAL_CREATURE_*`: the guard's pattern matched a doc comment that named `` `CREATURE_EQUAL_PRELUDE` ``); support: `typst-node` takes extra test fonts for one compile (a second compiler instance; the default one unchanged). **Defect found and fixed:** each card's builder called `gcc-eqc` with the whole data; equal mode took 1.3 s at 38 cards, 7.7 s at 120 and failed at 200 (`RuntimeError: unreachable` in typst.ts; the Typst CLI compiled 160 in 12.6 s). Now measured once and kept in a state: 0.5 s at 38, 1.0 s at 120, 1.3 s at 200 (off 1.5 s at 200), no warning from the CLI. The cause (the memo key hashing the whole data per call) is not verified; the measurement is. Mutation rounds: 12 mutants, 11 caught, the twelfth closed by the band-font test; after the fix 14 mutants (the 12, "each card measures the whole data again", "the state is never set"), 14 caught. Looked at: a sheet of six cards at 150 ppi, the bands at 600 ppi (on; smallest 9: the ferryman's band on two lines with the marks at mid-height). The whole suite: `npm test` 1178 passed and 16 red (#49), integration 189 passed; typecheck clean; lint clean.
 
 **Ticket #49 (2026-11-16), green:** `creature-titles-screen`, `titles-screen`, `us-007-fields`, `us-007-tab-helpers`, `scheme-settings`, and `us-007-wiring`, `us-007-commit`, `us-007-reset`, `creature-screen` unchanged (227 tests in the nine files); mutation round: 6 mutants (each size always shown, the size shown by the spell's toggle, the spell's group, the properties page, the toggle left out), 6 caught. The whole suite: `npm test` 1194 passed, integration 189 passed, typecheck clean, lint clean, build ok.
+
+## US-013 the UI standard: run dialog, ribbon icon, settings in sections (2026-11-17, G2): tests written (red by design)
+
+New files: `plugin/us-013-selection` (the tree from paths and kind rules, the order of the cards, checking folders and
+greyed notes, the saved form `all`, `readSelection`, renames and deletes by path segments, the saved-selection command),
+`plugin/us-013-dialog-rules` (the destination line, the enabled button, Enter / Escape / IME, the values saved at the
+run: normal form, kept keys, a refused folder, a hand edit kept), `plugin/us-013-sections` (five sections and their order,
+each field's section, the first section with a problem, reset per section, the feature rows), `plugin/us-013-debug-info`,
+`plugin/us-013-notices` (✅ / ❌, the refusal naming its section), `plugin/us-013-wiring` (the commands and `RIBBON`; text
+checks: `main.ts` registers them and listens to rename and delete; the tab without `Back`, with `<details>`; no inline
+style in `src/plugin`; the `gcc-` classes in `styles.css`; one string table). Amended (AC-11's notices, twelve pins in six
+files): `plugin/run-runner` (3), `plugin/us-007-notice` (3), `plugin/glyph-runner` (3), `plugin/creature-runner` (1),
+`plugin/us-008-adapters` (1), `integration/us-005-run` (1).
+
+Proven against a throwaway reference implementation of the five pure modules and the runner's notices (written in
+place, deleted): every test green there except the six text checks of `us-013-wiring` that need the real `main.ts`, tab,
+dialog, styles and string table (they turn green with the code tickets; their patterns read the named files); `npm test`
+1275 passed, integration 189 passed. Fifteen mutants on the reference, fifteen caught (rename by name prefix, no `all`
+form, plain sort instead of without case, saved paths not filtered, notes without a kind checkable, Enter ignoring the
+disabled button, month off by one, the button ignoring the count, no folder check before saving, a properties problem
+missed, any section resettable, titles fields in Page and text size, plugins unsorted, no cancel notice, every refusal
+naming Output); backups by full path, `shasum -c` 5 of 5 after the round. Found while proving: four amended pins the
+first text search missed (they pin `There are no cards to print` and `^1 card on 1 page` in other forms; SCAR-023). On
+the code of 0.6.0: `npm test` 1185 passed, 25 red (the US-013 files and the amended pins); integration 188 passed, 1 red
+(the amended done notice); typecheck red only in the new test files.
+
+| AC | Test |
+|---|---|
+| AC-1 | `us-013-wiring` (RIBBON, the two commands, main.ts registration, menus unchanged), `us-013-selection` (`plannedSavedRun`) |
+| AC-2 | `us-013-dialog-rules` (`canRun`); the dialog itself: manual check (G4) |
+| AC-3 | `us-013-dialog-rules` (`destinationLine`) |
+| AC-4 | `us-013-selection` (tree, order, checking, saved form, `initialChecked`, `readSelection`) |
+| AC-5 | `us-013-dialog-rules` (`runDialogKey`, `saveRunChoices`) |
+| AC-6 | `us-013-selection` (`followRename`, `followDelete`), `us-013-wiring` (main.ts listens) |
+| AC-7 | `us-013-sections` (sections, `sectionOf`, `firstProblemSection`, `initiallyOpen`), `us-013-wiring` (tab text checks, styles) |
+| AC-8 | `us-013-debug-info` |
+| AC-9 | `us-013-sections` (`FEATURE_ROWS`) |
+| AC-10 | `us-013-sections` (`RESETTABLE`, `resetSectionDialog`, `resetSection`) |
+| AC-11 | `us-013-notices`, the amended pins |
+| AC-12 | `us-013-wiring` (string table text check) |
+| AC-13 | M11 (measured: no progress tab); no test |
+| AC-14 | the manual check of the last ticket |

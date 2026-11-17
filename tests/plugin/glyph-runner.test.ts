@@ -73,7 +73,9 @@ describe('US-010 AC-5: the runner, the notice and the warnings file', () => {
     const {runner, calls} = setup(async () => ({ok: true, faces: [LATIN]}));
     await runner.runSelection(SELECTION);
     expect(calls.coverage).toEqual([[]]);
-    expect(calls.notices.at(-1)).toMatch(/^2 cards on 1 page, 1 warning\./);
+    expect(calls.notices.at(-1)).toMatch(
+      /^✅ Created 2 cards on 1 page, 1 warning\./,
+    );
     const file = calls.texts.find((t) => t.path.endsWith('.md'))!.text;
     expect(file).toContain(
       '- SKILL_GLYPH_MISSING — skills/Chinese.md — 漢 U+6F22, 😀 U+1F600\n',
@@ -86,7 +88,9 @@ describe('US-010 AC-5: the runner, the notice and the warnings file', () => {
       message: 'The plugin was unloaded',
     }));
     await runner.runSelection(SELECTION);
-    expect(calls.notices.at(-1)).toMatch(/^2 cards on 1 page, 1 warning\./);
+    expect(calls.notices.at(-1)).toMatch(
+      /^✅ Created 2 cards on 1 page, 1 warning\./,
+    );
     const file = calls.texts.find((t) => t.path.endsWith('.md'))!.text;
     // the path is empty: the file's form for every warning with no path
     expect(file).toContain(
@@ -96,7 +100,9 @@ describe('US-010 AC-5: the runner, the notice and the warnings file', () => {
   it('a runner without a coverage service (an older wiring): no check, no warning', async () => {
     const {runner, calls} = setup();
     await runner.runSelection(SELECTION);
-    expect(calls.notices.at(-1)).toMatch(/^2 cards on 1 page, 0 warnings\./);
+    expect(calls.notices.at(-1)).toMatch(
+      /^✅ Created 2 cards on 1 page, 0 warnings\./,
+    );
   });
 });
 

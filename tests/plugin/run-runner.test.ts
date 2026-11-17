@@ -114,7 +114,7 @@ describe('US-005 AC-4, AC-8, AC-9: a run from a deck note', () => {
       ],
     ]);
     expect(log.notices).toEqual([
-      '2 cards on 1 page, 0 warnings. Written to /out',
+      '✅ Created 2 cards on 1 page, 0 warnings. Written to /out',
     ]);
   });
   it('singular counts: 1 card on 1 page, 1 warning', async () => {
@@ -126,7 +126,7 @@ describe('US-005 AC-4, AC-8, AC-9: a run from a deck note', () => {
     NOTES['Single Deck.md'] = '- [[Reed Sweep]]\n- [[Gone]]\n';
     await runner.runDeck({path: 'Single Deck.md', name: 'Single Deck'});
     expect(log.notices).toEqual([
-      '1 card on 1 page, 1 warning. Written to /out',
+      '✅ Created 1 card on 1 page, 1 warning. Written to /out',
     ]);
   });
   it('the warnings of the deck and the cards are in the file, in order', async () => {
@@ -170,7 +170,9 @@ describe('US-005 AC-4, AC-8, AC-9: a run from a deck note', () => {
     NOTES['Empty Deck.md'] = 'No links here.\n';
     await runner.runDeck({path: 'Empty Deck.md', name: 'Empty Deck'});
     expect(log.writes).toEqual([]);
-    expect(log.notices).toEqual(['There are no cards to print']);
+    expect(log.notices).toEqual([
+      '❌ Card run failed: There are no cards to print',
+    ]);
   });
 });
 

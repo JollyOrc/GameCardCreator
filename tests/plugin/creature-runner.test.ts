@@ -78,7 +78,7 @@ describe('US-004 AC-3, AC-12: the runner hands the API and the extra to the run'
       fonts: FONTS,
     });
     expect(calls.writes.length).toBe(2);
-    expect(calls.notices.at(-1)).toMatch(/^1 card on 1 page/);
+    expect(calls.notices.at(-1)).toMatch(/^✅ Created 1 card on 1 page/);
   });
   it('no plugin: no card, the refusal is the notice of the run, nothing is compiled', async () => {
     const {runner, calls} = setup(() => undefined);
