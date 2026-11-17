@@ -747,3 +747,9 @@ empty list, #51), `us-013-sections` (two of the last three sections in trouble, 
 `runSavedSelection`, `openSettingsTab`, #56), `run-disk-writer` (`modifiedAt`, #56). Amended at G4: `us-007-reset`,
 `us-007-wiring`, `titles-screen`, `creature-titles-screen`, `scheme-screen` (#55: the page reset became the section
 reset), `us-013-wiring` (#56: the rename/delete handlers live in `run-dialog/deps.ts`, main.ts registers them).
+
+#58 (F1, 2026-11-17): new `plugin/f1-question-focus` (a fake modal that copies Obsidian 1.15.0's measured focus of the
+first focusable element after `onOpen`; both questions: order Cancel first, Enter right after opening cancels, Enter
+after moving to the action acts, back to Cancel cancels); red on the code before the fix (4 of 6), green after.
+Amended: `us-008-adapters`, `us-007-reset` (the order; buttons found by name). Mutants: 3 of 3 after one survivor (the
+focus listener of Cancel) got the back-to-Cancel test.

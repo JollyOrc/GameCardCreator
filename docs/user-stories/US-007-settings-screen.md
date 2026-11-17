@@ -100,7 +100,9 @@ English only (D9).
   `Cancel`, Enter acting on the focused button, Escape and a close being `Cancel` (the
   dialog logic of US-005's `dialogKey`). Only the keys of that page are reset. The main
   page has no reset: the output folder and the kind rules are never reset by the screen.
-  Deleting a kind rule asks nothing (D15).
+  Deleting a kind rule asks nothing (D15). **Amended 2026-11-17:** the sub pages became
+  sections with `Reset this section to defaults` (US-013 AC-10); the buttons read `Cancel`,
+  `Reset` in that order so the focus stays on `Cancel` in Obsidian (#58, F1).
 - **AC-10 (the file, SCAR-018).** The first write by the screen first copies `data.json` to
   `data-before-settings-screen.json` in the plugin's folder (never overwritten once it
   exists; no copy when there was no file; a failed copy stops the write and says so); the

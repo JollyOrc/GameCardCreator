@@ -92,6 +92,10 @@ function fakeApp(over: {base?: string | null} = {}) {
   return {app, log};
 }
 
+/** #58: a button by its name (the order changed: Cancel first). */
+const byName = (list: FakeEl[], name: string): FakeEl =>
+  list.find((b) => b.text === name)!;
+
 describe('US-008 AC-5: vaultAccess', () => {
   it("readNote reads the note's own text with vault.read, not the cache", async () => {
     const {vaultAccess} = await load<{
@@ -372,9 +376,10 @@ describe('US-008 AC-6: the confirmation modal', () => {
       .map((e) => e.text)
       .join('\n');
     for (const f of FILES) expect(text).toContain(f);
-    expect(buttons().map((b) => b.text)).toEqual(['Replace', 'Cancel']);
-    expect(buttons()[1]!.focused).toBe(true);
-    expect(buttons()[0]!.focused).toBe(false);
+    // #58 (F1): the safe button first
+    expect(buttons().map((b) => b.text)).toEqual(['Cancel', 'Replace']);
+    expect(byName(buttons(), 'Cancel').focused).toBe(true);
+    expect(byName(buttons(), 'Replace').focused).toBe(false);
   });
   it.each([
     ['Escape', {key: 'Escape'}, false],
@@ -387,21 +392,21 @@ describe('US-008 AC-6: the confirmation modal', () => {
   });
   it('Enter after the focus moved to Replace answers true', async () => {
     const {modal, buttons, answer} = await open();
-    buttons()[0]!.focus();
+    byName(buttons(), 'Replace').focus();
     modal.contentEl.fire('keydown', {key: 'Enter'});
     expect(await answer).toBe(true);
   });
   it('a click on Replace answers true, a click on Cancel false', async () => {
     const a = await open();
-    a.buttons()[0]!.click();
+    byName(a.buttons(), 'Replace').click();
     expect(await a.answer).toBe(true);
     const b = await open();
-    b.buttons()[1]!.click();
+    byName(b.buttons(), 'Cancel').click();
     expect(await b.answer).toBe(false);
   });
   it('Enter during an input-method composition does nothing; the dialog stays open', async () => {
     const {modal, buttons} = await open();
-    buttons()[0]!.focus();
+    byName(buttons(), 'Replace').focus();
     modal.contentEl.fire('keydown', {key: 'Enter', isComposing: true});
     await Promise.resolve();
     expect(modal.closed).toBe(0);
@@ -413,7 +418,7 @@ describe('US-008 AC-6: the confirmation modal', () => {
   });
   it('the first answer counts: a click and then a close do not change it', async () => {
     const {modal, buttons, answer} = await open();
-    buttons()[0]!.click();
+    byName(buttons(), 'Replace').click();
     modal.close();
     expect(await answer).toBe(true);
   });

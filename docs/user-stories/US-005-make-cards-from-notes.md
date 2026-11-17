@@ -106,7 +106,10 @@ All examples use invented names and folders; the real ones are settings.
   cards.pdf`. A name that is empty after that is `Cards` (`Cards cards.pdf`).
 - **AC-7 (an existing file, D3).** When either file exists, a
   confirmation names both and offers `Replace` and `Cancel` (focus on `Cancel`,
-  Escape cancels, Enter acts on the focused button, SCAR-014); on `Cancel`
+  Escape cancels, Enter acts on the focused button, SCAR-014). **Amended 2026-11-17
+  (#58, F1 of US-013's M12):** the buttons read `Cancel`, `Replace` in that order,
+  and the focus is on `Cancel` once the question has opened in Obsidian (whose
+  `Modal.open()` focuses the first focusable element after `onOpen`, measured); on `Cancel`
   nothing is read or written. The confirmation comes before the run starts.
 - **AC-8 (the warnings file).** `<name> cards warnings.md` is written with
   every run, also without warnings, as exactly: the heading `# <name> cards:

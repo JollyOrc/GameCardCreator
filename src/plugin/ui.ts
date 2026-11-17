@@ -119,8 +119,9 @@ export function confirmReplaceWith<App>(
 /**
  * US-008 | AC-6, US-007 | AC-9: The confirmation over Obsidian's `Modal` class for any
  * dialog data (`replaceDialog`, `resetDialog`): the question, the two buttons by their own
- * names, the focus on the safe one, every key decided by `dialogKey`, a close in any other
- * way answers `false`, the first answer counts.
+ * names with the safe one first (#58: Obsidian focuses the first focusable element after
+ * `onOpen`, so it stays on the safe one), every key decided by `dialogKey`, a close in any
+ * other way answers `false`, the first answer counts.
  */
 export function confirmDialogWith<App>(
   Base: new (app: App) => ModalLike,
@@ -138,8 +139,10 @@ export function confirmDialogWith<App>(
       modal.onOpen = () => {
         const content = modal.contentEl;
         content.createEl('p', {text: dialog.message});
-        const replace = content.createEl('button', {text: dialog.replaceLabel});
+        // #58 (F1, SCAR-014): the safe button first. Obsidian's `Modal.open()` focuses the
+        // first focusable element after `onOpen` (measured, M12), so it lands on Cancel.
         const cancel = content.createEl('button', {text: dialog.cancelLabel});
+        const replace = content.createEl('button', {text: dialog.replaceLabel});
         replace.addEventListener('focus', () => (focus = 'replace'));
         cancel.addEventListener('focus', () => (focus = 'cancel'));
         replace.addEventListener('click', () => {

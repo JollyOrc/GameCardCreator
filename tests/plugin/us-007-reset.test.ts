@@ -15,6 +15,10 @@ import {confirmDialogWith} from '../../src/plugin/ui';
 import {FakeEl} from '../support/fake-dom';
 import {memoryStore} from '../support/memory-store';
 
+/** #58: a button by its name (the order changed: Cancel first). */
+const byName = (list: FakeEl[], name: string): FakeEl =>
+  list.find((b) => b.text === name)!;
+
 describe('US-007 AC-9: the question', () => {
   it('names the page; Reset and Cancel by their own names; the focus on Cancel', () => {
     for (const page of ['properties', 'layout'] as const) {
@@ -177,8 +181,9 @@ describe('US-007 AC-9: the modal logic, with the dialog data of the reset (SCAR-
       .map((e) => e.text)
       .join('\n');
     expect(text).toContain('Note properties');
-    expect(buttons().map((b) => b.text)).toEqual(['Reset', 'Cancel']);
-    expect(buttons()[1]!.focused).toBe(true);
+    // #58 (F1): the safe button first
+    expect(buttons().map((b) => b.text)).toEqual(['Cancel', 'Reset']);
+    expect(byName(buttons(), 'Cancel').focused).toBe(true);
   });
   it.each([
     ['Escape', {key: 'Escape'}, false],
@@ -190,19 +195,19 @@ describe('US-007 AC-9: the modal logic, with the dialog data of the reset (SCAR-
   });
   it('Enter after the focus moved to Reset answers true; a click on Reset true, on Cancel false', async () => {
     const a = open();
-    a.buttons()[0]!.focus();
+    byName(a.buttons(), 'Reset').focus();
     a.modal.contentEl.fire('keydown', {key: 'Enter'});
     expect(await a.answer).toBe(true);
     const b = open();
-    b.buttons()[0]!.click();
+    byName(b.buttons(), 'Reset').click();
     expect(await b.answer).toBe(true);
     const c = open();
-    c.buttons()[1]!.click();
+    byName(c.buttons(), 'Cancel').click();
     expect(await c.answer).toBe(false);
   });
   it('Enter during a composition does nothing; closing in any other way is Cancel; the first answer counts', async () => {
     const a = open();
-    a.buttons()[0]!.focus();
+    byName(a.buttons(), 'Reset').focus();
     a.modal.contentEl.fire('keydown', {key: 'Enter', isComposing: true});
     await Promise.resolve();
     expect(a.modal.closed).toBe(0);
@@ -210,7 +215,7 @@ describe('US-007 AC-9: the modal logic, with the dialog data of the reset (SCAR-
     b.modal.close();
     expect(await b.answer).toBe(false);
     const c = open();
-    c.buttons()[0]!.click();
+    byName(c.buttons(), 'Reset').click();
     c.modal.close();
     expect(await c.answer).toBe(true);
   });
