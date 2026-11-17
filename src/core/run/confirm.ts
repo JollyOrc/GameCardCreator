@@ -35,6 +35,15 @@ export interface KeyEvent {
 }
 
 /**
+ * US-005 AC-7, US-013 AC-5 (SCAR-013): true while an input method composes a character
+ * (`isComposing`, or key code 229 in older engines); then a dialog's keys do nothing.
+ * The one composition check of every dialog (SCAR-017).
+ */
+export function isComposing(event: KeyEvent): boolean {
+  return event.isComposing === true || event.keyCode === 229;
+}
+
+/**
  * US-005 AC-7 (SCAR-013): what a key does in the confirmation. Escape cancels;
  * Enter acts on the button that has the focus; during an input-method
  * composition (`isComposing`, key code 229) nothing happens; every other key
@@ -44,7 +53,7 @@ export function dialogKey(
   event: KeyEvent,
   focus: DialogButton,
 ): DialogButton | 'none' {
-  if (event.isComposing === true || event.keyCode === 229) return 'none';
+  if (isComposing(event)) return 'none';
   if (event.key === 'Escape') return 'cancel';
   if (event.key === 'Enter') return focus;
   return 'none';
