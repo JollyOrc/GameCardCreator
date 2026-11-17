@@ -134,3 +134,24 @@ export function enabledPlugins(app: object): {id: string; version: string}[] {
   }
   return out;
 }
+
+/**
+ * US-013 | AC-2: Opens Obsidian's settings at the plugin's tab through the private
+ * `app.setting` (not in the typings; `open` then `openTabById`, measured in M11). Without
+ * it, nothing happens.
+ */
+export function openSettingsTab(app: object, id: string): void {
+  const setting = (
+    app as {
+      setting?: {open?: () => void; openTabById?: (id: string) => unknown};
+    }
+  ).setting;
+  if (
+    typeof setting?.open !== 'function' ||
+    typeof setting.openTabById !== 'function'
+  ) {
+    return;
+  }
+  setting.open();
+  setting.openTabById(id);
+}

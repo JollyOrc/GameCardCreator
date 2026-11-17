@@ -30,3 +30,22 @@ export function debugInfo(facts: DebugFacts): string {
     ].join('\n') + '\n'
   );
 }
+
+/**
+ * US-013 | AC-8: Gathers the debug facts at the click: the settings file read now (shown as
+ * two-space JSON, `null` when there is none), the versions given, the enabled plugins now.
+ */
+export async function gatherDebugFacts(input: {
+  read(): Promise<unknown>;
+  pluginVersion: string;
+  obsidianVersion: string;
+  plugins(): {id: string; version: string}[];
+}): Promise<DebugFacts> {
+  const raw = await input.read();
+  return {
+    pluginVersion: input.pluginVersion,
+    obsidianVersion: input.obsidianVersion,
+    settingsText: raw === null ? null : JSON.stringify(raw, null, 2),
+    plugins: input.plugins(),
+  };
+}

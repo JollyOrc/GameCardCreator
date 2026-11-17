@@ -740,3 +740,10 @@ the code of 0.6.0: `npm test` 1185 passed, 25 red (the US-013 files and the amen
 | AC-12 | `us-013-wiring` (string table text check) |
 | AC-13 | M11 (measured: no progress tab); no test |
 | AC-14 | the manual check of the last ticket |
+
+Added at G4 (US-013, 2026-11-17): `us-013-selection` (an empty selection in a vault without a note with a kind is the
+empty list, #51), `us-013-sections` (two of the last three sections in trouble, #53), `us-013-debug-info`
+(`enabledPlugins`, #55), `us-013-dialog-rules` (`saveSelection`, `updateSelection`, `selectionFollowers`,
+`runSavedSelection`, `openSettingsTab`, #56), `run-disk-writer` (`modifiedAt`, #56). Amended at G4: `us-007-reset`,
+`us-007-wiring`, `titles-screen`, `creature-titles-screen`, `scheme-screen` (#55: the page reset became the section
+reset), `us-013-wiring` (#56: the rename/delete handlers live in `run-dialog/deps.ts`, main.ts registers them).

@@ -2,11 +2,14 @@
 // the dependencies of US-005's runner from Obsidian and registers the command
 // and the menus and the settings tab; every decision lives in a tested function.
 import {apiVersion, Modal, Notice, Plugin} from 'obsidian';
-import {createCardCommands} from './commands';
+import {createCardCommands, RIBBON} from './commands';
+import {gatherDebugFacts} from './debug-info';
 import {embeddedCompilerDeps} from './compiler/embedded-assets';
 import {createCompiler} from './compiler/index';
 import {createDiskWriter} from './disk-writer';
 import {enabledPlugins, pluginApi, vaultAccess} from './obsidian-deps';
+import {runDialogDeps, selectionFollowers} from './run-dialog/deps';
+import {openRunDialog, runSavedSelection} from './run-dialog/dialog';
 import {createCardsRunner} from './runner';
 import {readSettingsFile} from './settings-file';
 import {createSettingsStore} from './settings/store';
@@ -44,15 +47,13 @@ export default class GameCardCreatorPlugin extends Plugin {
         confirm: (dialog) => confirmDialogWith(Modal)(this.app, dialog),
         exists: (path) => createDiskWriter(path).exists(path),
         // US-013 AC-8: gathered at the click; nothing is sent.
-        debugFacts: async () => {
-          const raw = await store.read();
-          return {
+        debugFacts: () =>
+          gatherDebugFacts({
+            read: () => store.read(),
             pluginVersion: this.manifest.version,
             obsidianVersion: apiVersion,
-            settingsText: raw === null ? null : JSON.stringify(raw, null, 2),
-            plugins: enabledPlugins(this.app),
-          };
-        },
+            plugins: () => enabledPlugins(this.app),
+          }),
         toClipboard: (text) => navigator.clipboard.writeText(text),
       }),
     );
@@ -76,6 +77,32 @@ export default class GameCardCreatorPlugin extends Plugin {
       notice: (text) => void new Notice(text),
     });
     const commands = createCardCommands(runner);
+    // US-013 AC-1 to AC-6: the run dialog, its two entry points and the saved selection.
+    const dialogDeps = runDialogDeps({
+      app: this.app,
+      store,
+      vaultRoot: () => access.vaultRoot(),
+      pluginId: this.manifest.id,
+      run: (items) => runner.runSelection(items),
+      notice: (text) => void new Notice(text),
+    });
+    const openDialog = (): void =>
+      void openRunDialog(Modal, this.app, dialogDeps);
+    this.addRibbonIcon(RIBBON.icon, RIBBON.title, openDialog);
+    this.addCommand({
+      id: commands.dialogCommand.id,
+      name: commands.dialogCommand.name,
+      callback: openDialog,
+    });
+    this.addCommand({
+      id: commands.savedSelectionCommand.id,
+      name: commands.savedSelectionCommand.name,
+      callback: () => void runSavedSelection(dialogDeps),
+    });
+    // US-013 AC-6: the saved selection follows renames and deletes (by path segments).
+    const follow = selectionFollowers({store});
+    this.registerEvent(this.app.vault.on('rename', follow.onRename));
+    this.registerEvent(this.app.vault.on('delete', follow.onDelete));
     this.addCommand({
       id: commands.deckCommand.id,
       name: commands.deckCommand.name,

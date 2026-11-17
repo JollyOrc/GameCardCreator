@@ -54,12 +54,16 @@ describe('US-013 AC-1: the entry points', () => {
 });
 
 describe('US-013 AC-6: the saved selection follows the vault', () => {
-  it('main.ts listens to rename and delete and hands them to followRename / followDelete', () => {
+  it('main.ts listens to rename and delete; its handlers hand them to followRename / followDelete', () => {
     const main = read('src/plugin/main.ts');
     expect(main).toMatch(/vault\.on\(\s*'rename'/);
     expect(main).toMatch(/vault\.on\(\s*'delete'/);
-    expect(main).toContain('followRename');
-    expect(main).toContain('followDelete');
+    // Amended at #56 (G4): main.ts must stay short (US-008 AC-5), so it registers the
+    // handlers of `selectionFollowers`; they hand the events to followRename / followDelete.
+    expect(main).toContain('selectionFollowers');
+    const deps = read('src/plugin/run-dialog/deps.ts');
+    expect(deps).toMatch(/followRename\(saved, oldPath, file\.path\)/);
+    expect(deps).toMatch(/followDelete\(saved, file\.path\)/);
   });
 });
 

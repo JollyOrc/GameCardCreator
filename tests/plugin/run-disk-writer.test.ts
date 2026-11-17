@@ -9,12 +9,13 @@ import {
   readFileSync,
   readdirSync,
   rmSync,
+  utimesSync,
   writeFileSync,
 } from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
-import {createDiskWriter} from '../../src/plugin/disk-writer';
+import {createDiskWriter, modifiedAt} from '../../src/plugin/disk-writer';
 
 let base = '';
 beforeEach(() => {
@@ -98,5 +99,18 @@ describe('US-005 AC-5: createDiskWriter', () => {
       'writeBytes',
       'writeText',
     ]);
+  });
+});
+
+describe('US-013 AC-3: modifiedAt (the destination line’s date, T6)', () => {
+  it('a file: its modification time; a folder or nothing: null', async () => {
+    const file = join(base, 'Cards cards.pdf');
+    writeFileSync(file, 'x');
+    const when = new Date(2026, 10, 17, 14, 2);
+    utimesSync(file, when, when);
+    expect((await modifiedAt(file))?.getTime()).toBe(when.getTime());
+    mkdirSync(join(base, 'Folder.pdf'));
+    expect(await modifiedAt(join(base, 'Folder.pdf'))).toBeNull();
+    expect(await modifiedAt(join(base, 'missing.pdf'))).toBeNull();
   });
 });

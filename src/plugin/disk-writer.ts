@@ -26,6 +26,15 @@ async function statOf(path: string) {
 }
 
 /**
+ * US-013 | AC-3: The modification time of the file at `path`, or null when there is no
+ * file (nothing, or a folder). A read; it never writes.
+ */
+export async function modifiedAt(path: string): Promise<Date | null> {
+  const found = await statOf(path);
+  return found?.isFile() === true ? found.mtime : null;
+}
+
+/**
  * US-005 AC-5: a writer for the output folder `root`. A path must be absolute
  * and strictly below the root (the root itself, a sibling whose name starts
  * with the root's and a `..` that leaves it are refused); there is no way to

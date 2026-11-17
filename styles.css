@@ -50,3 +50,59 @@
 .gcc-section-body {
   padding-left: 1.5em;
 }
+
+/* US-013 AC-2 to AC-4: the run dialog and its selection panel (layout measured in M11) */
+.gcc-dest-row {
+  display: flex;
+  gap: 0.5em;
+  align-items: center;
+}
+.gcc-dest-input {
+  flex: 1;
+}
+.gcc-dest-line {
+  margin: 0.5em 0 1em 0;
+}
+.gcc-more-options {
+  display: flex;
+  justify-content: flex-end;
+}
+.gcc-selection-panel {
+  position: relative;
+  z-index: 1;
+  width: 25em;
+  max-height: 80%;
+  margin: 10px;
+  padding: 0.75em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+}
+.gcc-panel-title {
+  font-weight: var(--font-semibold);
+}
+.gcc-tree {
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1;
+}
+.gcc-tree-note {
+  display: block;
+  padding: 0.1em 0;
+}
+.gcc-tree-children {
+  padding-left: 1.25em;
+}
+.gcc-no-kind {
+  color: var(--text-faint);
+}
+.gcc-kind-tag {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s);
+  padding: 0 0.35em;
+}
+.gcc-run-dialog .gcc-error {
+  margin-top: 0.25em;
+}

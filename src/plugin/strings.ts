@@ -47,3 +47,24 @@ export const TAB = {
   titleSizes: 'Title sizes',
   equalTitleBars: 'Equal title bars',
 } as const;
+
+/** US-013 AC-1 to AC-5: the run dialog's texts. */
+export const DIALOG = {
+  title: 'Create cards',
+  folderPlaceholder: 'Output folder (absolute path)',
+  chooseFolder: 'Choose folder…',
+  run: 'Create cards',
+  moreOptions: 'More options',
+  moreOptionsTooltip: 'Open the plugin settings',
+  treeTitle: 'Notes',
+  selectAll: 'Select all',
+  saveSelection: 'Save selection',
+  selectionSaved: 'Selection saved.',
+  noKind: 'no card kind',
+} as const;
+
+/** US-013 AC-1: the new entry points' names. */
+export const ENTRY = {
+  dialog: 'Create cards…',
+  savedSelection: 'Create cards from the saved selection',
+} as const;

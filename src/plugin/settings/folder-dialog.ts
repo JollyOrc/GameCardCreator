@@ -143,3 +143,26 @@ export async function dialogStart(
   const separator = home.includes('\\') && !home.includes('/') ? '\\' : '/';
   return `${home.replace(/[\\/]+$/, '')}${separator}Documents`;
 }
+
+/**
+ * US-007 | AC-5, US-013 | AC-2: The page's environment for the folder dialog: Obsidian's
+ * `window.require` (desktop), or none. The one place it is read (SCAR-017).
+ */
+export function windowEnv(): DialogEnv {
+  return {
+    require: (window as unknown as {require?: (id: string) => unknown}).require,
+  };
+}
+
+/**
+ * US-007 | AC-5, US-013 | AC-2: The user's home folder through `env` (Node's `os`), or
+ * `''` when it cannot be read (no `require`, or a throw).
+ */
+export function homeFolder(env: DialogEnv): string {
+  try {
+    const os = env.require?.('os') as {homedir(): string} | undefined;
+    return os?.homedir() ?? '';
+  } catch {
+    return '';
+  }
+}

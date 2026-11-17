@@ -36,7 +36,9 @@ import {
 import {
   dialogStart,
   folderDialogAvailable,
+  homeFolder,
   pickOutputFolder,
+  windowEnv,
   type DialogEnv,
 } from './folder-dialog';
 import {commitRule, suggestFolders} from './rules';
@@ -164,10 +166,7 @@ export class GameCardCreatorSettingTab extends PluginSettingTab {
   }
 
   private env(): DialogEnv {
-    return {
-      require: (window as unknown as {require?: (id: string) => unknown})
-        .require,
-    };
+    return windowEnv();
   }
 
   /** The settings as the file holds them now (the defaults when it cannot be read). */
@@ -428,12 +427,7 @@ export class GameCardCreatorSettingTab extends PluginSettingTab {
   }
 
   private homeFolder(): string {
-    try {
-      const os = this.env().require?.('os') as {homedir(): string} | undefined;
-      return os?.homedir() ?? '';
-    } catch {
-      return '';
-    }
+    return homeFolder(this.env());
   }
 
   /** US-007 | AC-6: the kind rules and `Add rule`. */

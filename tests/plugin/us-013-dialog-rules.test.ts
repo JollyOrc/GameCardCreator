@@ -7,7 +7,12 @@ import {
   destinationLine,
   runDialogKey,
   saveRunChoices,
+  saveSelection,
+  updateSelection,
 } from '../../src/plugin/run-dialog/rules';
+import {selectionFollowers} from '../../src/plugin/run-dialog/deps';
+import {runSavedSelection} from '../../src/plugin/run-dialog/dialog';
+import {openSettingsTab} from '../../src/plugin/obsidian-deps';
 import {memoryStore} from '../support/memory-store';
 
 describe('US-013 AC-3: what is at the destination', () => {
@@ -112,5 +117,114 @@ describe('US-013 AC-5: the values saved when the run starts', () => {
       schemeNote: 'Edited.md',
       selection: 'all',
     });
+  });
+});
+
+describe('US-013 AC-4, AC-6: saving and updating the selection alone (T6)', () => {
+  it('Save selection writes only the selection, keeping every other key, once', async () => {
+    const store = memoryStore({outputFolder: '/out', unknownKey: 1});
+    const result = await saveSelection({store}, ['Skills/a.md']);
+    expect(result.ok).toBe(true);
+    expect(store.writes).toHaveLength(1);
+    expect(store.file()).toEqual({
+      outputFolder: '/out',
+      unknownKey: 1,
+      selection: ['Skills/a.md'],
+    });
+  });
+  it('a rename changes the stored selection through the given change', async () => {
+    const store = memoryStore({selection: ['A/x.md', 'B.md'], other: 2});
+    await updateSelection({store}, (s) =>
+      s === null || s === 'all'
+        ? s
+        : s.map((p) => (p === 'A/x.md' ? 'A/y.md' : p)),
+    );
+    expect(store.file()).toEqual({selection: ['A/y.md', 'B.md'], other: 2});
+  });
+  it('no change, no write (a rename elsewhere in the vault)', async () => {
+    const store = memoryStore({selection: 'all'});
+    await updateSelection({store}, (s) => s);
+    await updateSelection({store}, (s) => s);
+    expect(store.writes).toHaveLength(0);
+  });
+  it('a selection that becomes empty is removed from the file', async () => {
+    const store = memoryStore({selection: ['A/x.md'], other: 2});
+    await updateSelection({store}, () => []);
+    expect(store.file()).toEqual({other: 2});
+  });
+});
+
+describe('US-013 AC-6: selectionFollowers (the vault event handlers, T6)', () => {
+  it('a rename and a delete update the stored selection by path segments', async () => {
+    const store = memoryStore({selection: ['A/x.md', 'A 2/y.md', 'B.md']});
+    const follow = selectionFollowers({store});
+    follow.onRename({path: 'Renamed'}, 'A');
+    follow.onDelete({path: 'B.md'});
+    await new Promise((r) => setTimeout(r, 0));
+    await new Promise((r) => setTimeout(r, 0));
+    expect(store.file()).toEqual({selection: ['Renamed/x.md', 'A 2/y.md']});
+  });
+});
+
+describe('US-013 AC-1: runSavedSelection (the command without the dialog, T6)', () => {
+  const depsWith = (file: unknown, paths: string[]) => {
+    const notices: string[] = [];
+    const runs: unknown[] = [];
+    const deps = {
+      store: memoryStore(file),
+      vaultRoot: () => '/v',
+      paths: () => paths,
+      modifiedAt: async () => null,
+      folderEnv: () => ({}),
+      home: () => '',
+      exists: async () => false,
+      openSettings: () => undefined,
+      run: async (items: unknown) => void runs.push(items),
+      notice: (t: string) => void notices.push(t),
+    };
+    return {deps, notices, runs};
+  };
+  const RULES = [{folder: 'Skills', kind: 'skill'}];
+  it('runs the saved notes that are checkable now, in path order', async () => {
+    const {deps, notices, runs} = depsWith(
+      {kindRules: RULES, selection: ['Skills/b.md', 'Skills/A.md', 'Gone.md']},
+      ['Skills/A.md', 'Skills/b.md', 'Notes/x.md'],
+    );
+    await runSavedSelection(deps);
+    expect(notices).toEqual([]);
+    expect(runs).toEqual([
+      [
+        {path: 'Skills/A.md', isFolder: false},
+        {path: 'Skills/b.md', isFolder: false},
+      ],
+    ]);
+  });
+  it('nothing saved: the notice, no run', async () => {
+    const {deps, notices, runs} = depsWith({kindRules: RULES}, ['Skills/A.md']);
+    await runSavedSelection(deps);
+    expect(notices).toEqual([
+      'Nothing selected yet. Open "Create cards…" and choose notes.',
+    ]);
+    expect(runs).toEqual([]);
+  });
+});
+
+describe('US-013 AC-2: openSettingsTab (the private app.setting, T6)', () => {
+  it('opens the settings, then the tab by id', () => {
+    const calls: string[] = [];
+    openSettingsTab(
+      {
+        setting: {
+          open: () => calls.push('open'),
+          openTabById: (id: string) => calls.push(`tab ${id}`),
+        },
+      },
+      'game-card-creator',
+    );
+    expect(calls).toEqual(['open', 'tab game-card-creator']);
+  });
+  it('without app.setting nothing happens and nothing throws', () => {
+    expect(() => openSettingsTab({}, 'x')).not.toThrow();
+    expect(() => openSettingsTab({setting: {open: 1}}, 'x')).not.toThrow();
   });
 });

@@ -10,7 +10,7 @@ import {
   type CommitResult,
   type SettingsStore,
 } from '../settings/commit';
-import type {SavedSelection} from './selection';
+import {readSelection, type SavedSelection} from './selection';
 
 const twoDigits = (n: number): string => String(n).padStart(2, '0');
 
@@ -75,6 +75,48 @@ export function saveRunChoices(
     file.outputFolder = folder.folder;
     file.selection =
       choices.selection === 'all' ? 'all' : [...choices.selection];
+    return save(deps.store, file);
+  });
+}
+
+/**
+ * US-013 | AC-4: `Save selection`: writes only `selection` (loaded now, every other key
+ * kept, one write, in the store's queue).
+ */
+export function saveSelection(
+  deps: {store: SettingsStore},
+  selection: SavedSelection,
+): Promise<CommitResult> {
+  return serial(deps.store, async () => {
+    const file = await loadFile(deps.store);
+    if (typeof file === 'string') return {ok: false, message: file};
+    file.selection = selection === 'all' ? 'all' : [...selection];
+    return save(deps.store, file);
+  });
+}
+
+/**
+ * US-013 | AC-6: Applies `change` (a `followRename` or `followDelete`) to the stored
+ * selection. Writes only when the selection changed; a selection that became empty is
+ * removed from the file. Loaded now, every other key kept, in the store's queue.
+ */
+export function updateSelection(
+  deps: {store: SettingsStore},
+  change: (saved: SavedSelection | null) => SavedSelection | null,
+): Promise<CommitResult> {
+  return serial(deps.store, async () => {
+    const file = await loadFile(deps.store);
+    if (typeof file === 'string') return {ok: false, message: file};
+    const before = readSelection(file.selection);
+    const after = change(before);
+    if (JSON.stringify(after) === JSON.stringify(before)) {
+      return {ok: true, warnings: []};
+    }
+    if (after === null || (after !== 'all' && after.length === 0)) {
+      delete file.selection;
+    } else {
+      file.selection = after === 'all' ? 'all' : [...after];
+    }
     return save(deps.store, file);
   });
 }

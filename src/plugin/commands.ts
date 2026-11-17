@@ -3,6 +3,7 @@
 // given; every read follows the click. `main.ts` (US-008) registers them.
 import type {SelectedItem} from '../core/run/select';
 import type {CardsRunner} from './runner';
+import {ENTRY} from './strings';
 
 /** The part of a file the deck command needs. */
 export interface DeckFile {
@@ -20,9 +21,19 @@ export interface MenuEntry {
 /** US-005 AC-9: the name of the deck command, also the title of its menu entry (D7). */
 const DECK_COMMAND_NAME = 'Create cards from this deck note';
 
+/** US-013 AC-1: the ribbon icon that opens the run dialog (`layout-grid`, measured in M11). */
+export const RIBBON = {icon: 'layout-grid', title: ENTRY.dialog} as const;
+
 /** US-005 AC-9: the commands for a runner. */
 export function createCardCommands(runner: CardsRunner) {
   return {
+    /** US-013 AC-1: opens the run dialog. */
+    dialogCommand: {id: 'create-cards-dialog', name: ENTRY.dialog},
+    /** US-013 AC-1: runs the saved selection without the dialog. */
+    savedSelectionCommand: {
+      id: 'create-cards-from-saved-selection',
+      name: ENTRY.savedSelection,
+    },
     /** `Create cards from this deck note`: offered only for a Markdown note. */
     deckCommand: {
       id: 'create-cards-from-deck-note',
