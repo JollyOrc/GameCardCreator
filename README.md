@@ -5,66 +5,72 @@ cards and writes them as an A4 PDF: cards of 62 mm x 88 mm, as many per page as 
 marks. The PDF is made by [Typst](https://typst.app), which is inside the plugin: nothing to
 install and nothing is downloaded.
 
-**Status:** version 0.4.0 makes **skill**, **spell** and **creature** cards; skill and spell cards can have a colour-coded header with icons from a scheme note of your vault. The creature card needs
-the plugin [Obsidian2Typst](https://github.com/JollyOrc/Obsidian2Typst) 0.15.1 or newer.
-Tested on Obsidian 1.15.0 on macOS only (see the release notes).
+**Status:** version 0.7.0 makes **skill**, **spell** and **creature** cards, chosen in a run dialog,
+from a deck note or from the file explorer. The creature card needs the plugin
+[Obsidian2Typst](https://github.com/JollyOrc/Obsidian2Typst) 0.15.1 or newer. Tested on Obsidian
+1.15.0 on macOS only (see the release notes).
+
+## Manual
+
+How to install and use the plugin: [`manual/manual.md`](manual/manual.md).
 
 ## What it does
 
 - A **skill card** shows the tags of the note, its title (the note's file name), a details row
   (`Time`, `Type`, `Requires`, from the note's properties) and the text of the note. A **spell
   card** shows the tags, the title and the text.
-- **A warning for a character no font draws.** Typst draws a character that no font has as an empty
-  box and says nothing. The plugin checks the text of every card (the title, tags, details row, the note's
-  text, a creature's section headings and texts) against the fonts of the compile and gives **one warning
-  per note** listing the characters, for example `SKILL_GLYPH_MISSING` with `漢 U+6F22, 😀 U+1F600` (ten at
-  most, then `and N more`). A character that some font of the compile draws is not reported: on a creature
-  sheet the fonts of Obsidian2Typst's preset count. The statblock's own text and the credit lines are not
-  checked.
-- **Colours and icons (optional).** When the setting **Scheme note** names a note of your vault, the
-  header of a skill or spell card sits on a band in the colour of its branch (the tag of the note that
-  has a row in the scheme), with the branch's icon at the right; several branches make a gradient and
-  several icons, in the order of the note's tags. The scheme note is an ordinary note with a table of
-  `Tag`, `Colour` (`#rrggbb`) and `Icon` (a name from [RPG Awesome](https://nagoshiashumari.github.io/Rpg-Awesome/));
-  other tools can read it too. The band can reach beyond the card's frame (setting **Bleed**, up to 3 mm,
-  1 mm with cut marks). The icons' credit is printed once at the foot of each sheet that shows an icon.
-- A **creature card** shows the statblock exactly as Obsidian2Typst draws it for a book (drawn by
-  that plugin's own code, with its preset's icons and fonts), then the creature's **Behaviour**,
-  **Actions** and **Signs** sections (the headings are settings). If it does not fit, the Signs
-  section is given up first, then Behaviour, then the Skills line of the statblock, and only then
-  does the text shrink; what is given up is reported. The icons' credit line is printed once at
-  the foot of each sheet that has a creature card.
-- Pictures are left out (with a warning). The text shrinks from 7 pt towards 5.5 pt to fit the card
-  and is cut, with a warning, when it still does not.
-- You choose the cards in two ways:
-  - a **deck note**: a note with a list of links to the cards' notes; the cards come in the order
-    of the links. Run the command **Create cards from this deck note**, or right-click the note and
-    choose **Create cards from this deck note**;
-  - the **file explorer**: right-click a note, several notes or a folder and choose **Create
-    cards**.
+- A **creature card** shows the statblock exactly as Obsidian2Typst draws it for a book (with its
+  preset's icons and fonts), then the creature's **Behaviour**, **Actions** and **Signs** sections
+  (the headings are settings). If it does not fit, the Signs section is given up first, then
+  Behaviour, then the Skills line of the statblock, and only then does the text shrink; what is
+  given up is reported.
+- The text shrinks from 7 pt towards 5.5 pt to fit the card and is cut, with a warning, when it
+  still does not. Pictures are left out (with a warning).
+- **Colours and icons (optional).** A **scheme note** in your vault, a table of `Tag`, `Colour` and
+  `Icon` (from [RPG Awesome](https://nagoshiashumari.github.io/Rpg-Awesome/)), puts the header of a
+  skill or spell card on a band in the colour of its branch, with the branch's icon; several
+  branches make a gradient. Optional bleed for the band. The icons' credit is printed at the foot
+  of each sheet that shows one.
+- **Equal title bars (optional, per kind).** All cards of a kind in a run get one title size and
+  one header height, so the cards line up; for creatures, one name size in the statblock band.
+- **A warning for a character no font draws**, one per note, listing the characters with their
+  code points (`漢 U+6F22, 😀 U+1F600`).
+- **Choosing the cards:**
+  - the **run dialog** (ribbon icon or command **Create cards…**): the output folder and a tree of
+    the vault's notes with their card kinds; the selection can be saved and run again with
+    **Create cards from the saved selection**;
+  - a **deck note**: a note with a list of links to the cards' notes, run with **Create cards from
+    this deck note** (command or right-click);
+  - the **file explorer**: right-click notes or folders and choose **Create cards**.
 - The result is `<name> cards.pdf` and `<name> cards warnings.md` in the output folder. If they
-  already exist the plugin asks before it replaces them. The plugin never changes your notes.
+  already exist the plugin asks before it replaces them (Cancel is the default). The plugin never
+  changes your notes.
 
 ## Set up
 
-1. Copy `main.js`, `manifest.json` and `styles.css` from the release into
+1. Copy `main.js`, `manifest.json` and `styles.css` from the
+   [release](https://github.com/JollyOrc/GameCardCreator/releases) into
    `<your vault>/.obsidian/plugins/game-card-creator/` and enable **Game Card Creator** in
    Settings, Community plugins.
-2. Open Settings, **Game Card Creator**:
-   - **Output folder**: type an absolute path or choose it with the system's folder dialog (a
+2. Open Settings, **Game Card Creator**. The settings are in collapsible sections:
+   - **Output**: the output folder, an absolute path, typed or chosen with **Choose folder…** (a
      folder inside the vault is allowed);
-   - **Which note is which card**: add a rule for each folder (for example your skills folder is
-     `skill`, your spells folder `spell`, your creatures folder `creature`); a note takes the kind of the longest matching folder;
-   - **Note properties**: the names of the properties the plugin reads (tags, timing, kind,
-     requires), the labels shown on the card, the three section headings of creature notes and the
-     **Scheme note** (optional, a vault path); **Page and text size**: the card size, margin,
-     gap, cut marks, the bleed and the text sizes.
+   - **Which note is which card**: a rule for each folder (for example your skills folder is
+     `skill`, your spells folder `spell`, your creatures folder `creature`); a note takes the kind
+     of the longest matching folder;
+   - **Note properties**: the property names the plugin reads, the labels shown on the card, the
+     three section headings of creature notes and the **Scheme note** (optional);
+   - **Page and text size**: card size, margin, gap, cut marks, bleed and the text sizes;
+   - **Titles**: the **Equal title bars** switch per kind, with its sizes behind a gear.
 3. The status line at the top says `Ready: ...` or what is still missing. Settings are saved as you
    change them; a value that is not valid is refused with the reason under the field.
 
+The manual describes every setting, card and warning.
+
 ## Limits
 
-Creature cards need Obsidian2Typst 0.15.1 or newer, installed and enabled; no pictures on cards; desktop only; Windows, Linux and mobile are not tested. See `releases/v0.4.0.md`.
+Creature cards need Obsidian2Typst 0.15.1 or newer, installed and enabled; no pictures on cards;
+no card backs; desktop only; Windows, Linux and mobile are not tested. See `releases/v0.7.0.md`.
 
 ## Development
 
@@ -79,4 +85,4 @@ The process (SCAR review, user story, tests, tickets, code) is in `CLAUDE.md`; t
 
 ## Licence
 
-MIT, see `LICENSE`. The bundled packages and the font are listed in `THIRD_PARTY_NOTICES.md`.
+MIT, see `LICENSE`. The bundled packages and the fonts are listed in `THIRD_PARTY_NOTICES.md`.
